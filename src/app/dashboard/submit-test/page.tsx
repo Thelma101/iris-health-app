@@ -1,0 +1,267 @@
+'use client';
+import React, { useState } from 'react';
+import CreateTestTypeModal from '@/components/ui/CreateTestTypeModal';
+import SubmitTestModal from '@/components/ui/SubmitTestModal';
+import TestTypeListModal from '@/components/ui/TestTypeListModal';
+import EditTestTypeModal from '@/components/ui/EditTestTypeModal';
+import FormProgress from '@/components/submit-test/FormProgress';
+import PatientInfoForm from '@/components/submit-test/PatientInfoForm';
+import TestDetailsForm from '@/components/submit-test/TestDetailsForm';
+import { useFormStep } from '@/hooks/useFormStep';
+import { LGA_OPTIONS, COMMUNITY_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/location-options';
+import { TEST_TYPE_OPTIONS, DEFAULT_TEST_TYPES } from '@/lib/constants/test-options';
+
+interface PatientInfo {
+  lga: string;
+  community: string;
+  firstName: string;
+  lastName: string;
+  age: string;
+  gender: string;
+  phoneNumber: string;
+}
+
+interface TestDetails {
+  testType: string;
+  dateConducted: string;
+  testResult: string;
+  officerNote: string;
+  testImage: File | null;
+}
+
+interface TestType {
+  id: number;
+  name: string;
+  results: string[];
+}
+
+export default function SubmitTestPage() {
+  const { currentStep, nextStep, previousStep } = useFormStep(1);
+
+  // Form State
+  const [formData, setFormData] = useState<PatientInfo>({
+    lga: 'Ikorodu',
+    community: 'Bayeku',
+    firstName: '',
+    lastName: '',
+    age: '',
+    gender: 'Male',
+    phoneNumber: '',
+  });
+
+  const [testDetails, setTestDetails] = useState<TestDetails>({
+    testType: 'HIV 1/2 Rapid Test',
+    dateConducted: '',
+    testResult: 'Positive',
+    officerNote: '',
+    testImage: null,
+  });
+
+  const [patientPhoto, setPatientPhoto] = useState<File | null>(null);
+  const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
+  const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
+
+  // Modal States
+  const [isCreateTestTypeModalOpen, setIsCreateTestTypeModalOpen] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isTestTypeListModalOpen, setIsTestTypeListModalOpen] = useState(false);
+  const [isEditTestTypeModalOpen, setIsEditTestTypeModalOpen] = useState(false);
+  const [selectedTestType, setSelectedTestType] = useState<TestType | null>(null);
+
+  // Test Types State
+  const [testTypes, setTestTypes] = useState<TestType[]>(DEFAULT_TEST_TYPES);
+
+  // Handlers
+  const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTestDetailsChange = (field: keyof TestDetails, value: string) => {
+    setTestDetails((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setTestDetails((prev) => ({ ...prev, testImage: file }));
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setTestImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePatientPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setPatientPhoto(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddTestType = (testType: string, expectedResults: string[]) => {
+    const newTestType: TestType = {
+      id: testTypes.length + 1,
+      name: testType,
+      results: expectedResults,
+    };
+    setTestTypes([...testTypes, newTestType]);
+  };
+
+  const handleEditTestType = (id: number, testType: string, expectedResults: string[]) => {
+    setTestTypes(testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t)));
+  };
+
+  const handleDeleteTestType = (id: number) => {
+    setTestTypes(testTypes.filter((t) => t.id !== id));
+  };
+
+  return (
+    <main className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
+        <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
+      </div>
+
+      {/* Action Buttons Row */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <button
+          onClick={() => setIsCreateTestTypeModalOpen(true)}
+          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          Create New Test Type
+        </button>
+        <button
+          onClick={() => setIsTestTypeListModalOpen(true)}
+          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          View All the Test Type
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-[#d9d9d9]" />
+
+      {/* Form Card */}
+      <div className="flex justify-center">
+        <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
+          {/* Progress */}
+          <FormProgress currentStep={currentStep} />
+
+          {/* Form Content */}
+          <div className="max-w-[517px] mx-auto">
+            {/* Step Title */}
+            <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
+              {currentStep === 1 && 'Patient Info'}
+              {currentStep === 2 && 'Test Details'}
+              {currentStep === 3 && 'Upload photo/attachment'}
+              {currentStep === 4 && 'Summary'}
+            </h2>
+
+            {/* Step 1: Patient Info */}
+            {currentStep === 1 && <PatientInfoForm formData={formData} onChange={handlePatientInfoChange} />}
+
+            {/* Step 2: Test Details */}
+            {currentStep === 2 && (
+              <TestDetailsForm testDetails={testDetails} onChange={handleTestDetailsChange} onImageChange={handleTestImageChange} />
+            )}
+
+            {/* Step 3: Photo Upload */}
+            {currentStep === 3 && (
+              <div className="flex flex-col gap-[26px]">
+                {/* Test Image Preview */}
+                {testImagePreview && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Image Preview</label>
+                    <img src={testImagePreview} alt="Test" className="max-w-[300px] rounded border border-[#d9d9d9]" />
+                  </div>
+                )}
+
+                {/* Patient Photo Upload */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePatientPhotoChange}
+                    className="w-full h-12 px-[22px] bg-white border border-[#d9d9d9] rounded text-[#212b36] font-poppins focus:outline-none"
+                  />
+                </div>
+
+                {/* Patient Photo Preview */}
+                {patientPhotoPreview && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo Preview</label>
+                    <img src={patientPhotoPreview} alt="Patient" className="max-w-[300px] rounded border border-[#d9d9d9]" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 4: Summary */}
+            {currentStep === 4 && (
+              <div className="flex flex-col gap-4 text-sm">
+                <div className="border border-[#d9d9d9] rounded p-4">
+                  <h3 className="font-semibold text-[#212b36] mb-2">Patient Information</h3>
+                  <p className="text-[#637381]">
+                    {formData.firstName} {formData.lastName} | {formData.age} | {formData.gender} | {formData.community}, {formData.lga}
+                  </p>
+                </div>
+                <div className="border border-[#d9d9d9] rounded p-4">
+                  <h3 className="font-semibold text-[#212b36] mb-2">Test Details</h3>
+                  <p className="text-[#637381]">{testDetails.testType} - {testDetails.testResult}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-4 justify-end mt-8">
+            {currentStep > 1 && (
+              <button
+                onClick={previousStep}
+                className="h-12 px-6 rounded-[10px] bg-white border border-[#d9d9d9] text-[#637381] font-medium font-inter hover:bg-gray-50 transition-colors"
+              >
+                Previous
+              </button>
+            )}
+            {currentStep < 4 ? (
+              <button
+                onClick={nextStep}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSubmitModalOpen(true)}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
+              >
+                Submit
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <CreateTestTypeModal
+        isOpen={isCreateTestTypeModalOpen}
+        onClose={() => setIsCreateTestTypeModalOpen(false)}
+        onAdd={handleAddTestType}
+      />
+      <TestTypeListModal isOpen={isTestTypeListModalOpen} onClose={() => setIsTestTypeListModalOpen(false)} testTypes={testTypes} />
+      <EditTestTypeModal
+        isOpen={isEditTestTypeModalOpen}
+        onClose={() => setIsEditTestTypeModalOpen(false)}
+        testType={selectedTestType}
+        onSave={handleEditTestType}
+      />
+      <SubmitTestModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => setIsSubmitModalOpen(false)}
+      />
+    </main>
+  );
+}

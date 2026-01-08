@@ -39,7 +39,7 @@ export default function OTPInput({ length = 6, onChange }: Props) {
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 sm:gap-3 justify-center">
       {values.map((v, i) => (
         <input
           ref={(el) => {
@@ -61,7 +61,7 @@ export default function OTPInput({ length = 6, onChange }: Props) {
             e.preventDefault();
             setVal(i, pasted);
           }}
-          className="w-14 h-12 text-center text-lg rounded-[4px] border border-[var(--gray-1)] bg-white text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+          className="w-12 sm:w-14 h-12 text-center text-lg rounded-[4px] border border-[var(--gray-1)] bg-white text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
           key={ids[i]}
         />
       ))}

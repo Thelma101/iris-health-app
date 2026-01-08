@@ -13,6 +13,19 @@
   --danger: #ef4444;
   --mid-black: #637381;
   --gray-1: #d9d9d9;
+  --light-blue-0001: #ECF4FF;
+  --black: #212B36;
+  --light-green: #DFFBF5;
+  --light-orange: #FFF9E6;
+  --light-red: #FFEDED;
+  --white: #FFFFFF;
+  --white-soft: #FCFDFD;
+  --white-overlay: #F2F4F436;
+  --orange: #F4A100;
+  --green: #00C897;
+  --red: #D64545;
+  --light-blue-100: #E8F1FF;
+  --community-dark: #1A5F7A;
 }
 
 
@@ -28,6 +41,12 @@
     --danger: #dc2626;
     --mid-black: #cbd5e1;
     --gray-1: #334155;
+    --light-blue-0001: #0f172a;
+    --black: #0b0f14;
+    --light-green: #133c35;
+    --white: #0a0a0a;
+    --white-soft: #0b0b0b;
+    --white-overlay: #0b0b0b66;
   }
 }
 
@@ -49,4 +68,14 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-poppins), system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+::selection {
+  color: var(--black);
+  background: var(--white-overlay);
 }

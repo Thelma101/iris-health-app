@@ -8,8 +8,8 @@ export default function Logo({ className }: Props) {
     <Image
       src="/logo.svg"
       alt="MedTrack"
-      width={224}
-      height={34}
+      width={24}
+      height={20}
       className={className}
       priority
     />

@@ -6,24 +6,30 @@ import Logo from "@/components/ui/Logo";
 import Eye from "@/components/icons/Eye";
 import EyeOff from "@/components/icons/EyeOff";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [role, setRole] = useState<"agent" | "admin">("agent");
   const [show, setShow] = useState(false);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push("/dashboard");
+  };
 
   return (
     <main className="min-h-screen relative">
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage:
-            "url(/images/login-bg.jpg), url(/images/login.JPG), url(/login.JPG)",
+          backgroundImage: "url(/login-bg.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       />
-      <div className="relative flex min-h-screen items-center justify-center p-4">
-        <div className="w-[527px] h-[677px] rounded-[10px] border border-[var(--border)] bg-[var(--background)] shadow-xl p-8">
+      <div className="relative flex min-h-screen items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-[527px] rounded-[10px] border border-[var(--border)] bg-[var(--background)] shadow-xl p-6 sm:p-8">
           <div className="flex justify-center">
             <Logo />
           </div>
@@ -56,7 +62,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <form className="mt-6 space-y-4">
+          <form className="mt-6 space-y-4" onSubmit={handleLogin}>
             <Input
               type="email"
               name="email"

@@ -30,8 +30,8 @@ export default function VerifyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-[434px] pt-[150px] pb-[454px]">
-      <div className="w-[572px] flex flex-col items-center gap-[120px]">
+    <main className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-[572px] flex flex-col items-center gap-12 sm:gap-16 md:gap-20">
         <div className="w-full flex flex-col items-center gap-2">
           <h1 className="h-[42px] text-center text-[28px] font-semibold text-[var(--mid-black)]">
             Verification

@@ -31,7 +31,34 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # vercel
 .vercel
@@ -39,3 +66,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# optional npm cache directory
+.npm
+
+# optional REPL history
+.node_repl_history
+
+# temporary files
+*.tmp
+*.temp
+
+# lock files (use specific package manager)
+# Uncomment if using lock files in version control
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
