@@ -1,6 +1,4 @@
 'use client';
-
-import React from 'react';
 import ModalBackdrop from './ModalBackdrop';
 
 const imgCancel01 = 'https://www.figma.com/api/mcp/asset/e97b51de-7fa7-4776-b957-44ca50739ef6';
@@ -26,7 +24,7 @@ export default function OfficerTestListModal({
   testType,
   patients,
   onPatientSelect,
-}: OfficerTestListModalProps) {
+}: Readonly<OfficerTestListModalProps>) {
   const defaultPatients: PatientTestRecord[] = [
     { index: 1, name: 'Kathryn Murphy' },
     { index: 2, name: 'Jerome Bell' },
@@ -62,16 +60,18 @@ export default function OfficerTestListModal({
               {/* Patient List */}
               <div className="space-y-[17px]">
                 {data.map((patient, idx) => (
-                  <div
+                  <button
+                    type="button"
                     key={patient.index}
                     onClick={() => onPatientSelect?.(patient.name)}
-                    className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] ${
+                    onKeyDown={(e) => e.key === 'Enter' && onPatientSelect?.(patient.name)}
+                    className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] text-left w-full bg-transparent border-none p-0 ${
                       idx === 2 ? 'bg-[#f4f5f7] -mx-[22px] px-[22px] py-2' : ''
                     }`}
                   >
                     <span className="text-[#637381] w-[16px] flex-shrink-0">{patient.index}</span>
                     <span className="text-[#637381] flex-1 hover:text-[#2c7be5]">{patient.name}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

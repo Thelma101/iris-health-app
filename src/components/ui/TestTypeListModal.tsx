@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 
 interface TestType {
@@ -16,7 +16,7 @@ interface TestTypeListModalProps {
   onDelete?: (id: number) => void;
 }
 
-export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, onDelete }: TestTypeListModalProps) {
+export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, onDelete }: Readonly<TestTypeListModalProps>) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [testTypeToDelete, setTestTypeToDelete] = useState<TestType | null>(null);
 
@@ -25,9 +25,12 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-0">
       {/* Backdrop */}
-      <div 
+      <button 
+        type="button"
         className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer" 
         onClick={onClose}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
+        aria-label="Close modal"
       />
       
       {/* Modal */}
@@ -63,8 +66,8 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
                 {/* Results List */}
                 <div className="flex flex-col gap-2.5">
                   <div className="flex flex-col gap-2.5">
-                    {testType.results.map((result, idx) => (
-                      <div key={idx} className="text-sm text-[#637381] font-poppins">
+                    {testType.results.map((result) => (
+                      <div key={result} className="text-sm text-[#637381] font-poppins">
                         {result}
                       </div>
                     ))}

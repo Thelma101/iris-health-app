@@ -1,6 +1,7 @@
 export function sanitizeInput(input: string): string {
   return input
-    .replace(/[<>]/g, '')
+    .replaceAll('<', '')
+    .replaceAll('>', '')
     .trim()
     .slice(0, 1000)
 }
@@ -61,18 +62,18 @@ export function validateFile(file: File): {
 }
 
 export function validatePhoneNumber(phone: string): boolean {
-  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/
+  const phoneRegex = /^\+?[\d\s-()]{10,}$/
   return phoneRegex.test(phone)
 }
 
 export function validateName(name: string): boolean {
-  const nameRegex = /^[a-zA-Z\s\-\']{2,50}$/
+  const nameRegex = /^[a-zA-Z\s-']{2,50}$/
   return nameRegex.test(name)
 }
 
 export function sanitizeFileName(fileName: string): string {
   return fileName
-    .replace(/[^a-zA-Z0-9.\-_]/g, '')
+    .replaceAll(/[^a-zA-Z0-9._-]/g, '')
     .toLowerCase()
     .slice(0, 100)
 }

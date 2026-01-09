@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-
 interface OfficerReportRow {
   id: string;
   name: string;
@@ -13,7 +11,7 @@ interface FieldOfficerReportProps {
   onViewTests?: (officerId: string, officerName: string) => void;
 }
 
-export default function FieldOfficerReport({ officers, onViewTests }: FieldOfficerReportProps) {
+export default function FieldOfficerReport({ officers, onViewTests }: Readonly<FieldOfficerReportProps>) {
   const defaultOfficers = [
     { id: '1', name: 'Jerome Bell', testCount: 67 },
     { id: '2', name: 'Wade Warren', testCount: 41 },
@@ -45,7 +43,7 @@ export default function FieldOfficerReport({ officers, onViewTests }: FieldOffic
             </tr>
           </thead>
           <tbody>
-            {data.map((officer, index) => (
+            {data.map((officer) => (
               <tr key={officer.id} className="border-b border-[#d9d9d9] hover:bg-[#f4f5f7] transition-colors">
                 <td className="px-4 sm:px-[15px] py-[10px]">
                   <p className="text-[14px] text-[#212b36] font-poppins font-regular">{officer.name}</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const imgCancel01 = 'https://www.figma.com/api/mcp/asset/732b6111-e5a5-477a-9038-f0f8bda0f47f';
 const imgArrowDown01 = 'https://www.figma.com/api/mcp/asset/40e2a5d3-a4f5-49f0-9761-e7e4d2467d9e';
@@ -22,7 +22,7 @@ interface EditUserModalProps {
   onUpdate?: (userData: User) => void;
 }
 
-export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditUserModalProps) {
+export default function EditUserModal({ isOpen, onClose, user, onUpdate }: Readonly<EditUserModalProps>) {
   const [formData, setFormData] = useState<User>({
     id: '',
     name: '',
@@ -56,7 +56,13 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditU
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
+      <button 
+        type="button"
+        className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" 
+        onClick={onClose}
+        onKeyDown={(e) => e.key === 'Escape' && onClose()}
+        aria-label="Close modal"
+      />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
@@ -76,8 +82,9 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditU
           <div className="p-12 space-y-10">
             {/* Name Field */}
             <div className="space-y-[6px]">
-              <label className="text-[14px] font-medium text-[#637381] font-poppins">Name</label>
+              <label htmlFor="name" className="text-[14px] font-medium text-[#637381] font-poppins">Name</label>
               <input
+                id="name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
@@ -87,8 +94,9 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditU
 
             {/* Email Field */}
             <div className="space-y-[6px]">
-              <label className="text-[14px] font-medium text-[#637381] font-poppins">Email</label>
+              <label htmlFor="email" className="text-[14px] font-medium text-[#637381] font-poppins">Email</label>
               <input
+                id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -98,9 +106,10 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditU
 
             {/* Role Dropdown */}
             <div className="space-y-[6px]">
-              <label className="text-[14px] font-medium text-[#637381] font-poppins">Role</label>
+              <label htmlFor="role" className="text-[14px] font-medium text-[#637381] font-poppins">Role</label>
               <div className="relative">
                 <select
+                  id="role"
                   value={formData.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
                   className="w-full h-[48px] px-[21px] border border-[#d9d9d9] rounded-[4px] text-[14px] font-poppins text-[#212b36] appearance-none bg-white focus:outline-none focus:border-[#2c7be5] transition-colors"
@@ -118,8 +127,9 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditU
 
             {/* Password Field */}
             <div className="space-y-[6px]">
-              <label className="text-[14px] font-medium text-[#637381] font-poppins">Password</label>
+              <label htmlFor="password" className="text-[14px] font-medium text-[#637381] font-poppins">Password</label>
               <input
+                id="password"
                 type="text"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}

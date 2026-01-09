@@ -1,6 +1,5 @@
 'use client';
-import React, { useState } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
 import AddCommunityModal from '@/components/ui/AddCommunityModal';
 import CommunityDetailsModal from '@/components/ui/CommunityDetailsModal';
 import EditCommunityModal from '@/components/ui/EditCommunityModal';

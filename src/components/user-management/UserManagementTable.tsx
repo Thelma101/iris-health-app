@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-
 interface User {
   id: string;
   name: string;
@@ -17,7 +15,7 @@ interface UserManagementTableProps {
   onDelete?: (userId: string) => void;
 }
 
-export default function UserManagementTable({ users, onEdit, onToggleStatus, onDelete }: UserManagementTableProps) {
+export default function UserManagementTable({ users, onEdit, onToggleStatus, onDelete }: Readonly<UserManagementTableProps>) {
   const defaultUsers: User[] = [
     { id: '1', name: 'Sam Mark', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
     { id: '2', name: 'Jane Doe', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Inactive' },
@@ -43,7 +41,7 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
             <span className="text-[14px] text-[#637381] font-poppins">{user.name}</span>
             <span className="text-[14px] text-[#637381] font-poppins">{user.role}</span>
             <span className="text-[14px] text-[#637381] font-poppins">{user.lastLogin}</span>
-            <span className={`text-[14px] font-poppins ${user.status === 'Active' ? 'text-[#637381]' : 'text-[#637381]'}`}>
+            <span className="text-[14px] font-poppins text-[#637381]">
               {user.status}
             </span>
             <div className="flex gap-3 justify-center">
