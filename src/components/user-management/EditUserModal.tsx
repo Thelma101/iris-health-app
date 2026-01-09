@@ -9,7 +9,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: 'Field Officer' | 'Admin';
   password: string;
   lastLogin: string;
   status: 'Active' | 'Inactive';
@@ -42,7 +42,10 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: EditU
   if (!isOpen || !user) return null;
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ 
+      ...prev, 
+      [field]: field === 'role' ? value as 'Field Officer' | 'Admin' : value 
+    }));
   };
 
   const handleUpdate = () => {

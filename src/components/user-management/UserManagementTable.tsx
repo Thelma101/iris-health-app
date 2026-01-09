@@ -11,27 +11,16 @@ interface User {
 }
 
 interface UserManagementTableProps {
-  users?: User[];
+  users: User[];
   onEdit?: (userId: string) => void;
   onToggleStatus?: (userId: string, currentStatus: 'Active' | 'Inactive') => void;
+  onDelete?: (userId: string) => void;
 }
 
-export default function UserManagementTable({ users, onEdit, onToggleStatus }: UserManagementTableProps) {
+export default function UserManagementTable({ users, onEdit, onToggleStatus, onDelete }: UserManagementTableProps) {
   const defaultUsers: User[] = [
-    { id: '1', name: 'Guy Hawkins', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '2', name: 'Arlene McCoy', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '3', name: 'Theresa Webb', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '4', name: 'Darlene Robertson', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '5', name: 'Ronald Richards', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Inactive' },
-    { id: '6', name: 'Albert Flores', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '7', name: 'Jerome Bell', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '8', name: 'Marvin McKinney', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '9', name: 'Darrell Steward', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '10', name: 'Devon Lane', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '11', name: 'Savannah Nguyen', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '12', name: 'Wade Warren', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '13', name: 'Bessie Cooper', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '14', name: 'Courtney Henry', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
+    { id: '1', name: 'Sam Mark', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
+    { id: '2', name: 'Jane Doe', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Inactive' },
   ];
 
   const data = users || defaultUsers;
@@ -71,6 +60,12 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus }: U
                 }`}
               >
                 {user.status === 'Active' ? 'Deactivate' : 'Activate'}
+              </button>
+              <button
+                onClick={() => onDelete?.(user.id)}
+                className="text-[14px] text-red-500 font-poppins hover:underline transition-colors cursor-pointer font-medium"
+              >
+                Delete
               </button>
             </div>
           </div>

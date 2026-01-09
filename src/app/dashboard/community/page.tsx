@@ -19,19 +19,6 @@ interface Community {
 const communityData: Community[] = [
   { id: 1, name: 'Ketu', lga: 'Kosofe', dateVisited: '23/09/2025', fieldOfficer: 'Opeyemi Braka', population: '12,000', totalTests: '1,200', visitationDates: ['23/09/2025', '15/08/2025'] },
   { id: 2, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 3, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 4, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 5, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 6, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 7, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 8, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 9, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 10, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 11, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 12, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 13, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 14, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 15, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
 ];
 
 export default function CommunityPage() {
@@ -233,6 +220,12 @@ export default function CommunityPage() {
                         className="text-[#00c897] font-semibold text-xs sm:text-sm hover:underline transition-all font-poppins"
                       >
                         Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCommunity(community.id)}
+                        className="text-red-500 font-semibold text-xs sm:text-sm hover:underline transition-all font-poppins"
+                      >
+                        Delete
                       </button>
                     </div>
                   </td>

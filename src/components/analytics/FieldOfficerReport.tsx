@@ -16,9 +16,7 @@ interface FieldOfficerReportProps {
 export default function FieldOfficerReport({ officers, onViewTests }: FieldOfficerReportProps) {
   const defaultOfficers = [
     { id: '1', name: 'Jerome Bell', testCount: 67 },
-    { id: '2', name: 'Wade Warren', testCount: 67 },
-    { id: '3', name: 'Annette Black', testCount: 67 },
-    { id: '4', name: 'Darlene Robertson', testCount: 67 },
+    { id: '2', name: 'Wade Warren', testCount: 41 },
   ];
 
   const data = officers || defaultOfficers;
@@ -41,7 +39,7 @@ export default function FieldOfficerReport({ officers, onViewTests }: FieldOffic
               <th className="px-4 sm:px-[15px] py-[10px] text-left">
                 <p className="text-[18px] font-semibold uppercase text-[#212b36] font-poppins">No. Of Tests</p>
               </th>
-              <th className="px-4 sm:px-[15px] py-[10px] text-left">
+              <th className="px-4 sm:px-[15px] py-[10px] text-right">
                 <p className="text-[18px] font-semibold uppercase text-[#212b36] font-poppins">Action</p>
               </th>
             </tr>
@@ -55,7 +53,7 @@ export default function FieldOfficerReport({ officers, onViewTests }: FieldOffic
                 <td className="px-4 sm:px-[15px] py-[10px]">
                   <p className="text-[14px] text-[#212b36] font-poppins font-regular">{officer.testCount}</p>
                 </td>
-                <td className="px-4 sm:px-[15px] py-[10px]">
+                <td className="px-4 sm:px-[15px] py-[10px] text-right">
                   <button
                     onClick={() => onViewTests?.(officer.id, officer.name)}
                     className="text-[14px] text-[#2c7be5] font-poppins font-regular hover:underline transition-colors cursor-pointer"

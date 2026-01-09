@@ -30,11 +30,6 @@ export default function OfficerTestListModal({
   const defaultPatients: PatientTestRecord[] = [
     { index: 1, name: 'Kathryn Murphy' },
     { index: 2, name: 'Jerome Bell' },
-    { index: 3, name: 'Brooklyn Simmons' },
-    { index: 4, name: 'Leslie Alexander' },
-    { index: 5, name: 'Ronald Richards' },
-    { index: 6, name: 'Wade Warren' },
-    { index: 7, name: 'Eleanor Pena' },
   ];
 
   const data = patients || defaultPatients;

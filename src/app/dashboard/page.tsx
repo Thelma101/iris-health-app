@@ -53,14 +53,8 @@ export default function DashboardPage() {
               </div>
               {(
                 [
-                  { c: 'Baiyeku Ikorodu', t: 679, p: 'HIV /AID', n: 'Hepatitis B' },
-                  { c: 'Awori Alimosho', t: 412, p: 'Malaria', n: 'HIV /AID' },
-                  { c: 'Ebute Ikorodu', t: 531, p: 'Hepatitis B', n: 'Tuberculosis' },
-                  { c: 'Agege', t: 298, p: 'Typhoid', n: 'Hepatitis C' },
-                  { c: 'Ikeja GRA', t: 754, p: 'HIV /AID', n: 'Malaria' },
-                  { c: 'Lekki Phase 1', t: 623, p: 'Hepatitis B', n: 'Typhoid' },
-                  { c: 'Badagry', t: 387, p: 'Malaria', n: 'Tuberculosis' },
-                  { c: 'Surulere', t: 468, p: 'HIV /AID', n: 'Hepatitis B' },
+                  { c: 'Baiyeku Ikorodu', t: 67, p: 'HIV /AID', n: 'Hepatitis B' },
+                  { c: 'Awori Alimosho', t: 41, p: 'Malaria', n: 'HIV /AID' },
                 ] as const
               ).map((r, idx) => (
                 <div
