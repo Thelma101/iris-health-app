@@ -17,8 +17,10 @@ interface UserManagementTableProps {
 
 export default function UserManagementTable({ users, onEdit, onToggleStatus, onDelete }: Readonly<UserManagementTableProps>) {
   const defaultUsers: User[] = [
-    { id: '1', name: 'Sam Mark', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '2', name: 'Jane Doe', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Inactive' },
+    { id: '1', name: 'Tee George', role: 'Admin', lastLogin: '09/01/2026 2:15 PM', status: 'Active' },
+    { id: '2', name: 'Green Lunar', role: 'Field Officer', lastLogin: '09/01/2026 11:45 AM', status: 'Active' },
+    { id: '3', name: 'Sam Mark', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
+    { id: '4', name: 'Jane Doe', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Inactive' },
   ];
 
   const data = users || defaultUsers;

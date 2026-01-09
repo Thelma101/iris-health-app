@@ -37,9 +37,11 @@ export const TEST_RESULT_OPTIONS = [
 ];
 
 export const DEFAULT_TEST_TYPES = [
-  { id: 1, name: 'Malaria Rapid Diagnostic Test (RDT)', results: ['Positive', 'Negative', 'Invalid'] },
-  { id: 2, name: 'HIV Screening (Determine/Unigold)', results: ['Positive', 'Negative', 'Inconclusive'] },
-  { id: 3, name: 'Hepatitis B Surface Antigen (HBsAg)', results: ['Reactive', 'Non-Reactive', 'Invalid'] },
-  { id: 4, name: 'Tuberculosis (TB) Sputum Smear / GeneXpert', results: ['Positive', 'Negative', 'Not Detected'] },
-  { id: 5, name: 'Cholera Rapid Test', results: ['Positive', 'Negative'] },
+  { id: 1, name: 'Tee George Health Panel', results: ['Complete', 'Pending', 'Review Required'] },
+  { id: 2, name: 'Green Lunar Wellness Check', results: ['Normal', 'Abnormal', 'Borderline'] },
+  { id: 3, name: 'Malaria Rapid Diagnostic Test (RDT)', results: ['Positive', 'Negative', 'Invalid'] },
+  { id: 4, name: 'HIV Screening (Determine/Unigold)', results: ['Positive', 'Negative', 'Inconclusive'] },
+  { id: 5, name: 'Hepatitis B Surface Antigen (HBsAg)', results: ['Reactive', 'Non-Reactive', 'Invalid'] },
+  { id: 6, name: 'Tuberculosis (TB) Sputum Smear / GeneXpert', results: ['Positive', 'Negative', 'Not Detected'] },
+  { id: 7, name: 'Cholera Rapid Test', results: ['Positive', 'Negative'] },
 ];

@@ -11,11 +11,11 @@ interface CasesPerCommunityProps {
 
 export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
   const defaultData = [
-    { label: '1', value: 78 },
-    { label: '2', value: 21 },
-    { label: '3', value: 18 },
+    { label: 'Tee George', value: 89 },
+    { label: 'Green Lunar', value: 73 },
+    { label: '3', value: 78 },
     { label: '4', value: 21 },
-    { label: '5', value: 50 },
+    { label: '5', value: 18 },
   ];
 
   const chartData = data || defaultData;

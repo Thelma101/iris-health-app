@@ -13,8 +13,10 @@ interface FieldOfficerReportProps {
 
 export default function FieldOfficerReport({ officers, onViewTests }: Readonly<FieldOfficerReportProps>) {
   const defaultOfficers = [
-    { id: '1', name: 'Jerome Bell', testCount: 67 },
-    { id: '2', name: 'Wade Warren', testCount: 41 },
+    { id: '1', name: 'Tee George', testCount: 89 },
+    { id: '2', name: 'Green Lunar', testCount: 73 },
+    { id: '3', name: 'Jerome Bell', testCount: 67 },
+    { id: '4', name: 'Wade Warren', testCount: 41 },
   ];
 
   const data = officers || defaultOfficers;

@@ -80,8 +80,10 @@ export default function MobileDashboard({ isOpen = false, onClose }: MobileDashb
             {/* Record Cards - Stacked for mobile */}
             <div className="space-y-4">
               {[
-                { c: 'Baiyeku Ikorodu', t: 679, p: 'HIV /AID', n: 'Hepatitis B' },
-                { c: 'Balogun Agege', t: 678, p: 'HIV /AID', n: 'Hepatitis B' },
+                { c: 'Tee George Community', t: 892, p: 'Malaria', n: 'Typhoid' },
+                { c: 'Green Lunar District', t: 756, p: 'HIV/AIDS', n: 'Hepatitis B' },
+                { c: 'Baiyeku Ikorodu', t: 679, p: 'HIV/AIDS', n: 'Hepatitis B' },
+                { c: 'Balogun Agege', t: 678, p: 'HIV/AIDS', n: 'Hepatitis B' },
               ].map((record, idx) => (
                 <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="bg-gray-100 px-4 py-2">

@@ -65,10 +65,10 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
           />
         )}
 
-        {/* Slide-in Sidebar from LEFT */}
+        {/* Slide-in Sidebar from RIGHT */}
         <aside 
-          className={`fixed left-0 top-0 h-screen w-72 sm:w-80 bg-white flex flex-col z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
-            isOpen ? 'translate-x-0' : '-translate-x-full'
+          className={`fixed right-0 top-0 h-screen w-72 sm:w-80 bg-white flex flex-col z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+            isOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
           {/* Close Button Header */}

@@ -16,8 +16,10 @@ interface Community {
 }
 
 const communityData: Community[] = [
-  { id: 1, name: 'Ketu', lga: 'Kosofe', dateVisited: '23/09/2025', fieldOfficer: 'Opeyemi Braka', population: '12,000', totalTests: '1,200', visitationDates: ['23/09/2025', '15/08/2025'] },
-  { id: 2, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
+  { id: 1, name: 'Tee George Community', lga: 'Kosofe', dateVisited: '09/01/2026', fieldOfficer: 'Tee George', population: '15,000', totalTests: '1,500', visitationDates: ['09/01/2026', '15/12/2025'] },
+  { id: 2, name: 'Green Lunar District', lga: 'Ikorodu', dateVisited: '08/01/2026', fieldOfficer: 'Green Lunar', population: '28,000', totalTests: '2,800', visitationDates: ['08/01/2026', '20/12/2025'] },
+  { id: 3, name: 'Ketu', lga: 'Kosofe', dateVisited: '23/09/2025', fieldOfficer: 'Opeyemi Braka', population: '12,000', totalTests: '1,200', visitationDates: ['23/09/2025', '15/08/2025'] },
+  { id: 4, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
 ];
 
 export default function CommunityPage() {
