@@ -77,24 +77,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
       {/* Notifications overlay */}
       {notifOpen && (
-        <div className="fixed inset-0 z-50">
+        <>
           {/* Backdrop */}
-          <button 
-            className="absolute inset-0 w-full h-full bg-black/20 backdrop-blur-[6px] cursor-default" 
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-[6px] z-40" 
             onClick={() => setNotifOpen(false)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape' || e.key === 'Enter') {
-                setNotifOpen(false);
-              }
-            }}
-            aria-label="Close notifications"
           />
           
           {/* Panel positioned on the right */}
-          <div className="absolute top-20 right-2 sm:right-4 md:right-6 z-10 w-[calc(100%-16px)] sm:w-full max-w-md">
+          <div className="fixed top-20 right-2 sm:right-4 md:right-6 z-50 w-[calc(100%-16px)] sm:w-full max-w-md">
             <NotificationsPanel onClose={() => setNotifOpen(false)} />
           </div>
-        </div>
+        </>
       )}
     </header>
   );
