@@ -30,6 +30,12 @@ export default function OfficerTestListModal({
     { index: 2, name: 'Green Lunar' },
     { index: 3, name: 'Kathryn Murphy' },
     { index: 4, name: 'Jerome Bell' },
+    { index: 5, name: 'Adebayo Smith' },
+    { index: 6, name: 'Chiamaka Johnson' },
+    { index: 7, name: 'Oluwaseun Adeyemi' },
+    { index: 8, name: 'Michael Tokunbo' },
+    { index: 9, name: 'Opeyemi Braka' },
+    { index: 10, name: 'Brooklyn Simmons' },
   ];
 
   const data = patients || defaultPatients;

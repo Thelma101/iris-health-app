@@ -84,6 +84,9 @@ export default function MobileDashboard({ isOpen = false, onClose }: MobileDashb
                 { c: 'Green Lunar District', t: 756, p: 'HIV/AIDS', n: 'Hepatitis B' },
                 { c: 'Baiyeku Ikorodu', t: 679, p: 'HIV/AIDS', n: 'Hepatitis B' },
                 { c: 'Balogun Agege', t: 678, p: 'HIV/AIDS', n: 'Hepatitis B' },
+                { c: 'Awori Alimosho', t: 541, p: 'Malaria', n: 'HIV/AIDS' },
+                { c: 'Ikorodu Central', t: 423, p: 'Typhoid', n: 'Malaria' },
+                { c: 'Epe Marina', t: 367, p: 'Hepatitis C', n: 'HIV/AIDS' },
               ].map((record, idx) => (
                 <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
                   <div className="bg-gray-100 px-4 py-2">

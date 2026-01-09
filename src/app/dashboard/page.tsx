@@ -53,8 +53,15 @@ export default function DashboardPage() {
               </div>
               {(
                 [
-                  { c: 'Baiyeku Ikorodu', t: 67, p: 'HIV /AID', n: 'Hepatitis B' },
-                  { c: 'Awori Alimosho', t: 41, p: 'Malaria', n: 'HIV /AID' },
+                  { c: 'Tee George Community', t: 892, p: 'Malaria', n: 'Typhoid' },
+                  { c: 'Green Lunar District', t: 756, p: 'HIV/AIDS', n: 'Hepatitis B' },
+                  { c: 'Baiyeku Ikorodu', t: 679, p: 'HIV/AIDS', n: 'Hepatitis B' },
+                  { c: 'Balogun Agege', t: 678, p: 'HIV/AIDS', n: 'Hepatitis B' },
+                  { c: 'Awori Alimosho', t: 541, p: 'Malaria', n: 'HIV/AIDS' },
+                  { c: 'Ikorodu Central', t: 423, p: 'Typhoid', n: 'Malaria' },
+                  { c: 'Epe Marina', t: 367, p: 'Hepatitis C', n: 'HIV/AIDS' },
+                  { c: 'Badagry Beach', t: 298, p: 'Tuberculosis', n: 'Malaria' },
+                  { c: 'Agege Stadium', t: 234, p: 'Blood Pressure', n: 'Blood Sugar' },
                 ] as const
               ).map((r, idx) => (
                 <div

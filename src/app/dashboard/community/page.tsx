@@ -20,6 +20,9 @@ const communityData: Community[] = [
   { id: 2, name: 'Green Lunar District', lga: 'Ikorodu', dateVisited: '08/01/2026', fieldOfficer: 'Green Lunar', population: '28,000', totalTests: '2,800', visitationDates: ['08/01/2026', '20/12/2025'] },
   { id: 3, name: 'Ketu', lga: 'Kosofe', dateVisited: '23/09/2025', fieldOfficer: 'Opeyemi Braka', population: '12,000', totalTests: '1,200', visitationDates: ['23/09/2025', '15/08/2025'] },
   { id: 4, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
+  { id: 5, name: 'Surulere Central', lga: 'Surulere', dateVisited: '07/01/2026', fieldOfficer: 'Adebayo Smith', population: '18,500', totalTests: '1,850', visitationDates: ['07/01/2026', '18/12/2025'] },
+  { id: 6, name: 'Victoria Island', lga: 'Eti-Osa', dateVisited: '06/01/2026', fieldOfficer: 'Chiamaka Johnson', population: '32,000', totalTests: '3,200', visitationDates: ['06/01/2026', '16/12/2025'] },
+  { id: 7, name: 'Yaba Tech Hub', lga: 'Yaba', dateVisited: '05/01/2026', fieldOfficer: 'Oluwaseun Adeyemi', population: '21,000', totalTests: '2,100', visitationDates: ['05/01/2026', '14/12/2025'] },
 ];
 
 export default function CommunityPage() {
