@@ -63,12 +63,6 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
                 >
                   {user.status === 'Active' ? 'Deactivate' : 'Activate'}
                 </button>
-                <button
-                  onClick={() => onDelete?.(user.id)}
-                  className="text-[14px] text-red-500 font-poppins hover:underline transition-colors cursor-pointer font-medium"
-                >
-                  Delete
-                </button>
               </div>
             </div>
           ))}
