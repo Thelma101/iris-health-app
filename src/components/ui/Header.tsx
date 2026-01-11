@@ -31,7 +31,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
     { label: 'Patients', href: '/dashboard/patients', iconName: 'patients' },
     { label: 'Analytics & Reports', href: '/dashboard/reports', iconName: 'analytics' },
     { label: 'Users', href: '/dashboard/users', iconName: 'users' },
-    { label: 'Profile', href: '/dashboard/profile', iconName: 'profile' },
   ];
   return (
     <header className="w-full h-16 bg-white rounded-sm border border-zinc-300 relative z-20">
@@ -54,7 +53,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </button>
 
           {/* Avatar */}
-          <Link href="/dashboard/profile" aria-label="Profile" className="cursor-pointer">
+          <div className="cursor-pointer">
             <Image 
               src="/icons/ellipse1.png" 
               alt="User" 
@@ -62,7 +61,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               height={44} 
               className="size-11 rounded-full hover:opacity-80 transition-opacity"
             />
-          </Link>
+          </div>
 
           {/* Mobile hamburger for sidebar */}
           <button 
