@@ -181,12 +181,37 @@ export default function SubmitTestPage() {
                 {/* Patient Photo Upload */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePatientPhotoChange}
-                    className="w-full h-12 px-[22px] bg-white border border-[#d9d9d9] rounded text-[#212b36] font-poppins focus:outline-none"
-                  />
+                  <div className="flex flex-col gap-3">
+                    {/* Snap Photo Button */}
+                    <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-[#2c7be5] text-white border border-[#2c7be5] rounded font-poppins font-medium hover:bg-blue-600 transition-colors cursor-pointer">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Snap Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handlePatientPhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {/* Upload File Button */}
+                    <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-white border border-[#d9d9d9] text-[#637381] rounded font-poppins font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Upload Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePatientPhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
 
                 {/* Patient Photo Preview */}

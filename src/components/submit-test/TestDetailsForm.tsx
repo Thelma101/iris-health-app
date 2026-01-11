@@ -18,7 +18,6 @@ interface TestDetailsFormProps {
 export default function TestDetailsForm({ testDetails, onChange, onImageChange }: TestDetailsFormProps) {
   const fields = [
     { key: 'testType' as const, label: 'Test Type', type: 'select', options: TEST_TYPE_OPTIONS },
-    { key: 'dateConducted' as const, label: 'Date Conducted', type: 'date' },
     { key: 'testResult' as const, label: 'Test Result', type: 'select', options: TEST_RESULT_OPTIONS },
     { key: 'officerNote' as const, label: 'Officer Note', type: 'textarea' },
   ];
@@ -68,6 +67,17 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
           )}
         </div>
       ))}
+
+      {/* Date Conducted Calendar Input */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
+        <input
+          type="date"
+          value={testDetails.dateConducted}
+          onChange={(e) => onChange('dateConducted', e.target.value)}
+          className="w-full h-12 px-[22px] bg-white border border-[#d9d9d9] rounded text-[#212b36] font-poppins focus:outline-none cursor-pointer"
+        />
+      </div>
 
       {/* Test Image Upload */}
       <div className="flex flex-col gap-1.5">
