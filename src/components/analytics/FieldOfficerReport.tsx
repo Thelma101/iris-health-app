@@ -13,10 +13,10 @@ interface FieldOfficerReportProps {
 
 export default function FieldOfficerReport({ officers, onViewTests }: Readonly<FieldOfficerReportProps>) {
   const defaultOfficers = [
-    { id: '1', name: 'Tee George', testCount: 89 },
-    { id: '2', name: 'Green Lunar', testCount: 73 },
-    { id: '3', name: 'Jerome Bell', testCount: 67 },
-    { id: '4', name: 'Wade Warren', testCount: 41 },
+    { id: '1', name: 'Jerome Bell', testCount: 67 },
+    { id: '2', name: 'Wade Warren', testCount: 67 },
+    { id: '3', name: 'Annette Black', testCount: 67 },
+    { id: '4', name: 'Darlene Robertson', testCount: 67 },
   ];
 
   const data = officers || defaultOfficers;
@@ -58,7 +58,7 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
                     onClick={() => onViewTests?.(officer.id, officer.name)}
                     className="text-[12px] sm:text-[14px] text-[#2c7be5] font-poppins font-regular hover:underline transition-colors cursor-pointer"
                   >
-                    View tests
+                    View Tests
                   </button>
                 </td>
               </tr>

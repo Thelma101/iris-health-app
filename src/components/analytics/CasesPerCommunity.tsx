@@ -11,61 +11,90 @@ interface CasesPerCommunityProps {
 
 export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
   const defaultData = [
-    { label: 'Tee George', value: 89 },
-    { label: 'Green Lunar', value: 73 },
-    { label: '3', value: 78 },
+    { label: '1', value: 78 },
+    { label: '2', value: 18 },
+    { label: '3', value: 21 },
     { label: '4', value: 21 },
-    { label: '5', value: 18 },
+    { label: '5', value: 60 },
   ];
 
   const chartData = data || defaultData;
   const maxValue = Math.max(...chartData.map((d) => d.value));
+  const minValue = Math.min(...chartData.map((d) => d.value));
+
+  // Calculate points for the line chart
+  const chartWidth = 100;
+  const chartHeight = 150;
+  const padding = 10;
+  const pointSpacing = (chartWidth - padding * 2) / (chartData.length - 1);
+
+  const getY = (value: number) => {
+    const range = maxValue - minValue || 1;
+    return chartHeight - padding - ((value - minValue) / range) * (chartHeight - padding * 2);
+  };
+
+  const points = chartData.map((item, index) => ({
+    x: padding + index * pointSpacing,
+    y: getY(item.value),
+    value: item.value,
+  }));
+
+  // Create line path
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  // Create area path (for gradient fill under line)
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${chartHeight - padding} L ${padding} ${chartHeight - padding} Z`;
 
   return (
-    <div
-      className="bg-white border border-[#d9d9d9] rounded-[8px] p-4 sm:p-7 flex flex-col min-h-[300px]"
-      style={{
-        backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
-      }}
-    >
+    <div className="bg-white border border-[#d9d9d9] rounded-[8px] p-4 sm:p-6 flex flex-col min-h-[280px]">
       {/* Title */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-4">
         <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins">Cases Per Community</h3>
-        <p className="text-[10px] text-[#b1b9c0] font-poppins mt-1">Number of test carried on every visit</p>
+        <p className="text-[10px] text-[#b1b9c0] font-poppins mt-1">Number Of Test Carried On Every Visit</p>
       </div>
 
-      {/* Chart Area */}
-      <div className="flex-1 flex items-end justify-center gap-4 sm:gap-12 relative mb-4 sm:mb-8 h-48 sm:h-64 overflow-x-auto">
-        {/* Y-axis line */}
-        <div className="absolute left-2 sm:left-8 top-0 bottom-0 w-[2px] bg-[#d9d9d9]" />
+      {/* Line Chart */}
+      <div className="flex-1 relative">
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 20}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#2c7be5" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#2c7be5" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
 
-        {/* Grid lines and bars */}
-        <div className="relative w-full flex items-end justify-around px-2 sm:px-8 min-w-[280px]">
-          {chartData.map((item, index) => (
-            <div key={index} className="flex flex-col items-center gap-1 sm:gap-2">
-              {/* Bar */}
-              <div className="flex flex-col items-center">
-                <div
-                  className="w-8 sm:w-12 bg-gradient-to-b from-[#e8f1ff] to-[#2c7be5] rounded-lg transition-all hover:opacity-80"
-                  style={{
-                    height: `${(item.value / maxValue) * 100}px`,
-                  }}
-                />
-                {/* Value label */}
-                <div className="mt-1 sm:mt-2 bg-[#2c7be5] text-white text-[8px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-poppins">
-                  {item.value}
-                </div>
-              </div>
-            </div>
+          {/* Y-axis line */}
+          <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#e5e7eb" strokeWidth="1" />
+
+          {/* X-axis line */}
+          <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#e5e7eb" strokeWidth="1" />
+
+          {/* Area fill */}
+          <path d={areaPath} fill="url(#areaGradient)" />
+
+          {/* Line */}
+          <path d={linePath} fill="none" stroke="#2c7be5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+
+          {/* Points and labels */}
+          {points.map((point, index) => (
+            <g key={index}>
+              {/* Point circle */}
+              <circle cx={point.x} cy={point.y} r="4" fill="#2c7be5" stroke="white" strokeWidth="2" />
+              
+              {/* Value label */}
+              <rect x={point.x - 12} y={point.y - 22} width="24" height="16" rx="8" fill="#2c7be5" />
+              <text x={point.x} y={point.y - 11} textAnchor="middle" fill="white" fontSize="8" fontWeight="600">
+                {point.value}
+              </text>
+
+              {/* X-axis label */}
+              <text x={point.x} y={chartHeight + 10} textAnchor="middle" fill="#637381" fontSize="10" fontWeight="500">
+                {chartData[index].label}
+              </text>
+            </g>
           ))}
-        </div>
-      </div>
-
-      {/* X-axis labels */}
-      <div className="flex justify-around px-2 sm:px-8 text-[8px] sm:text-[10px] font-semibold text-[#637381] font-poppins overflow-x-auto min-w-[280px]">
-        {chartData.map((item, index) => (
-          <span key={index} className="whitespace-nowrap">{item.label}</span>
-        ))}
+        </svg>
       </div>
     </div>
   );

@@ -32,46 +32,35 @@ export default function ReportPage() {
   };
 
   return (
-    <main className="space-y-0 w-full">
-      {/* Header with Filters Container */}
-      <div className="rounded-bl-[20px] rounded-tl-[20px] bg-white border border-[#d9d9d9] border-b-0 overflow-clip w-full mb-4 sm:mb-6">
-        {/* Header */}
-        <div
-          className="h-[50px] flex items-center px-4 sm:px-[26px] w-full"
-          style={{
-            backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
-          }}
-        >
-          <h1 className="text-[16px] sm:text-[20px] font-semibold uppercase text-[#212b36] font-poppins">Analytics & Reports</h1>
-        </div>
-
-        {/* Filters on Blurred Background */}
-        <div
-          className="px-4 sm:px-[26px] py-6 sm:py-[45px] backdrop-blur-sm"
-          style={{
-            backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
-          }}
-        >
-          <AnalyticsFilters
-            onCommunityChange={setSelectedCommunity}
-            onTestTypeChange={setSelectedTestType}
-            onDateChange={setSelectedDate}
-            onExport={handleExport}
-          />
-        </div>
+    <main className="space-y-6 w-full">
+      {/* Header */}
+      <div
+        className="h-[50px] flex items-center px-4 sm:px-6 rounded-lg"
+        style={{
+          backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
+        }}
+      >
+        <h1 className="text-[16px] sm:text-[18px] font-semibold uppercase text-[#212b36] font-poppins">Analytics & Reports</h1>
       </div>
 
-      {/* Content Area with padding */}
-      <div className="px-3 sm:px-6 space-y-4 sm:space-y-6">
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-[26px]">
-          <CasesPerCommunity />
-          <RatePerType />
-        </div>
-
-        {/* Field Officer Report */}
-        <FieldOfficerReport onViewTests={handleViewTests} />
+      {/* Filters */}
+      <div className="px-0">
+        <AnalyticsFilters
+          onCommunityChange={setSelectedCommunity}
+          onTestTypeChange={setSelectedTestType}
+          onDateChange={setSelectedDate}
+          onExport={handleExport}
+        />
       </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <CasesPerCommunity />
+        <RatePerType />
+      </div>
+
+      {/* Field Officer Report */}
+      <FieldOfficerReport onViewTests={handleViewTests} />
 
       {/* Officer Test List Modal */}
       {selectedOfficer && (
