@@ -242,30 +242,34 @@ export default function SubmitTestPage() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex gap-4 justify-end mt-8">
-            {currentStep > 1 && (
-              <button
-                onClick={previousStep}
-                className="h-12 px-6 rounded-[10px] bg-white border border-[#d9d9d9] text-[#637381] font-medium font-inter hover:bg-gray-50 transition-colors"
-              >
-                Previous
-              </button>
-            )}
-            {currentStep < 4 ? (
-              <button
-                onClick={nextStep}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsSubmitModalOpen(true)}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
-              >
-                Submit
-              </button>
-            )}
+          <div className="flex justify-between items-center mt-8">
+            <div>
+              {currentStep > 1 && (
+                <button
+                  onClick={previousStep}
+                  className="h-12 px-8 rounded-lg bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-poppins hover:bg-blue-50 transition-colors"
+                >
+                  Back
+                </button>
+              )}
+            </div>
+            <div>
+              {currentStep < 4 ? (
+                <button
+                  onClick={nextStep}
+                  className="h-12 px-8 rounded-lg bg-[#2c7be5] text-white font-medium font-poppins hover:bg-blue-600 transition-colors"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsSubmitModalOpen(true)}
+                  className="h-12 px-8 rounded-lg bg-[#2c7be5] text-white font-medium font-poppins hover:bg-blue-600 transition-colors"
+                >
+                  Submit
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

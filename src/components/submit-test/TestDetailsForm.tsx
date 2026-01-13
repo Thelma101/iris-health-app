@@ -16,78 +16,107 @@ interface TestDetailsFormProps {
 }
 
 export default function TestDetailsForm({ testDetails, onChange, onImageChange }: TestDetailsFormProps) {
-  const fields = [
-    { key: 'testType' as const, label: 'Test Type', type: 'select', options: TEST_TYPE_OPTIONS },
-    { key: 'testResult' as const, label: 'Test Result', type: 'select', options: TEST_RESULT_OPTIONS },
-    { key: 'officerNote' as const, label: 'Officer Note', type: 'textarea' },
-  ];
-
   return (
-    <div className="flex flex-col gap-[26px]">
-      {fields.map((field) => (
-        <div key={field.key} className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-[#637381] font-poppins">{field.label}</label>
-
-          {field.type === 'select' ? (
-            <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
-              <select
-                value={testDetails[field.key]}
-                onChange={(e) => onChange(field.key, e.target.value)}
-                className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
-              >
-                {field.options!.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              <svg
-                className="absolute top-1/2 right-[10px] -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          ) : field.type === 'textarea' ? (
-            <textarea
-              value={testDetails[field.key]}
-              onChange={(e) => onChange(field.key, e.target.value)}
-              className="w-full h-24 p-3 rounded bg-white border border-[#d9d9d9] text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none resize-none"
-              placeholder={`Enter ${field.label.toLowerCase()}`}
-            />
-          ) : (
-            <input
-              type={field.type}
-              value={testDetails[field.key]}
-              onChange={(e) => onChange(field.key, e.target.value)}
-              className="w-full h-12 px-[22px] bg-white border border-[#d9d9d9] rounded text-[#212b36] font-poppins focus:outline-none"
-            />
-          )}
+    <div className="flex flex-col gap-5">
+      {/* Test Type */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
+        <div className="relative">
+          <select
+            value={testDetails.testType}
+            onChange={(e) => onChange('testType', e.target.value)}
+            className="w-full h-12 px-4 bg-white border border-[#d9d9d9] rounded-lg text-[#212b36] font-poppins appearance-none focus:outline-none focus:border-[#2c7be5] cursor-pointer"
+          >
+            {TEST_TYPE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <svg
+            className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
-      ))}
+      </div>
 
-      {/* Date Conducted Calendar Input */}
+      {/* Date Conducted */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
-        <input
-          type="date"
-          value={testDetails.dateConducted}
-          onChange={(e) => onChange('dateConducted', e.target.value)}
-          className="w-full h-12 px-[22px] bg-white border border-[#d9d9d9] rounded text-[#212b36] font-poppins focus:outline-none cursor-pointer"
+        <div className="relative">
+          <input
+            type="date"
+            value={testDetails.dateConducted}
+            onChange={(e) => onChange('dateConducted', e.target.value)}
+            placeholder="21/07/2024"
+            className="w-full h-12 px-4 bg-white border border-[#d9d9d9] rounded-lg text-[#212b36] placeholder:text-[#919eab] font-poppins focus:outline-none focus:border-[#2c7be5] cursor-pointer"
+          />
+          <svg
+            className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Test Result */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
+        <div className="relative">
+          <select
+            value={testDetails.testResult}
+            onChange={(e) => onChange('testResult', e.target.value)}
+            className="w-full h-12 px-4 bg-white border border-[#d9d9d9] rounded-lg text-[#212b36] font-poppins appearance-none focus:outline-none focus:border-[#2c7be5] cursor-pointer"
+          >
+            {TEST_RESULT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <svg
+            className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Officer Note */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
+        <textarea
+          value={testDetails.officerNote}
+          onChange={(e) => onChange('officerNote', e.target.value)}
+          className="w-full h-[100px] p-4 rounded-lg bg-white border border-[#d9d9d9] text-[#212b36] placeholder:text-[#919eab] font-poppins focus:outline-none focus:border-[#2c7be5] resize-none"
+          placeholder="Enter notes here..."
         />
       </div>
 
-      {/* Test Image Upload */}
+      {/* Upload Test Image */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#637381] font-poppins">Test Image</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={onImageChange}
-          className="w-full h-12 px-[22px] bg-white border border-[#d9d9d9] rounded text-[#212b36] font-poppins focus:outline-none"
-        />
+        <label className="hidden text-sm font-medium text-[#637381] font-poppins">Test Image</label>
+        <label className="flex items-center justify-center h-[80px] border-2 border-dashed border-[#d9d9d9] rounded-lg bg-white hover:border-[#2c7be5] hover:bg-blue-50/30 transition-colors cursor-pointer">
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-sm font-medium text-[#637381] font-poppins">Upload Test Image</span>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={onImageChange}
+            className="hidden"
+          />
+        </label>
       </div>
     </div>
   );
