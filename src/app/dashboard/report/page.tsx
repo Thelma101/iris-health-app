@@ -32,35 +32,41 @@ export default function ReportPage() {
   };
 
   return (
-    <main className="space-y-6 w-full">
+    <main className="bg-white border border-[#d9d9d9] rounded-bl-[20px] rounded-tl-[20px] overflow-hidden w-full min-h-full">
       {/* Header */}
       <div
-        className="h-[50px] flex items-center px-4 sm:px-6 rounded-lg"
+        className="border-2 border-[#fff9e6] h-[50px] mx-4 lg:mx-[26px] my-[13px] overflow-hidden rounded-[8px] flex items-center px-[17px]"
         style={{
           backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
         }}
       >
-        <h1 className="text-[16px] sm:text-[18px] font-semibold uppercase text-[#212b36] font-poppins">Analytics & Reports</h1>
+        <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-semibold uppercase text-[#212b36] font-poppins">
+          Analytics & Reports
+        </p>
       </div>
 
-      {/* Filters */}
-      <div className="px-0">
+      {/* Content Container */}
+      <div className="flex flex-col gap-[20px] sm:gap-[30px] lg:gap-[45px] px-4 lg:px-[26px] pt-[23px] pb-[40px]">
+        {/* Filters */}
         <AnalyticsFilters
           onCommunityChange={setSelectedCommunity}
           onTestTypeChange={setSelectedTestType}
           onDateChange={setSelectedDate}
           onExport={handleExport}
         />
-      </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <CasesPerCommunity />
-        <RatePerType />
-      </div>
+        {/* Charts and Reports */}
+        <div className="flex flex-col gap-[20px] sm:gap-[26px] lg:gap-[30px] w-full">
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px] sm:gap-[26px] w-full">
+            <CasesPerCommunity />
+            <RatePerType />
+          </div>
 
-      {/* Field Officer Report */}
-      <FieldOfficerReport onViewTests={handleViewTests} />
+          {/* Field Officer Report */}
+          <FieldOfficerReport onViewTests={handleViewTests} />
+        </div>
+      </div>
 
       {/* Officer Test List Modal */}
       {selectedOfficer && (

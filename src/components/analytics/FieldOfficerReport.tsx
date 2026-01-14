@@ -22,43 +22,51 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
   const data = officers || defaultOfficers;
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-[8px] overflow-hidden">
-      {/* Header */}
-      <div className="px-3 sm:px-4 md:px-[15px] py-3 sm:py-4 bg-[#f4f5f7] border-b border-[#d9d9d9]">
-        <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins">Field Officer Report</h3>
+    <div className="bg-white border border-[#d9d9d9] rounded-[8px] overflow-hidden w-full">
+      {/* Title */}
+      <div className="px-[15px] sm:px-[18px] py-[11px] sm:py-[14px]">
+        <p className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">
+          Field officer report
+        </p>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[320px]">
+        <table className="w-full min-w-[400px]">
+          {/* Header Row */}
           <thead>
-            <tr className="border-b border-[#d9d9d9] bg-[#f4f5f7]">
-              <th className="px-3 sm:px-4 md:px-[15px] py-2 sm:py-[10px] text-left">
-                <p className="text-[14px] sm:text-[18px] font-semibold uppercase text-[#212b36] font-poppins">Name</p>
+            <tr className="bg-[#f4f5f7] border-b border-[#d9d9d9]">
+              <th className="px-[10px] sm:px-[15px] py-[10px] text-left">
+                <p className="text-[14px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">Name</p>
               </th>
-              <th className="px-3 sm:px-4 md:px-[15px] py-2 sm:py-[10px] text-left">
-                <p className="text-[14px] sm:text-[18px] font-semibold uppercase text-[#212b36] font-poppins">No. Of Tests</p>
+              <th className="px-[10px] sm:px-[15px] py-[10px] text-center">
+                <p className="text-[14px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">No. of Tests</p>
               </th>
-              <th className="px-3 sm:px-4 md:px-[15px] py-2 sm:py-[10px] text-right">
-                <p className="text-[14px] sm:text-[18px] font-semibold uppercase text-[#212b36] font-poppins">Action</p>
+              <th className="px-[10px] sm:px-[15px] py-[10px] text-right">
+                <p className="text-[14px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">Action</p>
               </th>
             </tr>
           </thead>
+
+          {/* Data Rows */}
           <tbody>
             {data.map((officer) => (
-              <tr key={officer.id} className="border-b border-[#d9d9d9] hover:bg-[#f4f5f7] transition-colors">
-                <td className="px-3 sm:px-4 md:px-[15px] py-2 sm:py-[10px]">
-                  <p className="text-[12px] sm:text-[14px] text-[#212b36] font-poppins font-regular">{officer.name}</p>
+              <tr
+                key={officer.id}
+                className="border-b border-[#d9d9d9] hover:bg-[#f9f9f9] transition-colors"
+              >
+                <td className="px-[10px] sm:px-[15px] py-[10px]">
+                  <p className="text-[12px] sm:text-[14px] text-[#212b36] font-poppins capitalize">{officer.name}</p>
                 </td>
-                <td className="px-3 sm:px-4 md:px-[15px] py-2 sm:py-[10px]">
-                  <p className="text-[12px] sm:text-[14px] text-[#212b36] font-poppins font-regular">{officer.testCount}</p>
+                <td className="px-[10px] sm:px-[15px] py-[10px] text-center">
+                  <p className="text-[12px] sm:text-[14px] text-[#212b36] font-poppins">{officer.testCount}</p>
                 </td>
-                <td className="px-3 sm:px-4 md:px-[15px] py-2 sm:py-[10px] text-right">
+                <td className="px-[10px] sm:px-[15px] py-[10px] text-right">
                   <button
                     onClick={() => onViewTests?.(officer.id, officer.name)}
-                    className="text-[12px] sm:text-[14px] text-[#2c7be5] font-poppins font-regular hover:underline transition-colors cursor-pointer"
+                    className="text-[12px] sm:text-[14px] text-[#2c7be5] hover:underline cursor-pointer capitalize font-poppins"
                   >
-                    View Tests
+                    View tests
                   </button>
                 </td>
               </tr>

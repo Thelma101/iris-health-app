@@ -9,7 +9,7 @@ interface RatePerTypeProps {
 
 export default function RatePerType({ positivePercentage = 40, negativePercentage = 60 }: RatePerTypeProps) {
   // SVG pie chart calculations
-  const size = 217;
+  const size = 180;
   const center = size / 2;
   const radius = size / 2;
 
@@ -33,15 +33,17 @@ export default function RatePerType({ positivePercentage = 40, negativePercentag
   const positiveAngle = (positivePercentage / 100) * 360;
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-lg p-4 sm:p-6 flex flex-col min-h-[280px]">
+    <div className="bg-white border border-[#d9d9d9] rounded-[8px] h-[280px] sm:h-[334px] overflow-hidden w-full p-4 sm:p-6">
       {/* Title */}
-      <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins mb-4">Rate Per Type</h3>
+      <p className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize mb-4 sm:mb-6">
+        Rate Per Type
+      </p>
 
-      {/* Chart Content */}
-      <div className="flex flex-col sm:flex-row items-center justify-center flex-1 gap-6 sm:gap-[45px]">
-        {/* Pie Chart SVG */}
-        <div className="flex items-center justify-center flex-shrink-0">
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {/* Chart and Legend Container */}
+      <div className="flex flex-col sm:flex-row gap-6 sm:gap-[45px] items-center justify-center">
+        {/* Pie Chart */}
+        <div className="w-[140px] h-[140px] sm:w-[180px] sm:h-[180px] flex-shrink-0">
+          <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
             {/* Negative (Blue) slice - starts at 0 */}
             <path
               d={getSlicePath(0, negativeAngle)}
@@ -57,19 +59,27 @@ export default function RatePerType({ positivePercentage = 40, negativePercentag
         </div>
 
         {/* Legend */}
-        <div className="w-[151px] flex flex-col gap-3">
+        <div className="flex flex-col gap-[12px]">
           {/* Positive */}
-          <div className="flex items-center gap-3.5">
-            <span className="text-[14px] font-semibold uppercase text-[#637381] font-poppins">Positive</span>
-            <div className="w-[31px] h-[13px] bg-[#00c897] rounded" />
-            <span className="text-[14px] font-semibold uppercase text-[#637381] font-poppins">{positivePercentage}%</span>
+          <div className="flex gap-[10px] sm:gap-[14px] items-center">
+            <p className="text-[12px] sm:text-[14px] font-semibold uppercase text-[#637381] font-poppins w-[60px] sm:w-[70px]">
+              Positive
+            </p>
+            <div className="bg-[#00c897] h-[13px] rounded-[4px] w-[25px] sm:w-[31px]" />
+            <p className="text-[12px] sm:text-[14px] font-semibold uppercase text-[#637381] font-poppins">
+              {positivePercentage}%
+            </p>
           </div>
 
           {/* Negative */}
-          <div className="flex items-center gap-3.5">
-            <span className="text-[14px] font-semibold uppercase text-[#637381] font-poppins shrink-0">Negative</span>
-            <div className="w-[31px] h-[13px] bg-[#2c7be5] rounded shrink-0" />
-            <span className="text-[14px] font-semibold uppercase text-[#637381] font-poppins shrink-0">{negativePercentage}%</span>
+          <div className="flex gap-[10px] sm:gap-[14px] items-center">
+            <p className="text-[12px] sm:text-[14px] font-semibold uppercase text-[#637381] font-poppins w-[60px] sm:w-[70px]">
+              Negative
+            </p>
+            <div className="bg-[#2c7be5] h-[13px] rounded-[4px] w-[25px] sm:w-[31px]" />
+            <p className="text-[12px] sm:text-[14px] font-semibold uppercase text-[#637381] font-poppins">
+              {negativePercentage}%
+            </p>
           </div>
         </div>
       </div>
