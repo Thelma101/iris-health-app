@@ -1,44 +1,26 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Node dependencies
+node_modules/
 
-# testing
-/coverage
+# Next.js build output
+.next/
+out/
+build/
+dist/
 
-# next.js
-/.next/
-/out/
+# Test coverage
+coverage/
 
-# production
-/build
-
-# misc
-.DS_Store
+# Environment variables and secrets
+.env*
+secrets.json
+config.json
+*.key
 *.pem
+*.p12
+*.pfx
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env
-.env.local
-.env.*.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE
+# IDE/editor/project files
 .vscode/
 .idea/
 *.swp
@@ -51,7 +33,7 @@ yarn-error.log*
 .settings/
 *.sublime-workspace
 
-# OS
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -60,43 +42,26 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
-# vercel
-.vercel
+# Vercel deployment
+.vercel/
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# optional npm cache directory
-.npm
+# Debug/log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
 
-# optional REPL history
+# REPL history
 .node_repl_history
 
-# temporary files
+# Temporary files
 *.tmp
 *.temp
-
-# lock files (use specific package manager)
-# Uncomment if using lock files in version control
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
-# Security - never commit these
-*.key
-*.pem
-*.p12
-*.pfx
-secrets.json
-config.json
-.env.production
-.env.staging
-
-# Build artifacts
-dist/
-build/
-*.log
 
 # Database
 *.db

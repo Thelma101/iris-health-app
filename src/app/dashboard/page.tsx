@@ -1,6 +1,42 @@
+
+import { useEffect, useState } from 'react';
 import StatCard from '@/components/ui/StatCard';
+import api from '@/lib/api';
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    communities: 0,
+    fieldAgents: 0,
+    tests: 0,
+    communitiesCovered: 0,
+    fieldAgentsAvailable: 0,
+    lastTestDate: '',
+  });
+  const [recentRecords, setRecentRecords] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch stats and recent records from API
+        const [statsRes, recentRes] = await Promise.all([
+          api.getDashboardStats(),
+          api.getRecentCommunityRecords(),
+        ]);
+        setStats(statsRes.data);
+        setRecentRecords(recentRes.data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDashboardData();
+  }, []);
+
   return (
     <main className="space-y-4 sm:space-y-6">
       <section className="bg-white rounded-tl-[20px] rounded-bl-[20px] border border-zinc-300">
@@ -9,73 +45,66 @@ export default function DashboardPage() {
             <span className="text-base sm:text-lg font-semibold text-[#212b36] uppercase">Dashboard</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-            <StatCard
-              title="Communities"
-              value={56}
-              subtitle="30 communities  Covered "
-              progress={0.45}
-              progressColour="bg-[#00c897]"
-              cardBg="bg-[#dffbf5]"
-              iconSrc="/icons/communities-icon.png"
-            />
-
-            <StatCard
-              title="Field Agents"
-              value={80}
-              subtitle="30 Field agents available "
-              progress={0.45}
-              progressColour="bg-[#f4a100]"
-              cardBg="bg-[#fff9e6]"
-              iconSrc="/icons/field-agents-icon.png"
-            />
-
-            <StatCard
-              title="Tests"
-              value="10,000"
-              subtitle="10,000 tests carried out as at 23/06/25 6:00PM"
-              progress={0.45}
-              progressColour="bg-[#d64545]"
-              cardBg="bg-[#fbeaea]"
-              iconSrc="/icons/tests-icon.png"
-              fullWidth
-            />
-          </div>
-
-          <section className="space-y-2.5">
-            <div className="text-gray-500 text-sm font-normal font-poppins">Recent record</div>
-            <div className="rounded-lg border border-zinc-300 overflow-x-auto">
-              <div className="min-w-[320px] sm:min-w-[720px] px-2 sm:px-1 py-1.5 bg-gray-100 flex items-center gap-2 sm:gap-6 md:gap-16 lg:gap-28">
-                <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Communities</div>
-                <div className="w-20 sm:w-36 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Total Test</div>
-                <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Top Tests +ve</div>
-                <div className="hidden sm:block w-48 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Top Tests -ve</div>
+          {error && <div className="text-red-500">{error}</div>}
+          {loading ? (
+            <div className="text-gray-500">Loading...</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+                <StatCard
+                  title="Communities"
+                  value={stats.communities}
+                  subtitle={`${stats.communitiesCovered} communities Covered`}
+                  progress={stats.communitiesCovered / (stats.communities || 1)}
+                  progressColour="bg-[#00c897]"
+                  cardBg="bg-[#dffbf5]"
+                  iconSrc="/icons/communities-icon.png"
+                />
+                <StatCard
+                  title="Field Agents"
+                  value={stats.fieldAgents}
+                  subtitle={`${stats.fieldAgentsAvailable} Field agents available`}
+                  progress={stats.fieldAgentsAvailable / (stats.fieldAgents || 1)}
+                  progressColour="bg-[#f4a100]"
+                  cardBg="bg-[#fff9e6]"
+                  iconSrc="/icons/field-agents-icon.png"
+                />
+                <StatCard
+                  title="Tests"
+                  value={stats.tests.toLocaleString()}
+                  subtitle={`${stats.tests.toLocaleString()} tests carried out as at ${stats.lastTestDate}`}
+                  progress={1}
+                  progressColour="bg-[#d64545]"
+                  cardBg="bg-[#fbeaea]"
+                  iconSrc="/icons/tests-icon.png"
+                  fullWidth
+                />
               </div>
-              {(
-                [
-                  { c: 'Tee George Community', t: 892, p: 'Malaria', n: 'Typhoid' },
-                  { c: 'Green Lunar District', t: 756, p: 'HIV/AIDS', n: 'Hepatitis B' },
-                  { c: 'Baiyeku Ikorodu', t: 679, p: 'HIV/AIDS', n: 'Hepatitis B' },
-                  { c: 'Balogun Agege', t: 678, p: 'HIV/AIDS', n: 'Hepatitis B' },
-                  { c: 'Awori Alimosho', t: 541, p: 'Malaria', n: 'HIV/AIDS' },
-                  { c: 'Ikorodu Central', t: 423, p: 'Typhoid', n: 'Malaria' },
-                  { c: 'Epe Marina', t: 367, p: 'Hepatitis C', n: 'HIV/AIDS' },
-                  { c: 'Badagry Beach', t: 298, p: 'Tuberculosis', n: 'Malaria' },
-                  { c: 'Agege Stadium', t: 234, p: 'Blood Pressure', n: 'Blood Sugar' },
-                ] as const
-              ).map((r, idx) => (
-                <div
-                  key={`${r.c}-${idx}`}
-                  className={`min-w-[320px] sm:min-w-[720px] px-2 sm:px-1 py-1.5 flex items-center gap-2 sm:gap-6 md:gap-16 lg:gap-28 border-b border-gray-200 ${idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'}`}
-                >
-                  <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-normal font-poppins truncate">{r.c}</div>
-                  <div className="w-20 sm:w-36 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.t}</div>
-                  <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.p}</div>
-                  <div className="hidden sm:block w-48 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.n}</div>
+
+              <section className="space-y-2.5">
+                <div className="text-gray-500 text-sm font-normal font-poppins">Recent record</div>
+                <div className="rounded-lg border border-zinc-300 overflow-x-auto">
+                  <div className="min-w-[320px] sm:min-w-[720px] px-2 sm:px-1 py-1.5 bg-gray-100 flex items-center gap-2 sm:gap-6 md:gap-16 lg:gap-28">
+                    <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Communities</div>
+                    <div className="w-20 sm:w-36 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Total Test</div>
+                    <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Top Tests +ve</div>
+                    <div className="hidden sm:block w-48 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Top Tests -ve</div>
+                  </div>
+                  {recentRecords.map((r: any, idx: number) => (
+                    <div
+                      key={`${r.community}-${idx}`}
+                      className={`min-w-[320px] sm:min-w-[720px] px-2 sm:px-1 py-1.5 flex items-center gap-2 sm:gap-6 md:gap-16 lg:gap-28 border-b border-gray-200 ${idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'}`}
+                    >
+                      <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-normal font-poppins truncate">{r.community}</div>
+                      <div className="w-20 sm:w-36 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.totalTests}</div>
+                      <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.topPositiveTest}</div>
+                      <div className="hidden sm:block w-48 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.topNegativeTest}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
+            </>
+          )}
         </div>
       </section>
     </main>

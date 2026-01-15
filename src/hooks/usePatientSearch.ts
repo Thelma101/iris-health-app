@@ -1,21 +1,44 @@
-import { useState } from 'react';
-import { Patient, PATIENTS_DATA } from '@/lib/constants/patients-data';
+import { useState, useEffect } from 'react';
+import api from '@/lib/api/index';
+import { Patient } from '@/lib/constants/patients-data';
 
 export function usePatientSearch() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPatients, setFilteredPatients] = useState<Patient[]>(PATIENTS_DATA);
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setLoading(true);
+      setError(null);
+      const res = await api.getPatients();
+      if (res.success && Array.isArray(res.data)) {
+        setFilteredPatients(res.data);
+      } else {
+        setError(res.error || 'Failed to fetch patients');
+      }
+      setLoading(false);
+    };
+    fetchPatients();
+  }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      const filtered = PATIENTS_DATA.filter(
-        (patient) =>
-          patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          patient.community.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          patient.lga.toLowerCase().includes(searchQuery.toLowerCase())
+      setFilteredPatients((prev) =>
+        prev.filter(
+          (patient) =>
+            patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            patient.community.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            patient.lga.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       );
-      setFilteredPatients(filtered);
     } else {
-      setFilteredPatients(PATIENTS_DATA);
+      api.getPatients().then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setFilteredPatients(res.data);
+        }
+      });
     }
   };
 
@@ -27,7 +50,6 @@ export function usePatientSearch() {
         [patient.name, patient.age, patient.gender, patient.community, patient.lga, patient.testsTaken, patient.lastTestResult].join(',')
       ),
     ].join('\n');
-
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -43,5 +65,7 @@ export function usePatientSearch() {
     filteredPatients,
     handleSearch,
     handleExport,
+    loading,
+    error,
   };
 }

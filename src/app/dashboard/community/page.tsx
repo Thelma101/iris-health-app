@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import api from '@/lib/api/index';
+import { useEffect, useState } from 'react';
 import AddCommunityModal from '@/components/ui/AddCommunityModal';
 import CommunityDetailsModal from '@/components/ui/CommunityDetailsModal';
 import EditCommunityModal from '@/components/ui/EditCommunityModal';
@@ -15,65 +16,101 @@ interface Community {
   visitationDates?: string[];
 }
 
-const communityData: Community[] = [
-  { id: 1, name: 'Tee George Community', lga: 'Kosofe', dateVisited: '09/01/2026', fieldOfficer: 'Tee George', population: '15,000', totalTests: '1,500', visitationDates: ['09/01/2026', '15/12/2025'] },
-  { id: 2, name: 'Green Lunar District', lga: 'Ikorodu', dateVisited: '08/01/2026', fieldOfficer: 'Green Lunar', population: '28,000', totalTests: '2,800', visitationDates: ['08/01/2026', '20/12/2025'] },
-  { id: 3, name: 'Ketu', lga: 'Kosofe', dateVisited: '23/09/2025', fieldOfficer: 'Opeyemi Braka', population: '12,000', totalTests: '1,200', visitationDates: ['23/09/2025', '15/08/2025'] },
-  { id: 4, name: 'Igbogbo', lga: 'Ikorodu', dateVisited: '01/08/2024', fieldOfficer: 'Michael Tokunbo', population: '23,000', totalTests: '2,000', visitationDates: ['20/02/2025', '09/12/2024'] },
-  { id: 5, name: 'Surulere Central', lga: 'Surulere', dateVisited: '07/01/2026', fieldOfficer: 'Adebayo Smith', population: '18,500', totalTests: '1,850', visitationDates: ['07/01/2026', '18/12/2025'] },
-  { id: 6, name: 'Victoria Island', lga: 'Eti-Osa', dateVisited: '06/01/2026', fieldOfficer: 'Chiamaka Johnson', population: '32,000', totalTests: '3,200', visitationDates: ['06/01/2026', '16/12/2025'] },
-  { id: 7, name: 'Yaba Tech Hub', lga: 'Yaba', dateVisited: '05/01/2026', fieldOfficer: 'Oluwaseun Adeyemi', population: '21,000', totalTests: '2,100', visitationDates: ['05/01/2026', '14/12/2025'] },
-];
-
 export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [communities, setCommunities] = useState<Community[]>(communityData);
-  const [filteredData, setFilteredData] = useState(communityData);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [filteredData, setFilteredData] = useState<Community[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch communities from API
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    api.getCommunities?.().then((res) => {
+      if (res?.success && Array.isArray(res.data)) {
+        setCommunities(res.data);
+        setFilteredData(res.data);
+      } else {
+        setError(res?.error || 'Failed to fetch communities');
+      }
+      setLoading(false);
+    });
+  }, []);
 
   const handleSearch = () => {
     const filtered = communities.filter(
       (community) =>
         community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         community.lga.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        community.fieldOfficer.toLowerCase().includes(searchTerm.toLowerCase())
+        (community.fieldOfficer || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredData(filtered);
   };
 
-  const handleAddCommunity = (data: { community: string; lga: string; fieldOfficers: string[] }) => {
-    const newCommunity: Omit<Community, 'id'> = {
-      name: data.community,
-      lga: data.lga,
-      dateVisited: new Date().toLocaleDateString('en-GB'),
-      fieldOfficer: data.fieldOfficers[0] || '',
-      visitationDates: [new Date().toLocaleDateString('en-GB')],
-    };
-    const community: Community = {
-      ...newCommunity,
-      id: communities.length + 1
-    };
-    const updated = [...communities, community];
-    setCommunities(updated);
-    setFilteredData(updated);
+  const handleAddCommunity = async (data: { community: string; lga: string; fieldOfficers: string[] }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const payload = {
+        name: data.community,
+        lga: data.lga,
+        fieldOfficers: data.fieldOfficers,
+      };
+      const res = await api.createCommunity?.(payload);
+      if (res?.success && res.data) {
+        const newCommunity = res.data as Community;
+        setCommunities((prev) => [...prev, newCommunity]);
+        setFilteredData((prev) => [...prev, newCommunity]);
+      } else {
+        setError(res?.error || 'Failed to add community');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to add community');
+    }
+    setLoading(false);
   };
 
-  const handleEditCommunity = (id: number, updatedData: Partial<Community>) => {
-    const updated = communities.map(c => c.id === id ? { ...c, ...updatedData } : c);
-    setCommunities(updated);
-    setFilteredData(updated);
+  const handleEditCommunity = async (id: number, updatedData: Partial<Community>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.updateCommunity?.(id, updatedData);
+      if (res?.success && res.data) {
+        const updatedCommunity = res.data as Community;
+        setCommunities((prev) => prev.map((c) => c.id === id ? updatedCommunity : c));
+        setFilteredData((prev) => prev.map((c) => c.id === id ? updatedCommunity : c));
+      } else {
+        setError(res?.error || 'Failed to update community');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to update community');
+    }
+    setLoading(false);
   };
 
-  const handleDeleteCommunity = (id: number) => {
-    const updated = communities.filter(c => c.id !== id);
-    setCommunities(updated);
-    setFilteredData(updated);
+  const handleDeleteCommunity = async (id: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.deleteCommunity?.(id);
+      if (res?.success) {
+        setCommunities((prev) => prev.filter((c) => c.id !== id));
+        setFilteredData((prev) => prev.filter((c) => c.id !== id));
+      } else {
+        setError(res?.error || 'Failed to delete community');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete community');
+    }
+    setLoading(false);
   };
 
-  return (
+    return (
     <main className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">

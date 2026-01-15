@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useState } from 'react';
+import api from '@/lib/api/index';
 
 interface CasesPerCommunityProps {
   data?: Array<{
@@ -17,12 +18,26 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
     { label: '4', value: 21 },
     { label: '5', value: 50 },
   ];
+  const [apiData, setApiData] = useState<Array<{ label: string; value: number }> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const chartData = data || defaultData;
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    api.getCasesPerCommunity?.().then((res) => {
+      if (res?.success && Array.isArray(res.data)) {
+        setApiData(res.data);
+      } else {
+        setError(res?.error || 'Failed to fetch data');
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  const chartData = apiData || data || defaultData;
   const maxValue = Math.max(...chartData.map((d) => d.value));
   const minValue = Math.min(...chartData.map((d) => d.value));
-
-  // Chart dimensions - responsive
   const getY = (value: number, height: number) => {
     const range = maxValue - minValue || 1;
     const padding = 20;
@@ -36,7 +51,6 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
         backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
       }}
     >
-      {/* Title */}
       <div className="flex flex-col gap-[5px] mb-4 sm:mb-6">
         <p className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">
           Cases Per Community
@@ -45,18 +59,14 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
           Number of test carried on every visit
         </p>
       </div>
-
-      {/* Chart Container */}
       <div className="w-full h-[180px] sm:h-[220px]">
         <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-          {/* Gradient definition */}
           <defs>
             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#E8F1FF" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#E8F1FF" stopOpacity="0.05" />
             </linearGradient>
           </defs>
-
           {/* Y-axis */}
           <line x1="40" y1="20" x2="40" y2="160" stroke="#d9d9d9" strokeWidth="2" />
           

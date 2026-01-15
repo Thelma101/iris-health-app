@@ -44,7 +44,9 @@ export default function PatientDetailsModal({
       <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
 
       {/* Modal Drawer */}
-      <div className="fixed right-0 top-0 h-screen w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
+      <div className="fixed right-0 top-0 h-screen w-full max-w-[466px] sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl transition-all duration-200"
+        style={{ width: '100vw', maxWidth: 466 }}
+      >
         {/* Header */}
         <div className="border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
           <h2 className="text-xl font-medium text-[#212b36] font-poppins">{patient.name}</h2>
@@ -73,7 +75,7 @@ export default function PatientDetailsModal({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-[10px] py-6">
-          <div className="flex flex-col gap-6 w-[446px]">
+          <div className="flex flex-col gap-6 w-full max-w-[446px] mx-auto">
             {/* Patient Info Section */}
             <div className="flex flex-col gap-3">
               <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">

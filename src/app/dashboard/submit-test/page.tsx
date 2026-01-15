@@ -9,7 +9,8 @@ import PatientInfoForm from '@/components/submit-test/PatientInfoForm';
 import TestDetailsForm from '@/components/submit-test/TestDetailsForm';
 import { useFormStep } from '@/hooks/useFormStep';
 import { LGA_OPTIONS, COMMUNITY_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/location-options';
-import { TEST_TYPE_OPTIONS, DEFAULT_TEST_TYPES } from '@/lib/constants/test-options';
+import { DEFAULT_TEST_TYPES } from '@/lib/constants/test-options';
+import api from '@/lib/api/index';
 
 interface PatientInfo {
   lga: string;
@@ -71,6 +72,11 @@ export default function SubmitTestPage() {
   // Test Types State
   const [testTypes, setTestTypes] = useState<TestType[]>(DEFAULT_TEST_TYPES);
 
+  // Submission State
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
   // Handlers
   const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -117,14 +123,49 @@ export default function SubmitTestPage() {
     setTestTypes(testTypes.filter((t) => t.id !== id));
   };
 
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      // Prepare payload for API
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phoneNumber,
+        age: formData.age,
+        gender: formData.gender,
+        community: formData.community,
+        lga: formData.lga,
+        testDetails: [
+          {
+            testType: testDetails.testType,
+            dateConducted: testDetails.dateConducted,
+            testResult: testDetails.testResult,
+            officerNote: testDetails.officerNote,
+            // testImage: testDetails.testImage, // handle file upload separately if needed
+          },
+        ],
+      };
+      const res = await api.createPatient(payload);
+      if (res.success) {
+        setSubmitSuccess(true);
+        setIsSubmitModalOpen(false);
+        // Optionally reset form or show success UI
+      } else {
+        setSubmitError(res.error || 'Submission failed');
+      }
+    } catch (err: any) {
+      setSubmitError(err.message || 'Submission failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="space-y-4 sm:space-y-6">
-      {/* Header */}
       <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
         <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
       </div>
-
-      {/* Action Buttons Row */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <button
           onClick={() => setIsCreateTestTypeModalOpen(true)}
@@ -139,50 +180,32 @@ export default function SubmitTestPage() {
           View All the Test Type
         </button>
       </div>
-
-      {/* Divider */}
       <div className="h-px bg-[#d9d9d9]" />
-
-      {/* Form Card */}
       <div className="flex justify-center">
         <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
-          {/* Progress */}
           <FormProgress currentStep={currentStep} />
-
-          {/* Form Content */}
           <div className="max-w-[517px] mx-auto">
-            {/* Step Title */}
             <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
               {currentStep === 1 && 'Patient Info'}
               {currentStep === 2 && 'Test Details'}
               {currentStep === 3 && 'Upload photo/attachment'}
               {currentStep === 4 && 'Summary'}
             </h2>
-
-            {/* Step 1: Patient Info */}
             {currentStep === 1 && <PatientInfoForm formData={formData} onChange={handlePatientInfoChange} />}
-
-            {/* Step 2: Test Details */}
             {currentStep === 2 && (
               <TestDetailsForm testDetails={testDetails} onChange={handleTestDetailsChange} onImageChange={handleTestImageChange} />
             )}
-
-            {/* Step 3: Photo Upload */}
             {currentStep === 3 && (
               <div className="flex flex-col gap-[26px]">
-                {/* Test Image Preview */}
                 {testImagePreview && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Test Image Preview</label>
                     <img src={testImagePreview} alt="Test" className="max-w-[300px] rounded border border-[#d9d9d9]" />
                   </div>
                 )}
-
-                {/* Patient Photo Upload */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo</label>
                   <div className="flex flex-col gap-3">
-                    {/* Snap Photo Button */}
                     <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-[#2c7be5] text-white border border-[#2c7be5] rounded font-poppins font-medium hover:bg-blue-600 transition-colors cursor-pointer">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -197,8 +220,6 @@ export default function SubmitTestPage() {
                         className="hidden"
                       />
                     </label>
-
-                    {/* Upload File Button */}
                     <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-white border border-[#d9d9d9] text-[#637381] rounded font-poppins font-medium hover:bg-gray-50 transition-colors cursor-pointer">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -213,8 +234,6 @@ export default function SubmitTestPage() {
                     </label>
                   </div>
                 </div>
-
-                {/* Patient Photo Preview */}
                 {patientPhotoPreview && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo Preview</label>
@@ -223,8 +242,6 @@ export default function SubmitTestPage() {
                 )}
               </div>
             )}
-
-            {/* Step 4: Summary */}
             {currentStep === 4 && (
               <div className="flex flex-col gap-4 text-sm">
                 <div className="border border-[#d9d9d9] rounded p-4">
@@ -240,41 +257,33 @@ export default function SubmitTestPage() {
               </div>
             )}
           </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-8">
-            <div>
-              {currentStep > 1 && (
-                <button
-                  onClick={previousStep}
-                  className="h-12 px-8 rounded-lg bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-poppins hover:bg-blue-50 transition-colors"
-                >
-                  Back
-                </button>
-              )}
-            </div>
-            <div>
-              {currentStep < 4 ? (
-                <button
-                  onClick={nextStep}
-                  className="h-12 px-8 rounded-lg bg-[#2c7be5] text-white font-medium font-poppins hover:bg-blue-600 transition-colors"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  onClick={() => setIsSubmitModalOpen(true)}
-                  className="h-12 px-8 rounded-lg bg-[#2c7be5] text-white font-medium font-poppins hover:bg-blue-600 transition-colors"
-                >
-                  Submit
-                </button>
-              )}
-            </div>
+          <div className="flex gap-4 justify-end mt-8">
+            {currentStep > 1 && (
+              <button
+                onClick={previousStep}
+                className="h-12 px-6 rounded-[10px] bg-white border border-[#d9d9d9] text-[#637381] font-medium font-inter hover:bg-gray-50 transition-colors"
+              >
+                Previous
+              </button>
+            )}
+            {currentStep < 4 ? (
+              <button
+                onClick={nextStep}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSubmitModalOpen(true)}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
+              >
+                Submit
+              </button>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Modals */}
       <CreateTestTypeModal
         isOpen={isCreateTestTypeModalOpen}
         onClose={() => setIsCreateTestTypeModalOpen(false)}
@@ -290,6 +299,7 @@ export default function SubmitTestPage() {
       <SubmitTestModal
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
+        onConfirm={handleSubmit}
       />
     </main>
   );

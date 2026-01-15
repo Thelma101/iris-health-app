@@ -101,6 +101,19 @@ export const api = {
   // Pharmacy
   getPharmacies: () => apiRequest('/pharmacy'),
   getPharmacy: (id: string) => apiRequest(`/pharmacy/${id}`),
+
+  // Communities
+  getCommunities: () => apiRequest('/community/all'),
+  createCommunity: (data: object) =>
+    apiRequest('/community', { method: 'POST', body: JSON.stringify(data) }),
+  updateCommunity: (id: string | number, data: object) =>
+    apiRequest(`/community/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCommunity: (id: string | number) =>
+    apiRequest(`/community/${id}`, { method: 'DELETE' }),
+
+  // Analytics
+  getCasesPerCommunity: () => apiRequest('/analytics/cases-per-community'),
+  getFieldOfficers: () => apiRequest('/fieldAgent/all'),
 };
 
 export default api;
