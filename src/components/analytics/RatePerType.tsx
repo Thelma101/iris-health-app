@@ -14,9 +14,15 @@ export default function RatePerType() {
     setLoading(true);
     setError(null);
     api.getTestRatePerType?.().then((res) => {
-      if (res?.success && res.data) {
-        setPositivePercentage(res.data.positivePercentage);
-        setNegativePercentage(res.data.negativePercentage);
+      if (
+        res?.success &&
+        res.data &&
+        typeof res.data === 'object' &&
+        'positivePercentage' in res.data &&
+        'negativePercentage' in res.data
+      ) {
+        setPositivePercentage((res.data as any).positivePercentage);
+        setNegativePercentage((res.data as any).negativePercentage);
       } else {
         setError(res?.error || 'Failed to fetch test rate');
       }

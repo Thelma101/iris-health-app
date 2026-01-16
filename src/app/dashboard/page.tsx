@@ -1,4 +1,5 @@
 
+"use client";
 import { useEffect, useState } from 'react';
 import StatCard from '@/components/ui/StatCard';
 import api from '@/lib/api';
@@ -26,8 +27,8 @@ export default function DashboardPage() {
           api.getDashboardStats(),
           api.getRecentCommunityRecords(),
         ]);
-        setStats(statsRes.data);
-        setRecentRecords(recentRes.data);
+        setStats(statsRes.data as typeof stats);
+        setRecentRecords(recentRes.data as any[]);
       } catch (err: any) {
         setError(err.message || 'Failed to load dashboard data');
       } finally {

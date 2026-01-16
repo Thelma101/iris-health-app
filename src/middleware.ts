@@ -1,9 +1,16 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Security headers
-  const response = NextResponse.next()
+  const response = NextResponse.next();
+  // TEMP: Relax CSP for local API testing
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:5000;"
+  );
+  return response;
+}
   
   // Security headers
   response.headers.set('X-Frame-Options', 'DENY')

@@ -114,6 +114,13 @@ export const api = {
   // Analytics
   getCasesPerCommunity: () => apiRequest('/analytics/cases-per-community'),
   getFieldOfficers: () => apiRequest('/fieldAgent/all'),
+
+  // Dashboard
+  getDashboardStats: () => apiRequest('/dashboard/stats'),
+  getRecentCommunityRecords: () => apiRequest('/dashboard/recent-records'),
+
+  // Test Rate
+  getTestRatePerType: () => apiRequest('/analytics/test-rate-per-type'),
 };
 
 export default api;
