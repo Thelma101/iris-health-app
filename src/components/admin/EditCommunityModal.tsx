@@ -1,9 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-
-const imgCancel01 = 'https://www.figma.com/api/mcp/asset/2b456a93-2a4f-432f-a1a0-28f92eb6aef6';
-const imgArrowDown01 = 'https://www.figma.com/api/mcp/asset/8d583b47-1d74-49a5-b843-8f0a91aaeb6f';
-const imgCancelCircle = 'https://www.figma.com/api/mcp/asset/63836115-6265-411f-97a7-628d0d066004';
+import Image from 'next/image';
 
 interface EditCommunityModalProps {
   isOpen: boolean;
@@ -62,9 +59,9 @@ export default function EditCommunityModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-[#637381] hover:text-[#212b36] transition-colors flex-shrink-0 cursor-pointer"
+            className="text-[#637381] hover:text-[#212b36] transition-colors shrink-0 cursor-pointer"
           >
-            <img src={imgCancel01} alt="Close" className="w-6 h-6 sm:w-[24px] sm:h-[24px]" />
+            <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
           </button>
         </div>
 
@@ -82,7 +79,11 @@ export default function EditCommunityModal({
                   onChange={(e) => setSelectedCommunity(e.target.value)}
                   className="w-full border-0 outline-none bg-transparent text-xs sm:text-[14px] text-[#212b36] font-poppins"
                 />
-                <img src={imgArrowDown01} alt="Dropdown" className="w-6 h-6 sm:w-[24px] sm:h-[24px] absolute right-2 sm:right-[9px] pointer-events-none" />
+                <div className="absolute right-2 sm:right-[9px] pointer-events-none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9L12 15L18 9" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -96,7 +97,11 @@ export default function EditCommunityModal({
                   onChange={(e) => setSelectedLga(e.target.value)}
                   className="w-full border-0 outline-none bg-transparent text-xs sm:text-[14px] text-[#212b36] font-poppins"
                 />
-                <img src={imgArrowDown01} alt="Dropdown" className="w-6 h-6 sm:w-[24px] sm:h-[24px] absolute right-2 sm:right-[9px] pointer-events-none" />
+                <div className="absolute right-2 sm:right-[9px] pointer-events-none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9L12 15L18 9" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -107,7 +112,11 @@ export default function EditCommunityModal({
                 <p className="text-xs sm:text-[14px] text-[#212b36] font-poppins flex-1">
                   {selectedOfficers.length > 0 ? selectedOfficers.join(', ') : 'Select officers'}
                 </p>
-                <img src={imgArrowDown01} alt="Dropdown" className="w-6 h-6 sm:w-[24px] sm:h-[24px] absolute right-2 sm:right-[9px] pointer-events-none" />
+                <div className="absolute right-2 sm:right-[9px] pointer-events-none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9L12 15L18 9" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
 
               {/* Selected Officers Tags */}
@@ -118,9 +127,12 @@ export default function EditCommunityModal({
                       <span>{officer}</span>
                       <button
                         onClick={() => handleRemoveOfficer(officer)}
-                        className="text-[#637381] hover:text-[#212b36] transition-colors flex-shrink-0 ml-1 cursor-pointer"
+                        className="text-[#637381] hover:text-[#212b36] transition-colors shrink-0 ml-1 cursor-pointer"
                       >
-                        <img src={imgCancelCircle} alt="Remove" className="w-4 h-4 sm:w-[16px] sm:h-[16px]" />
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" stroke="#637381" strokeWidth="2"/>
+                          <path d="M15 9L9 15M9 9L15 15" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                       </button>
                     </div>
                   ))}

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import UserManagementTable from '@/components/user-management/UserManagementTable';
-import AddUserModal from '@/components/user-management/AddUserModal';
-import EditUserModal from '@/components/user-management/EditUserModal';
+import UserManagementTable from '@/components/admin/user-management/UserManagementTable';
+import AddUserModal from '@/components/admin/user-management/AddUserModal';
+import EditUserModal from '@/components/admin/user-management/EditUserModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import api from '@/lib/api';
 
@@ -32,31 +32,53 @@ export default function UserManagementPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.getUsers();
-      if (res.success && Array.isArray(res.data)) {
-        const mappedUsers: User[] = res.data.map((u: any) => ({
+      const res = await api.getUsers() as any;
+      console.log('API Response (full):', res);
+      console.log('API Response data:', res.data);
+      
+      // Check for authentication errors
+      if (!res.success && res.error) {
+        if (res.error.includes('login') || res.error.includes('Session expired') || res.error.includes('Authentication')) {
+          setError(res.error);
+          setUsers([]);
+          return;
+        }
+      }
+      
+      // Handle the nested response structure from the backend
+      // Backend returns: { success, message, data: { fieldAgents: [...] } }
+      // apiRequest wraps it: { success, data: { success, message, data: { fieldAgents } } }
+      const backendData = res.data?.data || res.data;
+      const fieldAgents = backendData?.fieldAgents || backendData || [];
+      
+      console.log('Extracted fieldAgents:', fieldAgents);
+      
+      if (res.success && Array.isArray(fieldAgents)) {
+        const mappedUsers: User[] = fieldAgents.map((u: any) => ({
           id: u._id || u.id,
           name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.name || 'Unknown',
           email: u.email,
-          role: u.role === 'admin' ? 'Admin' : 'Field Officer',
+          role: (u.role === 'Admin' ? 'Admin' : 'Field Officer') as 'Admin' | 'Field Officer',
           password: '',
-          lastLogin: u.lastLogin || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          lastLogin: u.lastLogin 
+            ? new Date(u.lastLogin).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+            : 'Never',
           status: u.status || 'Active',
         }));
+        console.log('Mapped users:', mappedUsers);
         setUsers(mappedUsers);
+        
+        if (mappedUsers.length === 0) {
+          console.log('No users found in database');
+        }
       } else {
-        // Use fallback data
-        setUsers([
-          { id: '1', name: 'Sam Mark', email: 'sam@medtrack.com', role: 'Admin', password: '', lastLogin: '2 Jan, 10:30 AM', status: 'Active' },
-          { id: '2', name: 'Jane Doe', email: 'jane@medtrack.com', role: 'Field Officer', password: '', lastLogin: '1 Jan, 2:15 PM', status: 'Inactive' },
-        ]);
+        console.log('Response structure issue - fieldAgents:', fieldAgents, 'isArray:', Array.isArray(fieldAgents));
+        setUsers([]);
       }
     } catch (err: unknown) {
-      // Use fallback data on error
-      setUsers([
-        { id: '1', name: 'Sam Mark', email: 'sam@medtrack.com', role: 'Admin', password: '', lastLogin: '2 Jan, 10:30 AM', status: 'Active' },
-        { id: '2', name: 'Jane Doe', email: 'jane@medtrack.com', role: 'Field Officer', password: '', lastLogin: '1 Jan, 2:15 PM', status: 'Inactive' },
-      ]);
+      console.error('Error fetching users:', err);
+      setError('Failed to fetch users from server');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -91,33 +113,23 @@ export default function UserManagementPage() {
 
   const handleToggleStatus = async (userId: string, currentStatus: 'Active' | 'Inactive') => {
     setActionLoading(true);
+    setError(null);
     try {
       const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+      console.log('Toggling status for user:', userId, 'to:', newStatus);
+      
       const res = await api.updateUser(userId, { status: newStatus });
+      console.log('Toggle status response:', res);
+      
       if (res.success) {
-        setUsers(users.map(user => 
-          user.id === userId 
-            ? { ...user, status: newStatus }
-            : user
-        ));
         setSuccessMessage(`User status updated to ${newStatus}`);
+        await fetchUsers(); // Refresh from server
       } else {
-        // Fallback - update locally
-        setUsers(users.map(user => 
-          user.id === userId 
-            ? { ...user, status: newStatus }
-            : user
-        ));
-        setSuccessMessage(`User status updated to ${newStatus}`);
+        setError(res.error || 'Failed to update status');
       }
-    } catch {
-      // Update locally on error
-      const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
-      setUsers(users.map(user => 
-        user.id === userId 
-          ? { ...user, status: newStatus }
-          : user
-      ));
+    } catch (err: any) {
+      console.error('Error toggling status:', err);
+      setError(err.message || 'Failed to update status');
     } finally {
       setActionLoading(false);
     }
@@ -129,43 +141,30 @@ export default function UserManagementPage() {
 
   const handleAddUser = async (userData: { name: string; email: string; role: string; password: string }) => {
     setActionLoading(true);
+    setError(null);
     try {
-      const res = await api.createUser({
-        ...userData,
-        firstName: userData.name.split(' ')[0],
-        lastName: userData.name.split(' ').slice(1).join(' '),
-      });
-      
-      if (res.success && res.data) {
-        setSuccessMessage('User added successfully!');
-        fetchUsers();
-      } else {
-        // Add locally as fallback
-        const newUser: User = {
-          id: Date.now().toString(),
-          name: userData.name,
-          email: userData.email,
-          role: userData.role as 'Field Officer' | 'Admin',
-          password: userData.password,
-          lastLogin: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-          status: 'Active'
-        };
-        setUsers([...users, newUser]);
-        setSuccessMessage('User added successfully!');
-      }
-    } catch {
-      // Add locally on error
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: userData.name,
+      const nameParts = userData.name.trim().split(' ');
+      const payload = {
+        firstName: nameParts[0],
+        lastName: nameParts.slice(1).join(' ') || '',
         email: userData.email,
-        role: userData.role as 'Field Officer' | 'Admin',
         password: userData.password,
-        lastLogin: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-        status: 'Active'
+        role: userData.role, // Pass the role to API
       };
-      setUsers([...users, newUser]);
-      setSuccessMessage('User added successfully!');
+      
+      console.log('Creating user with payload:', payload);
+      const res = await api.createUser(payload);
+      console.log('Create user response:', res);
+      
+      if (res.success) {
+        setSuccessMessage(`${userData.role} added successfully!`);
+        await fetchUsers(); // Refresh the list
+      } else {
+        setError(res.error || 'Failed to add user');
+      }
+    } catch (err: any) {
+      console.error('Error adding user:', err);
+      setError(err.message || 'Failed to add user');
     } finally {
       setActionLoading(false);
       setShowAddModal(false);
@@ -174,24 +173,30 @@ export default function UserManagementPage() {
 
   const handleUpdateUser = async (userData: User) => {
     setActionLoading(true);
+    setError(null);
     try {
-      const res = await api.updateUser(userData.id, userData);
+      const nameParts = userData.name.trim().split(' ');
+      const payload = {
+        firstName: nameParts[0],
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: userData.email,
+        status: userData.status,
+        role: userData.role, // Preserve the role on update
+      };
+      
+      console.log('Updating user:', userData.id, 'with payload:', payload);
+      const res = await api.updateUser(userData.id, payload);
+      console.log('Update user response:', res);
+      
       if (res.success) {
         setSuccessMessage('User updated successfully!');
-        fetchUsers();
+        await fetchUsers();
       } else {
-        // Update locally as fallback
-        setUsers(users.map(user => 
-          user.id === userData.id ? userData : user
-        ));
-        setSuccessMessage('User updated successfully!');
+        setError(res.error || 'Failed to update user');
       }
-    } catch {
-      // Update locally on error
-      setUsers(users.map(user => 
-        user.id === userData.id ? userData : user
-      ));
-      setSuccessMessage('User updated successfully!');
+    } catch (err: any) {
+      console.error('Error updating user:', err);
+      setError(err.message || 'Failed to update user');
     } finally {
       setActionLoading(false);
       setShowEditModal(false);
@@ -202,18 +207,21 @@ export default function UserManagementPage() {
     if (!confirm('Are you sure you want to delete this user?')) return;
     
     setActionLoading(true);
+    setError(null);
     try {
+      console.log('Deleting user:', userId);
       const res = await api.deleteUser(userId);
+      console.log('Delete user response:', res);
+      
       if (res.success) {
-        setUsers(users.filter(user => user.id !== userId));
         setSuccessMessage('User deleted successfully!');
+        await fetchUsers();
       } else {
-        setUsers(users.filter(user => user.id !== userId));
-        setSuccessMessage('User deleted successfully!');
+        setError(res.error || 'Failed to delete user');
       }
-    } catch {
-      setUsers(users.filter(user => user.id !== userId));
-      setSuccessMessage('User deleted successfully!');
+    } catch (err: any) {
+      console.error('Error deleting user:', err);
+      setError(err.message || 'Failed to delete user');
     } finally {
       setActionLoading(false);
     }
@@ -244,7 +252,7 @@ export default function UserManagementPage() {
 
       {/* Header */}
       <div
-        className="rounded-bl-[20px] rounded-tl-[20px] bg-white border-2 border-[#fff9e6] border-solid overflow-hidden h-[50px] flex items-center px-[26px] w-full"
+        className="rounded-lg bg-white border-2 border-[#fff9e6] border-solid overflow-hidden px-[17px] py-4"
         style={{
           backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
         }}

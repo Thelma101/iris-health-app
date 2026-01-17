@@ -4,6 +4,7 @@ import { createPatient, deletePatient, getAllPatients, getPatientById, updatePat
 const patientRoutes: Router = Router();
 patientRoutes.post('/', protect, agentOrAdmin, createPatient)
 patientRoutes.get('/', protect, agentOrAdmin, getAllPatients)
+patientRoutes.get('/all', protect, agentOrAdmin, getAllPatients) // Alias for frontend compatibility
 patientRoutes.get('/:id', protect, agentOrAdmin, getPatientById)
 patientRoutes.put('/:id', protect, agentOrAdmin, updatePatient)
 patientRoutes.delete('/:id', protect, agentOrAdmin, deletePatient)

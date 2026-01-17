@@ -23,7 +23,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-0">
+    <div className="fixed inset-0 z-50 flex items-start justify-end pt-0">
       {/* Backdrop */}
       <button 
         type="button"
@@ -34,7 +34,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-[554px] max-h-screen rounded-b-[10px] bg-white overflow-hidden shadow-lg mt-0 flex flex-col">
+      <div className="relative w-full max-w-[554px] max-h-screen rounded-bl-[10px] bg-white overflow-hidden shadow-lg mt-0 mr-0 flex flex-col">
         {/* Header */}
         <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px]">
           <div className="font-medium text-xl text-[#212b36] font-poppins">Test Type List</div>
@@ -116,6 +116,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
           if (testTypeToDelete) {
             onDelete?.(testTypeToDelete.id);
           }
+          setShowConfirmModal(false);
           setTestTypeToDelete(null);
         }}
         title="Delete Test Type"

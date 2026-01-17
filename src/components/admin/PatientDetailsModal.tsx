@@ -2,8 +2,6 @@
 
 import React from 'react';
 
-const imgCancel = 'https://www.figma.com/api/mcp/asset/6aca19c6-4713-4165-b581-e15290423d87';
-
 interface PatientDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;

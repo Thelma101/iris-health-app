@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import StatCard from '@/components/ui/StatCard';
+import StatCard from '@/components/admin/StatCard';
 import api, { DashboardStats, RecentRecord } from '@/lib/api';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -96,8 +96,8 @@ export default function DashboardPage() {
                 <StatCard
                   title="Tests"
                   value={stats.tests.toLocaleString()}
-                  subtitle={`${stats.tests.toLocaleString()} tests carried out as at ${stats.lastTestDate}`}
-                  progress={1}
+                  subtitle={`${stats.tests.toLocaleString()} tests carried out as at ${stats.lastTestDate || 'N/A'}`}
+                  progress={stats.tests > 0 ? 1 : 0}
                   progressColour="bg-[#d64545]"
                   cardBg="bg-[#fbeaea]"
                   iconSrc="/icons/tests-icon.png"

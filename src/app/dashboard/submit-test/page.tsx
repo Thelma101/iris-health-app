@@ -1,15 +1,14 @@
 'use client';
 import React, { useState } from 'react';
-import CreateTestTypeModal from '@/components/ui/CreateTestTypeModal';
-import SubmitTestModal from '@/components/ui/SubmitTestModal';
-import TestTypeListModal from '@/components/ui/TestTypeListModal';
-import EditTestTypeModal from '@/components/ui/EditTestTypeModal';
-import FormProgress from '@/components/submit-test/FormProgress';
-import PatientInfoForm from '@/components/submit-test/PatientInfoForm';
-import TestDetailsForm from '@/components/submit-test/TestDetailsForm';
+import CreateTestTypeModal from '@/components/admin/CreateTestTypeModal';
+import SubmitTestModal from '@/components/admin/SubmitTestModal';
+import TestTypeListModal from '@/components/admin/TestTypeListModal';
+import EditTestTypeModal from '@/components/admin/EditTestTypeModal';
+import FormProgress from '@/components/admin/submit-test/FormProgress';
+import PatientInfoForm from '@/components/admin/submit-test/PatientInfoForm';
+import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
 import { useFormStep } from '@/hooks/useFormStep';
 import { LGA_OPTIONS, COMMUNITY_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/location-options';
-import { DEFAULT_TEST_TYPES } from '@/lib/constants/test-options';
 import api from '@/lib/api/index';
 
 interface PatientInfo {
@@ -69,8 +68,8 @@ export default function SubmitTestPage() {
   const [isEditTestTypeModalOpen, setIsEditTestTypeModalOpen] = useState(false);
   const [selectedTestType, setSelectedTestType] = useState<TestType | null>(null);
 
-  // Test Types State
-  const [testTypes, setTestTypes] = useState<TestType[]>(DEFAULT_TEST_TYPES);
+  // Test Types State - start empty, no dummy data
+  const [testTypes, setTestTypes] = useState<TestType[]>([]);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,20 +106,43 @@ export default function SubmitTestPage() {
   };
 
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
+    console.log('=== ADD TEST TYPE ===' );
+    console.log('Test type name:', testType);
+    console.log('Expected results:', expectedResults);
+    console.log('Current test types before add:', testTypes);
+    
     const newTestType: TestType = {
       id: testTypes.length + 1,
       name: testType,
       results: expectedResults,
     };
-    setTestTypes([...testTypes, newTestType]);
+    console.log('New test type object:', newTestType);
+    
+    const updatedTestTypes = [...testTypes, newTestType];
+    console.log('Updated test types array:', updatedTestTypes);
+    setTestTypes(updatedTestTypes);
   };
 
   const handleEditTestType = (id: number, testType: string, expectedResults: string[]) => {
-    setTestTypes(testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t)));
+    console.log('=== EDIT TEST TYPE ===' );
+    console.log('Editing ID:', id);
+    console.log('New name:', testType);
+    console.log('New results:', expectedResults);
+    console.log('Current test types:', testTypes);
+    
+    const updated = testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t));
+    console.log('Updated test types:', updated);
+    setTestTypes(updated);
   };
 
   const handleDeleteTestType = (id: number) => {
-    setTestTypes(testTypes.filter((t) => t.id !== id));
+    console.log('=== DELETE TEST TYPE ===' );
+    console.log('Deleting ID:', id);
+    console.log('Current test types:', testTypes);
+    
+    const filtered = testTypes.filter((t) => t.id !== id);
+    console.log('Filtered test types:', filtered);
+    setTestTypes(filtered);
   };
 
   const handleSubmit = async () => {
@@ -168,13 +190,20 @@ export default function SubmitTestPage() {
       </div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <button
-          onClick={() => setIsCreateTestTypeModalOpen(true)}
+          onClick={() => {
+            console.log('Opening Create Test Type modal');
+            setIsCreateTestTypeModalOpen(true);
+          }}
           className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
         >
           Create New Test Type
         </button>
+        <div className="flex-1" />
         <button
-          onClick={() => setIsTestTypeListModalOpen(true)}
+          onClick={() => {
+            console.log('Opening Test Type List modal, current test types:', testTypes);
+            setIsTestTypeListModalOpen(true);
+          }}
           className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
         >
           View All the Test Type
@@ -289,7 +318,16 @@ export default function SubmitTestPage() {
         onClose={() => setIsCreateTestTypeModalOpen(false)}
         onAdd={handleAddTestType}
       />
-      <TestTypeListModal isOpen={isTestTypeListModalOpen} onClose={() => setIsTestTypeListModalOpen(false)} testTypes={testTypes} />
+      <TestTypeListModal 
+        isOpen={isTestTypeListModalOpen} 
+        onClose={() => setIsTestTypeListModalOpen(false)} 
+        testTypes={testTypes}
+        onEdit={(testType) => {
+          setSelectedTestType(testType);
+          setIsEditTestTypeModalOpen(true);
+        }}
+        onDelete={handleDeleteTestType}
+      />
       <EditTestTypeModal
         isOpen={isEditTestTypeModalOpen}
         onClose={() => setIsEditTestTypeModalOpen(false)}

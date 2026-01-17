@@ -6,6 +6,8 @@ export interface IFieldAgent extends Document {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  status: 'Active' | 'Inactive';
+  lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,7 +17,9 @@ const FieldAgentSchema = new Schema<IFieldAgent>({
   password: { type: String, required: true },
   firstName: { type: String },
   lastName: { type: String },
-  phone: { type: String }
+  phone: { type: String },
+  status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
+  lastLogin: { type: Date }
 }, { timestamps: true });
 
 export default model<IFieldAgent>("FieldAgent", FieldAgentSchema);

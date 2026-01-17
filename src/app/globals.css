@@ -3,7 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #0ea5e9;
+  --primary: #2c7be5;
   --primary-foreground: #ffffff;
   --secondary: #64748b;
   --secondary-foreground: #ffffff;
@@ -26,6 +26,8 @@
   --red: #D64545;
   --light-blue-100: #E8F1FF;
   --community-dark: #1A5F7A;
+  --blue: #2c7be5;
+  --teal: #00ab9f;
 }
 
 
@@ -78,4 +80,20 @@ html, body {
 ::selection {
   color: var(--black);
   background: var(--white-overlay);
+}
+
+/* Animation for ProfileModal slide-down */
+@keyframes slide-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
 }

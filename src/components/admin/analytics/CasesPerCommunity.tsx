@@ -11,42 +11,72 @@ interface CasesPerCommunityProps {
 }
 
 export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
-  const defaultData = [
-    { label: '1', value: 78 },
-    { label: '2', value: 18 },
-    { label: '3', value: 21 },
-    { label: '4', value: 21 },
-    { label: '5', value: 50 },
-  ];
   const [apiData, setApiData] = useState<Array<{ label: string; value: number }> | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    setError(null);
-    api.getCasesPerCommunity?.().then((res) => {
-      if (res?.success && Array.isArray(res.data)) {
-        setApiData(res.data);
-      } else {
-        setError(res?.error || 'Failed to fetch data');
-      }
-      setLoading(false);
-    });
+    api.getCasesPerCommunity()
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setApiData(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching cases per community:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  const chartData = apiData || data || defaultData;
-  const maxValue = Math.max(...chartData.map((d) => d.value));
-  const minValue = Math.min(...chartData.map((d) => d.value));
+  const chartData = apiData || data || [];
+  const maxValue = chartData.length > 0 ? Math.max(...chartData.map((d) => d.value)) : 100;
+  const minValue = chartData.length > 0 ? Math.min(...chartData.map((d) => d.value)) : 0;
+  
   const getY = (value: number, height: number) => {
     const range = maxValue - minValue || 1;
     const padding = 20;
     return height - padding - ((value - minValue) / range) * (height - padding * 2);
   };
 
+  // Calculate x positions based on number of data points
+  const getX = (index: number, total: number) => {
+    const startX = 60;
+    const endX = 460;
+    const step = (endX - startX) / (total - 1 || 1);
+    return startX + index * step;
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="h-[280px] sm:h-[334px] overflow-hidden rounded-lg w-full p-4 sm:p-6 flex items-center justify-center"
+        style={{
+          backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
+        }}
+      >
+        <p className="text-[#637381] font-poppins">Loading chart data...</p>
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <div
+        className="h-[280px] sm:h-[334px] overflow-hidden rounded-lg w-full p-4 sm:p-6 flex items-center justify-center"
+        style={{
+          backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
+        }}
+      >
+        <p className="text-[#637381] font-poppins">No data available</p>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="h-[280px] sm:h-[334px] overflow-hidden rounded-[8px] w-full p-4 sm:p-6"
+      className="h-[280px] sm:h-[334px] overflow-hidden rounded-lg w-full p-4 sm:p-6"
       style={{
         backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
       }}
@@ -79,34 +109,37 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
           <line x1="40" y1="110" x2="460" y2="110" stroke="#f4f5f7" strokeWidth="1" />
           <line x1="40" y1="140" x2="460" y2="140" stroke="#f4f5f7" strokeWidth="1" />
 
-          {/* Area fill under line */}
-          <path
-            d={`M 60 ${getY(chartData[0].value, 180)} 
-                L 160 ${getY(chartData[1].value, 180)} 
-                L 260 ${getY(chartData[2].value, 180)} 
-                L 360 ${getY(chartData[3].value, 180)} 
-                L 460 ${getY(chartData[4].value, 180)} 
-                L 460 160 L 60 160 Z`}
-            fill="url(#chartGradient)"
-          />
+          {/* Area fill under line - dynamically generated */}
+          {chartData.length > 1 && (
+            <path
+              d={chartData.map((item, i) => {
+                const x = getX(i, chartData.length);
+                const y = getY(item.value, 180);
+                return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+              }).join(' ') + ` L ${getX(chartData.length - 1, chartData.length)} 160 L ${getX(0, chartData.length)} 160 Z`}
+              fill="url(#chartGradient)"
+            />
+          )}
 
-          {/* Line */}
-          <path
-            d={`M 60 ${getY(chartData[0].value, 180)} 
-                L 160 ${getY(chartData[1].value, 180)} 
-                L 260 ${getY(chartData[2].value, 180)} 
-                L 360 ${getY(chartData[3].value, 180)} 
-                L 460 ${getY(chartData[4].value, 180)}`}
-            fill="none"
-            stroke="#2C7BE5"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {/* Line - dynamically generated */}
+          {chartData.length > 1 && (
+            <path
+              d={chartData.map((item, i) => {
+                const x = getX(i, chartData.length);
+                const y = getY(item.value, 180);
+                return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+              }).join(' ')}
+              fill="none"
+              stroke="#2C7BE5"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
 
           {/* Points and value badges */}
           {chartData.map((item, index) => {
-            const x = 60 + index * 100;
+            const x = getX(index, chartData.length);
             const y = getY(item.value, 180);
             return (
               <g key={index}>
@@ -124,7 +157,7 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
 
           {/* X-axis labels */}
           {chartData.map((item, index) => {
-            const x = 60 + index * 100;
+            const x = getX(index, chartData.length);
             return (
               <text key={index} x={x} y="180" textAnchor="middle" fill="#637381" fontSize="12" fontWeight="600" fontFamily="Poppins">
                 {item.label}

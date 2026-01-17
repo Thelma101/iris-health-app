@@ -66,3 +66,52 @@ export const getfieldAgentProfile = asyncHandler(async (req: AuthRequest, res: R
   delete fieldAgentData.password;
   new SuccessResponse('Profile fetched successfully.', { fieldAgent: fieldAgentData }).sendResponse(res);
 });
+
+// Get all field agents
+export const getAllFieldAgents = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const fieldAgents = await fieldAgentModel.find().select('-password');
+  new SuccessResponse('Field agents fetched successfully.', { fieldAgents }).sendResponse(res);
+});
+
+// Get single field agent
+export const getFieldAgentById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const fieldAgent = await fieldAgentModel.findById(id).select('-password');
+  if (!fieldAgent) {
+    throw new NotFoundException('Field Agent not found', ERRORCODES.RESOURCE_NOT_FOUND);
+  }
+  new SuccessResponse('Field agent fetched successfully.', { fieldAgent }).sendResponse(res);
+});
+
+// Update field agent
+export const updateFieldAgent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { firstName, lastName, email, status, password } = req.body;
+  
+  const fieldAgent = await fieldAgentModel.findById(id);
+  if (!fieldAgent) {
+    throw new NotFoundException('Field Agent not found', ERRORCODES.RESOURCE_NOT_FOUND);
+  }
+
+  if (firstName) fieldAgent.firstName = firstName;
+  if (lastName) fieldAgent.lastName = lastName;
+  if (email) fieldAgent.email = email;
+  if (status) fieldAgent.status = status;
+  if (password) fieldAgent.password = await bcrypt.hash(password, 10);
+
+  await fieldAgent.save();
+  
+  const fieldAgentData = fieldAgent.toJSON() as Record<string, any>;
+  delete fieldAgentData.password;
+  new SuccessResponse('Field agent updated successfully.', { fieldAgent: fieldAgentData }).sendResponse(res);
+});
+
+// Delete field agent
+export const deleteFieldAgent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const fieldAgent = await fieldAgentModel.findByIdAndDelete(id);
+  if (!fieldAgent) {
+    throw new NotFoundException('Field Agent not found', ERRORCODES.RESOURCE_NOT_FOUND);
+  }
+  new SuccessResponse('Field agent deleted successfully.', {}).sendResponse(res);
+});

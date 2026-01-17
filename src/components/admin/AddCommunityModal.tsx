@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from 'react';
-import Image from 'next/image';
 
 interface AddCommunityModalProps {
   isOpen: boolean;
@@ -8,8 +7,6 @@ interface AddCommunityModalProps {
   onSubmit?: (data: { community: string; lga: string; fieldOfficers: string[] }) => void;
 }
 
-const communities = ['Bayeku', 'Ketu', 'Igbogbo', 'Lekki', 'Ikoyi'];
-const lgas = ['Ikeja', 'Kosofe', 'Ikorodu', 'Lagos Island', 'Surulere'];
 const fieldOfficersAvailable = ['Tope Barakat', 'Musa Mohammed', 'John Allah', 'Opeyemi Braka', 'Michael Tokunbo', 'Adekunle Ahmed'];
 
 export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddCommunityModalProps) {
@@ -18,15 +15,30 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
     lga: '',
     selectedOfficers: [] as string[],
   });
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+    
+    // Validate required fields
+    if (!formData.community.trim()) {
+      setValidationError('Community name is required');
+      return;
+    }
+    if (!formData.lga.trim()) {
+      setValidationError('Local Government Area (LGA) is required');
+      return;
+    }
+    
     onSubmit?.({
       community: formData.community,
       lga: formData.lga,
       fieldOfficers: formData.selectedOfficers,
     });
-    onClose();
+    // Reset form after successful submission (parent will close modal)
+    setFormData({ community: '', lga: '', selectedOfficers: [] });
+    // Note: Don't call onClose() here - let parent handle it after API response
   };
 
   const handleAddOfficer = (officer: string) => {
@@ -74,41 +86,48 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
 
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-8 space-y-6 sm:space-y-8">
+          {/* Validation Error */}
+          {validationError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm font-poppins">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {validationError}
+            </div>
+          )}
           <div className="space-y-6 sm:space-y-8">
             {/* Community Field */}
             <div className="space-y-2">
               <label className="block text-xs sm:text-sm font-medium text-[#637381] font-poppins">
-                Community
+                Community <span className="text-red-500">*</span>
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.community}
-                onChange={(e) => setFormData({ ...formData, community: e.target.value })}
-                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins appearance-none bg-white cursor-pointer hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
-              >
-                {communities.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => {
+                  setFormData({ ...formData, community: e.target.value });
+                  if (validationError) setValidationError(null);
+                }}
+                placeholder="Enter community name"
+                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins placeholder-[#999] bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
+              />
             </div>
 
             {/* LGA Field */}
             <div className="space-y-2">
               <label className="block text-xs sm:text-sm font-medium text-[#637381] font-poppins">
-                LGA
+                LGA <span className="text-red-500">*</span>
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.lga}
-                onChange={(e) => setFormData({ ...formData, lga: e.target.value })}
-                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins appearance-none bg-white cursor-pointer hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
-              >
-                {lgas.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => {
+                  setFormData({ ...formData, lga: e.target.value });
+                  if (validationError) setValidationError(null);
+                }}
+                placeholder="Enter Local Government Area"
+                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins placeholder-[#999] bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
+              />
             </div>
 
             {/* Field Officer Field - Multi-select */}

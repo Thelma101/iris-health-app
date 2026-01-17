@@ -15,30 +15,26 @@ interface FieldOfficerReportProps {
 }
 
 export default function FieldOfficerReport({ officers, onViewTests }: Readonly<FieldOfficerReportProps>) {
-  const defaultOfficers = [
-    { id: '1', name: 'Jerome Bell', testCount: 67 },
-    { id: '2', name: 'Wade Warren', testCount: 67 },
-    { id: '3', name: 'Annette Black', testCount: 67 },
-    { id: '4', name: 'Darlene Robertson', testCount: 67 },
-  ];
   const [apiOfficers, setApiOfficers] = useState<OfficerReportRow[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    setError(null);
-    api.getFieldOfficers?.().then((res) => {
-      if (res?.success && Array.isArray(res.data)) {
-        setApiOfficers(res.data);
-      } else {
-        setError(res?.error || 'Failed to fetch officers');
-      }
-      setLoading(false);
-    });
+    api.getFieldOfficers()
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setApiOfficers(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching officers:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  const data = apiOfficers || officers || defaultOfficers;
+  const data = apiOfficers || officers || [];
   return (
     <div className="bg-white border border-[#d9d9d9] rounded-[8px] overflow-hidden w-full">
       <div className="px-[15px] sm:px-[18px] py-[11px] sm:py-[14px]">

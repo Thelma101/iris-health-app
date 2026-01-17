@@ -1,9 +1,9 @@
 'use client';
 import api, { Community as APICommunity } from '@/lib/api/index';
 import { useEffect, useState, useCallback } from 'react';
-import AddCommunityModal from '@/components/ui/AddCommunityModal';
-import CommunityDetailsModal from '@/components/ui/CommunityDetailsModal';
-import EditCommunityModal from '@/components/ui/EditCommunityModal';
+import AddCommunityModal from '@/components/admin/AddCommunityModal';
+import CommunityDetailsModal from '@/components/admin/CommunityDetailsModal';
+import EditCommunityModal from '@/components/admin/EditCommunityModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -115,11 +115,15 @@ export default function CommunityPage() {
         setIsModalOpen(false);
         fetchCommunities(); // Refresh the list
       } else {
-        setError(res?.error || 'Failed to add community');
+        // Show error but keep modal open for retry
+        const errorMsg = res?.error || 'Failed to add community. Please check if backend server is running.';
+        setError(errorMsg);
+        // Don't close modal on error
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add community';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add community. Server may be unavailable.';
       setError(errorMessage);
+      // Don't close modal on error
     } finally {
       setActionLoading(false);
     }

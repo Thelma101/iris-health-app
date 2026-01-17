@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import AnalyticsFilters from '@/components/analytics/AnalyticsFilters';
-import CasesPerCommunity from '@/components/analytics/CasesPerCommunity';
-import RatePerType from '@/components/analytics/RatePerType';
-import FieldOfficerReport from '@/components/analytics/FieldOfficerReport';
-import OfficerTestListModal from '@/components/ui/OfficerTestListModal';
-import OfficerTestDetailsModal from '@/components/ui/OfficerTestDetailsModal';
+import AnalyticsFilters from '@/components/admin/analytics/AnalyticsFilters';
+import CasesPerCommunity from '@/components/admin/analytics/CasesPerCommunity';
+import RatePerType from '@/components/admin/analytics/RatePerType';
+import FieldOfficerReport from '@/components/admin/analytics/FieldOfficerReport';
+import OfficerTestListModal from '@/components/admin/OfficerTestListModal';
+import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal';
 
 export default function ReportPage() {
   const [selectedDate, setSelectedDate] = useState('02/10/25');
@@ -16,9 +16,23 @@ export default function ReportPage() {
   const [selectedOfficer, setSelectedOfficer] = useState<{ id: string; name: string } | null>(null);
   const [showTestDetailsModal, setShowTestDetailsModal] = useState(false);
   const [selectedPatientName, setSelectedPatientName] = useState<string>('');
+  const [exportLoading, setExportLoading] = useState(false);
 
-  const handleExport = () => {
-    // Connect to analytics export service
+  const handleExport = async () => {
+    setExportLoading(true);
+    try {
+      // Generate report data
+      const reportData = `Analytics Report - ${selectedDate}\n\nCommunity: ${selectedCommunity || 'All'}\nTest Type: ${selectedTestType || 'All'}\n\nGenerated at: ${new Date().toLocaleString()}`;
+      const blob = new Blob([reportData], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-report-${selectedDate.replace(/\//g, '-')}.txt`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const handleViewTests = (officerId: string, officerName: string) => {

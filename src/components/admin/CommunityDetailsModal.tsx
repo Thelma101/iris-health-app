@@ -25,7 +25,7 @@ export default function CommunityDetailsModal({
     fieldOfficer: 'Michael Tokunbo',
     totalTests: '2,000',
     visitationDates: ['20/02/2025', '09/12/2024'],
-    mapImageUrl: 'https://www.figma.com/api/mcp/asset/27c0545b-bb3f-4f00-83c8-f4e38a8ac9ab',
+    mapImageUrl: '/images/map-placeholder.png',
   },
 }: CommunityDetailsModalProps) {
   if (!isOpen) return null;
@@ -58,12 +58,14 @@ export default function CommunityDetailsModal({
         {/* Modal Body */}
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
           {/* Map Section */}
-          <div className="bg-gray-100 h-32 sm:h-40 rounded-lg overflow-hidden border border-[#d9d9d9]">
-            <img
-              src="https://www.figma.com/api/mcp/asset/933dcaea-b68a-4ec2-b7b1-b97c0111497c"
-              alt={`Map of ${community.name}`}
-              className="w-full h-full object-cover"
-            />
+          <div className="bg-gray-100 h-32 sm:h-40 rounded-lg overflow-hidden border border-[#d9d9d9] flex items-center justify-center">
+            <div className="text-center">
+              <svg className="w-12 h-12 mx-auto text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p className="text-sm text-[#637381] mt-2 font-poppins">{community.name} Location</p>
+            </div>
           </div>
 
           {/* Details Sections */}

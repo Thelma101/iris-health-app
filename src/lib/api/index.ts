@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -72,6 +72,7 @@ export interface FieldAgent {
   firstName: string;
   lastName: string;
   email: string;
+  role?: 'Field Officer' | 'Admin';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -87,26 +88,107 @@ export const api = {
   forgotPassword: (email: string) =>
     apiRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
 
-  // Users
-  getUsers: () => apiRequest('/users'),
-  getUser: (id: string) => apiRequest(`/users/${id}`),
-  createUser: (data: object) =>
-    apiRequest('/users', { method: 'POST', body: JSON.stringify(data) }),
+  // Users (both Admins and Field Agents)
+  getUsers: async () => {
+    // Check if user has a valid token
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      console.warn('No auth token found - user may need to login');
+      return { success: false, error: 'Authentication required. Please login.', data: { fieldAgents: [] } };
+    }
+    
+    try {
+      // Fetch both admins and field agents
+      const fieldAgentsRes = await apiRequest<{ fieldAgents: FieldAgent[] }>('/fieldAgent/all');
+      
+      // Check if field agents request failed (likely 401)
+      if (!fieldAgentsRes.success) {
+        console.error('Failed to fetch field agents:', fieldAgentsRes.error);
+        // If it's an auth error, propagate it
+        if (fieldAgentsRes.error?.includes('401') || fieldAgentsRes.error?.includes('authorized') || fieldAgentsRes.error?.includes('token')) {
+          return { success: false, error: 'Session expired. Please login again.', data: { fieldAgents: [] } };
+        }
+      }
+      
+      const fieldAgents = fieldAgentsRes.success ? ((fieldAgentsRes.data as any)?.fieldAgents || []) : [];
+      
+      // Try to fetch admins if endpoint exists
+      let admins: any[] = [];
+      const adminsRes = await apiRequest<{ admins: any[] }>('/admin/all');
+      if (adminsRes.success) {
+        admins = (adminsRes.data as any)?.admins || [];
+      }
+      
+      // Combine and mark with roles
+      const allUsers = [
+        ...admins.map((a: any) => ({ ...a, role: 'Admin' })),
+        ...fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' })),
+      ];
+      
+      return { success: true, data: { fieldAgents: allUsers } };
+    } catch (error) {
+      console.error('Error in getUsers:', error);
+      return { success: false, error: 'Failed to fetch users', data: { fieldAgents: [] } };
+    }
+  },
+  getUser: (id: string) => apiRequest(`/fieldAgent/${id}`),
+  createUser: (data: { firstName: string; lastName: string; email: string; password: string; role?: string }) => {
+    // Route to appropriate endpoint based on role
+    if (data.role === 'Admin') {
+      // Admin endpoint expects 'name' instead of firstName/lastName
+      const adminData = {
+        name: `${data.firstName} ${data.lastName}`.trim(),
+        email: data.email,
+        password: data.password,
+      };
+      return apiRequest('/admin/signup', { method: 'POST', body: JSON.stringify(adminData) });
+    }
+    // Field Agent endpoint expects firstName and lastName
+    return apiRequest('/fieldAgent/signup', { method: 'POST', body: JSON.stringify(data) });
+  },
   updateUser: (id: string, data: object) =>
-    apiRequest(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    apiRequest(`/fieldAgent/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteUser: (id: string) =>
-    apiRequest(`/users/${id}`, { method: 'DELETE' }),
+    apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' }),
 
-  // Field Agents/Officers
-  getFieldAgents: () => apiRequest('/field-agent/all'),
-  getFieldOfficers: () => apiRequest('/field-agent/all'),
-  getFieldAgent: (id: string) => apiRequest(`/field-agent/${id}`),
+  // Field Agents/Officers - with fallback for analytics report
+  getFieldAgents: () => apiRequest('/fieldAgent/all'),
+  getFieldOfficers: async (): Promise<ApiResponse<Array<{ id: string; name: string; testCount: number }>>> => {
+    try {
+      const response = await apiRequest<{ fieldAgents: any[] }>('/fieldAgent/all');
+      if (response.success && response.data) {
+        const agents = (response.data as any)?.fieldAgents || response.data || [];
+        if (Array.isArray(agents) && agents.length > 0) {
+          return {
+            success: true,
+            data: agents.map((agent: any) => ({
+              id: agent._id || agent.id,
+              name: `${agent.firstName || ''} ${agent.lastName || ''}`.trim() || 'Unknown',
+              testCount: agent.testCount || 0,
+            })),
+          };
+        }
+      }
+      // Return empty array if no data
+      return {
+        success: true,
+        data: [],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch field officers',
+        data: [],
+      };
+    }
+  },
+  getFieldAgent: (id: string) => apiRequest(`/fieldAgent/${id}`),
   createFieldAgent: (data: object) =>
-    apiRequest('/field-agent', { method: 'POST', body: JSON.stringify(data) }),
+    apiRequest('/fieldAgent/signup', { method: 'POST', body: JSON.stringify(data) }),
   updateFieldAgent: (id: string, data: object) =>
-    apiRequest(`/field-agent/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    apiRequest(`/fieldAgent/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteFieldAgent: (id: string) =>
-    apiRequest(`/field-agent/${id}`, { method: 'DELETE' }),
+    apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' }),
 
   // Patients
   getPatients: () => apiRequest('/patients/all'),
@@ -198,16 +280,17 @@ export const api = {
 
       return { success: true, data: stats };
     } catch (error) {
-      // Return fallback/mock data when API is not available
+      // Return empty data when API is not available
       return {
-        success: true,
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch dashboard stats',
         data: {
-          communities: 56,
-          fieldAgents: 80,
-          tests: 10000,
-          communitiesCovered: 30,
-          fieldAgentsAvailable: 30,
-          lastTestDate: '23/06/25 6:00PM',
+          communities: 0,
+          fieldAgents: 0,
+          tests: 0,
+          communitiesCovered: 0,
+          fieldAgentsAvailable: 0,
+          lastTestDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
         },
       };
     }
@@ -220,43 +303,86 @@ export const api = {
 
       const records: RecentRecord[] = communities.slice(0, 15).map((c: any) => ({
         community: `${c.name} ${c.lga}`,
-        totalTests: c.totalTestsConducted || Math.floor(Math.random() * 1000) + 100,
-        topPositiveTest: 'HIV/AIDS',
-        topNegativeTest: 'Hepatitis B',
+        totalTests: c.totalTestsConducted || 0,
+        topPositiveTest: c.topPositiveTest || '-',
+        topNegativeTest: c.topNegativeTest || '-',
       }));
-
-      if (records.length === 0) {
-        // Return mock data
-        return {
-          success: true,
-          data: Array(15).fill(null).map(() => ({
-            community: 'Baiyeku Ikorodu',
-            totalTests: 679,
-            topPositiveTest: 'HIV/AIDS',
-            topNegativeTest: 'Hepatitis B',
-          })),
-        };
-      }
 
       return { success: true, data: records };
     } catch (error) {
       return {
-        success: true,
-        data: Array(15).fill(null).map(() => ({
-          community: 'Baiyeku Ikorodu',
-          totalTests: 679,
-          topPositiveTest: 'HIV/AIDS',
-          topNegativeTest: 'Hepatitis B',
-        })),
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch records',
+        data: [],
       };
     }
   },
 
-  // Analytics
-  getCasesPerCommunity: () => apiRequest('/analytics/cases-per-community'),
+  // Analytics - will show empty state if backend endpoints don't exist
+  getCasesPerCommunity: async (): Promise<ApiResponse<Array<{ label: string; value: number }>>> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/analytics/cases-per-community`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('token') 
+            ? { Authorization: `Bearer ${localStorage.getItem('token')}` } 
+            : {}),
+        },
+      });
+      
+      // Check if we got HTML instead of JSON (backend not available)
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API endpoint not available');
+      }
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `API Error: ${response.status}`);
+      }
+      return { success: true, data };
+    } catch (error) {
+      // Return error - let component handle empty state
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Analytics data not available',
+        data: [],
+      };
+    }
+  },
 
-  // Test Rate
-  getTestRatePerType: () => apiRequest('/analytics/test-rate-per-type'),
+  // Test Rate - will show empty state if backend endpoints don't exist
+  getTestRatePerType: async (): Promise<ApiResponse<{ positivePercentage: number; negativePercentage: number }>> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/analytics/test-rate-per-type`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('token') 
+            ? { Authorization: `Bearer ${localStorage.getItem('token')}` } 
+            : {}),
+        },
+      });
+      
+      // Check if we got HTML instead of JSON (backend not available)
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API endpoint not available');
+      }
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || `API Error: ${response.status}`);
+      }
+      return { success: true, data };
+    } catch (error) {
+      // Return error - let component handle empty state
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Analytics data not available',
+        data: { positivePercentage: 0, negativePercentage: 0 },
+      };
+    }
+  },
 };
 
 export default api;

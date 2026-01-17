@@ -1,7 +1,9 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import NotificationsPanel from './NotificationsPanel';
+import Logo from '@/components/ui/Logo';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -9,6 +11,7 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const [notifOpen, setNotifOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (notifOpen) {
@@ -21,25 +24,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
     };
   }, [notifOpen]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('fieldAgentToken');
+    localStorage.removeItem('userRole');
+    router.push('/login');
+  };
+
   return (
-    <header className="w-full h-[65px] bg-white rounded-[3.969px] border border-[#d9d9d9] relative z-20 overflow-clip">
+    <header className="w-full h-[65px] bg-white rounded-[3.969px] border border-[#d9d9d9] relative z-20 overflow-visible">
       <div className="h-full max-w-[1444px] mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Logo container (left) - matches Figma design 1:838 */}
-        <div className="bg-white h-[46px] w-[244px] overflow-clip rounded-[4px] flex items-center justify-center gap-[11px]">
-          <Image 
-            src="/images/favicon.svg" 
-            alt="Favicon" 
-            width={24} 
-            height={26} 
-            className="w-[24px] h-[26px]"
-          />
-          <Image 
-            src="/images/logo.svg" 
-            alt="Logo" 
-            width={153} 
-            height={24} 
-            className="h-6 w-auto"
-          />
+        <div className="bg-white h-[46px] overflow-clip rounded-[4px] flex items-center">
+          <Logo textSize="md" />
         </div>
 
         {/* Right cluster - notification + avatar */}
@@ -50,20 +47,21 @@ export default function Header({ onMenuClick }: HeaderProps) {
             onClick={() => setNotifOpen(true)}
             className="size-8 grid place-items-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors overflow-clip"
           >
-            <Image src="/icons/notification-01.svg" alt="Notifications" width={24} height={24} />
+            <Image src="/icons/notification-01.svg" alt="Notifications" width={20} height={20} />
           </button>
 
-          {/* Avatar */}
+          {/* Avatar - navigates to Profile Page */}
           <button 
-            className="cursor-pointer overflow-hidden rounded-full"
+            className="cursor-pointer overflow-hidden rounded-full size-11 hover:ring-2 hover:ring-[#2c7be5] transition-all"
             aria-label="User profile"
+            onClick={() => router.push('/dashboard/profile')}
           >
             <Image 
               src="/icons/ellipse1.png" 
-              alt="User" 
+              alt="Profile" 
               width={44} 
-              height={44} 
-              className="size-11 rounded-full hover:opacity-80 transition-opacity object-cover"
+              height={44}
+              className="rounded-full object-cover"
             />
           </button>
 
@@ -93,6 +91,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </div>
         </>
       )}
+
     </header>
   );
 }

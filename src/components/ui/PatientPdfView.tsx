@@ -2,9 +2,6 @@
 
 import React from 'react';
 
-const imgTestSheet = 'https://www.figma.com/api/mcp/asset/5f564de8-3f1d-4d9d-b03a-b1e69c9cba5a';
-const imgPatientPhoto = 'https://www.figma.com/api/mcp/asset/fba0d512-6abb-40bb-9c16-846888579dd1';
-
 interface PatientPdfViewProps {
   patient?: {
     name: string;

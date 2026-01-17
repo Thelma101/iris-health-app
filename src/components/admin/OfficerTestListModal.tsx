@@ -1,7 +1,6 @@
 'use client';
+import Image from 'next/image';
 import ModalBackdrop from './ModalBackdrop';
-
-const imgCancel01 = 'https://www.figma.com/api/mcp/asset/e97b51de-7fa7-4776-b957-44ca50739ef6';
 
 interface PatientTestRecord {
   index: number;
@@ -55,7 +54,7 @@ export default function OfficerTestListModal({
               onClick={onClose}
               className="text-[#637381] hover:text-[#212b36] transition-colors"
             >
-              <img src={imgCancel01} alt="Close" className="w-6 h-6" />
+              <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
             </button>
           </div>
 

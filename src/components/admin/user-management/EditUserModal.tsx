@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const imgCancel01 = 'https://www.figma.com/api/mcp/asset/732b6111-e5a5-477a-9038-f0f8bda0f47f';
-const imgArrowDown01 = 'https://www.figma.com/api/mcp/asset/40e2a5d3-a4f5-49f0-9761-e7e4d2467d9e';
+import Image from 'next/image';
 
 interface User {
   id: string;
@@ -74,7 +72,7 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: Reado
               onClick={onClose}
               className="text-[#637381] hover:text-[#212b36] transition-colors"
             >
-              <img src={imgCancel01} alt="Close" className="w-6 h-6" />
+              <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
             </button>
           </div>
 
@@ -117,11 +115,11 @@ export default function EditUserModal({ isOpen, onClose, user, onUpdate }: Reado
                   <option value="Admin">Admin</option>
                   <option value="Field Officer">Field Officer</option>
                 </select>
-                <img
-                  src={imgArrowDown01}
-                  alt="Dropdown"
-                  className="absolute right-[12px] top-1/2 transform -translate-y-1/2 w-6 h-6 pointer-events-none"
-                />
+                <div className="absolute right-[12px] top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9L12 15L18 9" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 

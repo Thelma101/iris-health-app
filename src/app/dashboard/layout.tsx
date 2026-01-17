@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import SideMenu from "../../components/ui/SideMenu";
-import Header from "@/components/ui/Header";
-import MobileDashboard from "@/components/ui/MobileDashboard";
+import SideMenu from "@/components/admin/SideMenu";
+import Header from "@/components/admin/Header";
+import MobileDashboard from "@/components/admin/MobileDashboard";
 
 export default function DashboardLayout({ children }: { readonly children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

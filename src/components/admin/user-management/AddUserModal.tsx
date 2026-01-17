@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-const imgCancel01 = 'https://www.figma.com/api/mcp/asset/87b79148-b7c5-4325-895c-97b8a6593f5c';
-const imgArrowDown01 = 'https://www.figma.com/api/mcp/asset/8c2cc956-8042-45a0-a11b-ae6d177f6b20';
+import Image from 'next/image';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -19,17 +17,24 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
     password: '',
   });
 
-  if (!isOpen) return null;
+  // Reset form when modal closes - MUST be before conditional return
+  React.useEffect(() => {
+    if (!isOpen) {
+      setFormData({ name: '', email: '', role: 'Admin', password: '' });
+    }
+  }, [isOpen]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleAdd = () => {
+    // Just call the onAdd callback - parent will handle closing the modal
+    // and resetting state after the API call completes
     onAdd?.(formData);
-    setFormData({ name: '', email: '', role: 'Admin', password: '' });
-    onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <>
@@ -46,7 +51,7 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
               onClick={onClose}
               className="text-[#637381] hover:text-[#212b36] transition-colors"
             >
-              <img src={imgCancel01} alt="Close" className="w-6 h-6" />
+              <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
             </button>
           </div>
 
@@ -88,11 +93,11 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
                   <option value="Admin">Admin</option>
                   <option value="Field Officer">Field Officer</option>
                 </select>
-                <img
-                  src={imgArrowDown01}
-                  alt="Dropdown"
-                  className="absolute right-[12px] top-1/2 transform -translate-y-1/2 w-6 h-6 pointer-events-none"
-                />
+                <div className="absolute right-[12px] top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 9L12 15L18 9" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
