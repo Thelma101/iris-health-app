@@ -8,7 +8,7 @@ export default function ResetSuccessPage() {
         <div className="p-4 sm:p-8">
           <div className="flex flex-col items-center gap-6 sm:gap-10">
             <div className="flex flex-col items-center gap-4">
-              <Image src="/logo.svg" alt="Logo" width={122} height={28} />
+              <Image src="/images/logo.svg" alt="Logo" width={122} height={28} />
               <div className="flex flex-col items-center gap-3">
                 <h1 className="text-center text-gray-800 text-sm sm:text-base font-medium font-poppins">Password successfully reset.</h1>
                 <p className="text-center text-gray-600 text-xs sm:text-sm font-medium font-poppins max-w-xs">You can now log in to your account using your new password</p>

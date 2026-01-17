@@ -1,7 +1,5 @@
 'use client';
 import Image from 'next/image';
-import Link from 'next/link';
-import Icon, { IconName } from './Icon';
 import { useState, useEffect } from 'react';
 import NotificationsPanel from './NotificationsPanel';
 
@@ -10,7 +8,6 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
@@ -24,46 +21,53 @@ export default function Header({ onMenuClick }: HeaderProps) {
     };
   }, [notifOpen]);
 
-  const items: ReadonlyArray<{ readonly label: string; readonly href: string; readonly iconName: IconName }> = [
-    { label: 'Dashboard', href: '/dashboard', iconName: 'dashboard' },
-    { label: 'Community', href: '/dashboard/community', iconName: 'community' },
-    { label: 'Test Recording', href: '/dashboard/tests', iconName: 'test' },
-    { label: 'Patients', href: '/dashboard/patients', iconName: 'patients' },
-    { label: 'Analytics & Reports', href: '/dashboard/reports', iconName: 'analytics' },
-    { label: 'Users', href: '/dashboard/users', iconName: 'users' },
-  ];
   return (
-    <header className="w-full h-16 bg-white rounded-sm border border-zinc-300 relative z-20">
+    <header className="w-full h-[65px] bg-white rounded-[3.969px] border border-[#d9d9d9] relative z-20 overflow-clip">
       <div className="h-full max-w-[1444px] mx-auto px-4 sm:px-6 flex items-center justify-between">
-        {/* Gradient logo bar (left) */}
-        <div className="h-11 flex items-center gap-2">
-          <Image src="/favicon.svg" alt="Favicon" width={20} height={20} />
-          <Image src="/logo.svg" alt="Logo" width={20} height={20} className="h-6 w-auto" />
+        {/* Logo container (left) - matches Figma design 1:838 */}
+        <div className="bg-white h-[46px] w-[244px] overflow-clip rounded-[4px] flex items-center justify-center gap-[11px]">
+          <Image 
+            src="/images/favicon.svg" 
+            alt="Favicon" 
+            width={24} 
+            height={26} 
+            className="w-[24px] h-[26px]"
+          />
+          <Image 
+            src="/images/logo.svg" 
+            alt="Logo" 
+            width={153} 
+            height={24} 
+            className="h-6 w-auto"
+          />
         </div>
 
-        {/* Right cluster */}
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
-          {/* Notification bell */}
+        {/* Right cluster - notification + avatar */}
+        <div className="flex items-center gap-[21px]">
+          {/* Notification bell - circular button */}
           <button 
             aria-label="Notifications" 
             onClick={() => setNotifOpen(true)}
-            className="size-8 grid place-items-center bg-gray-100 rounded-[20px] shadow-[0_0_0_1px] shadow-zinc-300 cursor-pointer hover:bg-gray-200 transition-colors"
+            className="size-8 grid place-items-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors overflow-clip"
           >
-            <Image src="/icons/notification-01.svg" alt="Notifications" width={20} height={20} />
+            <Image src="/icons/notification-01.svg" alt="Notifications" width={24} height={24} />
           </button>
 
           {/* Avatar */}
-          <div className="cursor-pointer">
+          <button 
+            className="cursor-pointer overflow-hidden rounded-full"
+            aria-label="User profile"
+          >
             <Image 
               src="/icons/ellipse1.png" 
               alt="User" 
               width={44} 
               height={44} 
-              className="size-11 rounded-full hover:opacity-80 transition-opacity"
+              className="size-11 rounded-full hover:opacity-80 transition-opacity object-cover"
             />
-          </div>
+          </button>
 
-          {/* Mobile hamburger for sidebar */}
+          {/* Mobile hamburger menu */}
           <button 
             aria-label="Menu" 
             onClick={() => onMenuClick?.()} 

@@ -1,11 +1,11 @@
-
 "use client";
 import { useEffect, useState } from 'react';
 import StatCard from '@/components/ui/StatCard';
-import api from '@/lib/api';
+import api, { DashboardStats, RecentRecord } from '@/lib/api';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     communities: 0,
     fieldAgents: 0,
     tests: 0,
@@ -13,7 +13,7 @@ export default function DashboardPage() {
     fieldAgentsAvailable: 0,
     lastTestDate: '',
   });
-  const [recentRecords, setRecentRecords] = useState<Array<any>>([]);
+  const [recentRecords, setRecentRecords] = useState<RecentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,10 +27,15 @@ export default function DashboardPage() {
           api.getDashboardStats(),
           api.getRecentCommunityRecords(),
         ]);
-        setStats(statsRes.data as typeof stats);
-        setRecentRecords(recentRes.data as any[]);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load dashboard data');
+        if (statsRes.data) {
+          setStats(statsRes.data);
+        }
+        if (recentRes.data) {
+          setRecentRecords(recentRes.data);
+        }
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -40,18 +45,36 @@ export default function DashboardPage() {
 
   return (
     <main className="space-y-4 sm:space-y-6">
-      <section className="bg-white rounded-tl-[20px] rounded-bl-[20px] border border-zinc-300">
+      <section className="bg-white rounded-tl-[20px] rounded-bl-[20px] border border-[#d9d9d9]">
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          <div className="w-full h-[50px] relative rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] box-border overflow-hidden shrink-0 text-left font-poppins flex items-center px-4 sm:px-[19px]">
-            <span className="text-base sm:text-lg font-semibold text-[#212b36] uppercase">Dashboard</span>
+          {/* Dashboard Header */}
+          <div 
+            className="w-full h-[50px] relative rounded-lg border-2 border-[#fff9e6] overflow-hidden flex items-center px-4 sm:px-[17px]"
+            style={{
+              backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
+            }}
+          >
+            <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">Dashboard</span>
           </div>
 
-          {error && <div className="text-red-500">{error}</div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
+          
           {loading ? (
-            <div className="text-gray-500">Loading...</div>
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <LoadingSpinner />
+              <p className="text-[#637381] text-sm font-poppins">Loading dashboard data...</p>
+            </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-[22px]">
                 <StatCard
                   title="Communities"
                   value={stats.communities}
@@ -78,30 +101,51 @@ export default function DashboardPage() {
                   progressColour="bg-[#d64545]"
                   cardBg="bg-[#fbeaea]"
                   iconSrc="/icons/tests-icon.png"
-                  fullWidth
                 />
               </div>
 
+              {/* Recent Records Section */}
               <section className="space-y-2.5">
-                <div className="text-gray-500 text-sm font-normal font-poppins">Recent record</div>
-                <div className="rounded-lg border border-zinc-300 overflow-x-auto">
-                  <div className="min-w-[320px] sm:min-w-[720px] px-2 sm:px-1 py-1.5 bg-gray-100 flex items-center gap-2 sm:gap-6 md:gap-16 lg:gap-28">
-                    <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Communities</div>
-                    <div className="w-20 sm:w-36 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Total Test</div>
-                    <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Top Tests +ve</div>
-                    <div className="hidden sm:block w-48 text-gray-500 text-xs sm:text-sm font-semibold font-poppins">Top Tests -ve</div>
+                <p className="text-[#637381] text-sm font-normal font-poppins">Recent record</p>
+                <div className="rounded-lg border border-[#d9d9d9] overflow-hidden">
+                  {/* Table Header */}
+                  <div className="bg-[#f4f5f7] px-1 py-1.5 flex items-center gap-[114px] overflow-x-auto">
+                    <div className="min-w-[211px] text-[#637381] text-sm font-semibold font-poppins px-1">Communities</div>
+                    <div className="min-w-[143px] text-[#637381] text-sm font-semibold font-poppins">Total Test</div>
+                    <div className="min-w-[202px] text-[#637381] text-sm font-semibold font-poppins">Top Tests +ve</div>
+                    <div className="min-w-[188px] text-[#637381] text-sm font-semibold font-poppins hidden sm:block">Top Tests -ve</div>
                   </div>
-                  {recentRecords.map((r: any, idx: number) => (
-                    <div
-                      key={`${r.community}-${idx}`}
-                      className={`min-w-[320px] sm:min-w-[720px] px-2 sm:px-1 py-1.5 flex items-center gap-2 sm:gap-6 md:gap-16 lg:gap-28 border-b border-gray-200 ${idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'}`}
-                    >
-                      <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-normal font-poppins truncate">{r.community}</div>
-                      <div className="w-20 sm:w-36 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.totalTests}</div>
-                      <div className="w-32 sm:w-52 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.topPositiveTest}</div>
-                      <div className="hidden sm:block w-48 text-gray-500 text-xs sm:text-sm font-normal font-poppins">{r.topNegativeTest}</div>
-                    </div>
-                  ))}
+
+                  {/* Table Body */}
+                  <div className="divide-y divide-[#e5e7eb]">
+                    {recentRecords.length > 0 ? (
+                      recentRecords.map((record, idx) => (
+                        <div
+                          key={`${record.community}-${idx}`}
+                          className={`px-1 py-1.5 flex items-center gap-[114px] overflow-x-auto transition-colors hover:bg-gray-50 ${
+                            idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'
+                          }`}
+                        >
+                          <div className="min-w-[211px] text-[#637381] text-sm font-normal font-poppins px-1 truncate">
+                            {record.community}
+                          </div>
+                          <div className="min-w-[143px] text-[#637381] text-sm font-normal font-poppins">
+                            {record.totalTests}
+                          </div>
+                          <div className="min-w-[202px] text-[#637381] text-sm font-normal font-poppins">
+                            {record.topPositiveTest}
+                          </div>
+                          <div className="min-w-[188px] text-[#637381] text-sm font-normal font-poppins hidden sm:block">
+                            {record.topNegativeTest}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex items-center justify-center py-8">
+                        <p className="text-[#637381] text-sm font-poppins">No records available</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </section>
             </>

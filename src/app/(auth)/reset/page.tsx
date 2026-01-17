@@ -27,7 +27,7 @@ export default function ResetPasswordPage() {
         <div className="p-8">
           <div className="flex flex-col items-center gap-10">
             <div className="flex flex-col items-center gap-4">
-              <Image src="/logo.svg" alt="Logo" width={122} height={28} />
+              <Image src="/images/logo.svg" alt="Logo" width={122} height={28} />
               <h1 className="text-center text-gray-800 text-base font-medium font-poppins">Reset your password</h1>
             </div>
 

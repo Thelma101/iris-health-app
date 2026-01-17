@@ -29,7 +29,7 @@ export default function ResetModal({ open, onClose }: Props) {
             <div className="p-4 sm:p-8">
               <div className="flex items-center justify-between">
                 <div className="flex flex-col items-center gap-3.5 mx-auto">
-                  <Image src="/logo.svg" alt="Logo" width={82} height={20} />
+                  <Image src="/images/logo.svg" alt="Logo" width={82} height={20} />
                   <div className="max-w-xs sm:w-56 text-center text-gray-800 text-sm sm:text-base font-medium font-poppins">Reset your password</div>
                 </div>
                 <button aria-label="Close" onClick={onClose} className="size-6 cursor-pointer hover:bg-gray-100 rounded transition-colors">×</button>
@@ -73,7 +73,7 @@ export default function ResetModal({ open, onClose }: Props) {
           <div className="w-full max-w-[513px] bg-white rounded-[10px] border border-zinc-300 overflow-hidden">
             <div className="p-4 sm:p-8">
               <div className="flex items-center justify-between">
-                <Image src="/logo.svg" alt="Logo" width={82} height={20} />
+                <Image src="/images/logo.svg" alt="Logo" width={82} height={20} />
                 <button aria-label="Close" onClick={onClose} className="size-6 cursor-pointer hover:bg-gray-100 rounded transition-colors">×</button>
               </div>
               <div className="mt-4 sm:mt-6 text-center space-y-2">
