@@ -43,6 +43,9 @@ export const fieldAgentApi = {
     fieldAgentRequest('/fieldAgent/login', { method: 'POST', body: JSON.stringify(credentials) }),
 
   getProfile: () => fieldAgentRequest('/fieldAgent/profile'),
+  
+  updateProfile: (data: object) =>
+    fieldAgentRequest('/fieldAgent/profile', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Communities (field agent's assigned communities)
   getMyCommunities: () => fieldAgentRequest('/community/all'),
