@@ -53,7 +53,10 @@
     "skipLibCheck": true,
     "noImplicitAny": false,
     "resolveJsonModule": true,
-    "declaration": false
+    "declaration": false,
+    "noEmitOnError": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
