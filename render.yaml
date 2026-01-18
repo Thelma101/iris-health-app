@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: lunarmedtrack-api
+    runtime: node
+    rootDir: Backend/LunarMedtrack
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: NODE_ENV
+        value: production
