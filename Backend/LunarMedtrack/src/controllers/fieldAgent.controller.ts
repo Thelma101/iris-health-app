@@ -67,13 +67,11 @@ export const getfieldAgentProfile = asyncHandler(async (req: AuthRequest, res: R
   new SuccessResponse('Profile fetched successfully.', { fieldAgent: fieldAgentData }).sendResponse(res);
 });
 
-// Get all field agents
 export const getAllFieldAgents = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const fieldAgents = await fieldAgentModel.find().select('-password');
   new SuccessResponse('Field agents fetched successfully.', { fieldAgents }).sendResponse(res);
 });
 
-// Get single field agent
 export const getFieldAgentById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const fieldAgent = await fieldAgentModel.findById(id).select('-password');
@@ -83,7 +81,6 @@ export const getFieldAgentById = asyncHandler(async (req: Request, res: Response
   new SuccessResponse('Field agent fetched successfully.', { fieldAgent }).sendResponse(res);
 });
 
-// Update field agent
 export const updateFieldAgent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { firstName, lastName, email, status, password } = req.body;
@@ -106,7 +103,6 @@ export const updateFieldAgent = asyncHandler(async (req: Request, res: Response)
   new SuccessResponse('Field agent updated successfully.', { fieldAgent: fieldAgentData }).sendResponse(res);
 });
 
-// Delete field agent
 export const deleteFieldAgent = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const fieldAgent = await fieldAgentModel.findByIdAndDelete(id);

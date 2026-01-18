@@ -212,8 +212,8 @@ export const api = {
   deleteDrug: (id: string) =>
     apiRequest(`/drugs/${id}`, { method: 'DELETE' }),
 
-  // Inventory
-  getInventory: () => apiRequest('/inventory/all'),
+  // Inventory (medical supplies tracking per community)
+  getInventory: () => apiRequest('/inventory'),
   updateInventory: (id: string, data: object) =>
     apiRequest(`/inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 

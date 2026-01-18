@@ -12,7 +12,7 @@
 | **Database Type** | MongoDB Atlas (Cloud) |
 | **Cluster Name** | `medtrack.izytxxn.mongodb.net` |
 | **Database Name** | `medtrack` |
-| **Connection String** | `mongodb+srv://iamfidelisokoh_db_user:***@medtrack.izytxxn.mongodb.net/medtrack` |
+| **Connection String** | See `.env` file or contact admin |
 
 ### How to Access Your Database
 
@@ -20,7 +20,7 @@
 1. Download from: https://www.mongodb.com/try/download/compass
 2. Install and open MongoDB Compass
 3. Click "New Connection"
-4. Paste connection string: `mongodb+srv://iamfidelisokoh_db_user:hhCHqUkL6S2Otwvg@medtrack.izytxxn.mongodb.net/medtrack`
+4. Get connection string from `.env` file (MONGO_URI)
 5. Click "Connect"
 6. Browse collections: `admins`, `fieldagents`, `communities`, `patients`, `visitations`, `inventories`
 

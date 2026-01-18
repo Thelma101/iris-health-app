@@ -64,26 +64,25 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen relative">
-      {/* Background Image */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "url(/images/login-bg.jpg)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
+    <main className="min-h-screen relative overflow-hidden">
+      {/* Background Image - Optimized with Next/Image */}
+      <div className="absolute inset-0">
+        <img
+          src="/images/login-bg.jpg"
+          alt="Healthcare background"
+          className="w-full h-full object-cover"
+        />
+      </div>
       
       {/* Login Form Container */}
       <div className="relative flex min-h-screen items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-[450px] rounded-[10px] bg-white shadow-xl p-8 sm:p-10">
+        <div className="w-full max-w-[400px] sm:max-w-[450px] rounded-[10px] bg-white shadow-xl p-6 sm:p-8 md:p-10">
           {/* Logo Section */}
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-4 sm:gap-6">
             {/* MedTrack Logo */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               {/* Icon */}
-              <svg width="35" height="38" viewBox="0 0 35 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="30" height="33" viewBox="0 0 35 38" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-[35px] sm:h-[38px]">
                 <path d="M17.5 0L17.5 14.25" stroke="#00AB9F" strokeWidth="4" strokeLinecap="round"/>
                 <path d="M17.5 23.75L17.5 38" stroke="#00AB9F" strokeWidth="4" strokeLinecap="round"/>
                 <path d="M0 19L14.25 19" stroke="#2C7BE5" strokeWidth="4" strokeLinecap="round"/>
@@ -91,24 +90,24 @@ export default function LoginPage() {
                 <circle cx="17.5" cy="19" r="6" fill="#00AB9F"/>
               </svg>
               {/* Text */}
-              <span className="text-[32px] font-semibold">
+              <span className="text-[26px] sm:text-[32px] font-semibold">
                 <span className="text-[#00ab9f]">Med</span>
                 <span className="text-[#2c7be5]">Track</span>
               </span>
             </div>
             
             {/* Tagline */}
-            <p className="text-[#212b36] text-[24px] font-medium font-['Poppins'] text-center">
+            <p className="text-[#212b36] text-[18px] sm:text-[24px] font-medium font-['Poppins'] text-center">
               Bringing Healthcare Closer
             </p>
           </div>
 
           {/* Role Selection */}
-          <div className="flex items-center justify-center gap-4 mt-8">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
             <button
               type="button"
               onClick={() => setRole("agent")}
-              className={`h-10 px-5 rounded-[10px] text-sm font-normal font-['Poppins'] transition-colors ${
+              className={`h-9 sm:h-10 px-4 sm:px-5 rounded-[10px] text-sm font-normal font-['Poppins'] transition-colors ${
                 role === "agent"
                   ? "bg-[#2c7be5] text-white"
                   : "bg-white text-[#637381] border border-[#d9d9d9]"
@@ -119,7 +118,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setRole("admin")}
-              className={`h-10 px-5 rounded-[10px] text-sm font-normal font-['Poppins'] transition-colors ${
+              className={`h-9 sm:h-10 px-4 sm:px-5 rounded-[10px] text-sm font-normal font-['Poppins'] transition-colors ${
                 role === "admin"
                   ? "bg-[#2c7be5] text-white"
                   : "bg-white text-[#637381] border border-[#d9d9d9]"
@@ -137,8 +136,8 @@ export default function LoginPage() {
           )}
 
           {/* Login Form */}
-          <form className="mt-8 flex flex-col gap-10" onSubmit={handleLogin}>
-            <div className="flex flex-col gap-[26px]">
+          <form className="mt-6 sm:mt-8 flex flex-col gap-8 sm:gap-10" onSubmit={handleLogin}>
+            <div className="flex flex-col gap-5 sm:gap-[26px]">
               {/* Email Field */}
               <div className="flex flex-col gap-[6px]">
                 <label className="text-[#637381] text-sm font-medium font-['Poppins']">
@@ -150,7 +149,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-12 w-full px-5 bg-white border border-[#d9d9d9] rounded text-sm text-[#212b36] placeholder:text-[#d9d9d9] font-['Poppins'] focus:outline-none focus:border-[#2c7be5] focus:ring-1 focus:ring-[#2c7be5]"
+                  className="h-11 sm:h-12 w-full px-4 sm:px-5 bg-white border border-[#d9d9d9] rounded text-sm text-[#212b36] placeholder:text-[#d9d9d9] font-['Poppins'] focus:outline-none focus:border-[#2c7be5] focus:ring-1 focus:ring-[#2c7be5]"
                 />
               </div>
 
@@ -166,7 +165,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 w-full px-5 pr-12 bg-white border border-[#d9d9d9] rounded text-sm text-[#212b36] placeholder:text-[#212b36] font-['Poppins'] focus:outline-none focus:border-[#2c7be5] focus:ring-1 focus:ring-[#2c7be5]"
+                    className="h-11 sm:h-12 w-full px-4 sm:px-5 pr-12 bg-white border border-[#d9d9d9] rounded text-sm text-[#212b36] placeholder:text-[#212b36] font-['Poppins'] focus:outline-none focus:border-[#2c7be5] focus:ring-1 focus:ring-[#2c7be5]"
                   />
                   <button
                     type="button"
@@ -176,6 +175,12 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff /> : <Eye />}
                   </button>
                 </div>
+                {/* Forgot Password Link - Positioned below password */}
+                <div className="flex justify-end mt-1">
+                  <a href="/forgot" className="text-sm text-[#d64545] hover:underline font-['Poppins']">
+                    Forgot Password
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -183,18 +188,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="h-12 w-full bg-[#2c7be5] hover:bg-[#1e5db8] text-white text-base font-medium font-['Inter'] rounded-[10px] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="h-11 sm:h-12 w-full bg-[#2c7be5] hover:bg-[#1e5db8] text-white text-base font-medium font-['Inter'] rounded-[10px] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
-
-          {/* Forgot Password Link */}
-          <div className="mt-4 text-center">
-            <a href="/forgot" className="text-sm text-[#2c7be5] hover:underline font-['Poppins']">
-              Forgot Password?
-            </a>
-          </div>
         </div>
       </div>
     </main>

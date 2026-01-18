@@ -67,17 +67,11 @@ export const getAdminProfile = asyncHandler(async (req: AuthRequest, res: Respon
   new SuccessResponse('Profile fetched successfully.', { admin: adminData }).sendResponse(res);
 });
 
-/**
- * Get all admins (for user management)
- */
 export const getAllAdmins = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const admins = await adminModel.find().select('-password');
   new SuccessResponse('Admins fetched successfully.', { admins }).sendResponse(res);
 });
 
-/**
- * Analytics: Get cases/tests per community
- */
 export const getCasesPerCommunity = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const communities = await Community.find().select('name totalTestsConducted');
   const data = communities.map(c => ({
@@ -87,9 +81,6 @@ export const getCasesPerCommunity = asyncHandler(async (req: Request, res: Respo
   new SuccessResponse('Cases per community fetched.', { data }).sendResponse(res);
 });
 
-/**
- * Analytics: Get test results summary
- */
 export const getTestResultsSummary = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const patients = await Patient.find();
   const summary: Record<string, number> = {};
@@ -105,9 +96,6 @@ export const getTestResultsSummary = asyncHandler(async (req: Request, res: Resp
   new SuccessResponse('Test results summary fetched.', { data }).sendResponse(res);
 });
 
-/**
- * Analytics: Get dashboard statistics
- */
 export const getDashboardStats = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const [communitiesCount, patientsCount, totalTests] = await Promise.all([
     Community.countDocuments(),
