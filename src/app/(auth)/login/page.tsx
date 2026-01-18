@@ -31,10 +31,10 @@ export default function LoginPage() {
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           if (token) {
-            console.log("[Auth] Admin token received, storing and redirecting to /dashboard/admin");
+            console.log("[Auth] Admin token received, storing and redirecting to /dashboard");
             localStorage.setItem("token", token);
             localStorage.setItem("userRole", "admin");
-            router.push("/dashboard/admin");
+            router.push("/dashboard");
           } else {
             console.error("[Auth] No token in admin response");
             setError("Invalid admin credentials");
@@ -52,10 +52,10 @@ export default function LoginPage() {
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           if (token) {
-            console.log("[Auth] Field agent token received, storing and redirecting to /dashboard");
+            console.log("[Auth] Field agent token received, storing and redirecting to /dashboard/field-agent");
             localStorage.setItem("fieldAgentToken", token);
             localStorage.setItem("userRole", "field-agent");
-            router.push("/dashboard");
+            router.push("/dashboard/field-agent");
           } else {
             console.error("[Auth] No token in field agent response");
             setError("Invalid field agent credentials");
