@@ -10,8 +10,6 @@ const fieldAgentItems: ReadonlyArray<{ readonly label: string; readonly href: st
   { label: 'Dashboard', href: '/dashboard', iconName: 'dashboard' },
   { label: 'Community', href: '/dashboard/community', iconName: 'community' },
   { label: 'Test Recording', href: '/dashboard/submit-test', iconName: 'test' },
-  { label: 'Test Types', href: '/dashboard/test-types', iconName: 'test' },
-  { label: 'Profile', href: '/dashboard/profile', iconName: 'users' },
 ];
 
 interface SideMenuProps {

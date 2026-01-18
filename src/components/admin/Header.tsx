@@ -1,7 +1,6 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import NotificationsPanel from './NotificationsPanel';
 import Logo from '@/components/ui/Logo';
 
@@ -11,7 +10,6 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const [notifOpen, setNotifOpen] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     if (notifOpen) {
@@ -23,13 +21,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
       document.body.style.overflow = 'unset';
     };
   }, [notifOpen]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('fieldAgentToken');
-    localStorage.removeItem('userRole');
-    router.push('/login');
-  };
 
   return (
     <header className="w-full h-[65px] bg-white rounded-[3.969px] border border-[#d9d9d9] relative z-20 overflow-visible">
@@ -50,11 +41,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <Image src="/icons/notification-01.svg" alt="Notifications" width={20} height={20} />
           </button>
 
-          {/* Avatar - navigates to Profile Page */}
-          <button 
-            className="cursor-pointer overflow-hidden rounded-full size-11 hover:ring-2 hover:ring-[#2c7be5] transition-all"
+          {/* Avatar - Profile icon (no redirect, stays on current dashboard) */}
+          <div 
+            className="cursor-default overflow-hidden rounded-full size-11"
             aria-label="User profile"
-            onClick={() => router.push('/dashboard/profile')}
           >
             <Image 
               src="/icons/ellipse1.png" 
@@ -63,7 +53,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               height={44}
               className="rounded-full object-cover"
             />
-          </button>
+          </div>
 
           {/* Mobile hamburger menu */}
           <button 
@@ -85,8 +75,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
             onClick={() => setNotifOpen(false)}
           />
           
-          {/* Panel positioned on the right */}
-          <div className="fixed top-20 right-2 sm:right-4 md:right-6 z-50 w-[calc(100%-16px)] sm:w-full max-w-md">
+          {/* Panel positioned on the right - aligned with top */}
+          <div className="fixed top-[65px] right-2 sm:right-4 md:right-6 z-50 w-[calc(100%-16px)] sm:w-full max-w-md" style={{ margin: 0 }}>
             <NotificationsPanel onClose={() => setNotifOpen(false)} />
           </div>
         </>
