@@ -179,6 +179,7 @@ interface FileUploadFieldProps {
   placeholder?: string;
   accept?: string;
   preview?: string | null;
+  enableCamera?: boolean;
 }
 
 const FileUploadField: React.FC<FileUploadFieldProps> = ({
@@ -188,11 +189,18 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
   placeholder = 'Upload file',
   accept = 'image/*',
   preview = null,
+  enableCamera = true,
 }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const cameraRef = React.useRef<HTMLInputElement>(null);
 
   const handleClick = () => {
     inputRef.current?.click();
+  };
+
+  const handleCameraClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cameraRef.current?.click();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +217,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
       )}
       <div
         onClick={handleClick}
-        className="w-full h-[125px] bg-white border border-dashed border-[#d9d9d9] rounded cursor-pointer flex items-center justify-center hover:border-[#2c7be5] transition-colors"
+        className="w-full min-h-[125px] bg-white border border-dashed border-[#d9d9d9] rounded cursor-pointer flex flex-col items-center justify-center hover:border-[#2c7be5] transition-colors p-4"
       >
         <input
           ref={inputRef}
@@ -218,16 +226,93 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
           onChange={handleChange}
           className="hidden"
         />
+        {/* Camera input for mobile devices */}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleChange}
+          className="hidden"
+        />
         {preview ? (
-          <img
-            src={preview}
-            alt="Preview"
-            className="max-h-full max-w-full object-contain"
-          />
+          <div className="flex flex-col items-center gap-2">
+            <img
+              src={preview}
+              alt="Preview"
+              className="max-h-[80px] max-w-full object-contain"
+            />
+            <p className="font-poppins text-xs text-[#637381]">Tap to change</p>
+          </div>
         ) : value ? (
           <p className="font-poppins text-sm text-[#212b36]">{value.name}</p>
         ) : (
-          <p className="font-poppins text-sm text-[#212b36]">{placeholder}</p>
+          <div className="flex flex-col items-center gap-3">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                stroke="#637381"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <polyline
+                points="17,8 12,3 7,8"
+                stroke="#637381"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <line
+                x1="12"
+                y1="3"
+                x2="12"
+                y2="15"
+                stroke="#637381"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p className="font-poppins text-sm text-[#212b36] text-center">{placeholder}</p>
+            {enableCamera && (
+              <button
+                type="button"
+                onClick={handleCameraClick}
+                className="flex items-center gap-2 px-4 py-2 bg-[#2c7be5] text-white rounded-lg text-sm font-poppins hover:bg-blue-600 transition-colors"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="13"
+                    r="4"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                </svg>
+                Take Photo
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -110,18 +110,24 @@ export const api = {
         }
       }
       
-      const fieldAgents = fieldAgentsRes.success ? ((fieldAgentsRes.data as any)?.fieldAgents || []) : [];
+      // Handle nested response: apiRequest returns { success, data: backendResponse }
+      // backendResponse is { success, message, data: { fieldAgents: [...] } }
+      const fieldAgentsData = fieldAgentsRes.data as any;
+      const fieldAgents = fieldAgentsRes.success 
+        ? (fieldAgentsData?.data?.fieldAgents || fieldAgentsData?.fieldAgents || []) 
+        : [];
       
       // Try to fetch admins if endpoint exists
       let admins: any[] = [];
       const adminsRes = await apiRequest<{ admins: any[] }>('/admin/all');
       if (adminsRes.success) {
-        admins = (adminsRes.data as any)?.admins || [];
+        const adminsData = adminsRes.data as any;
+        admins = adminsData?.data?.admins || adminsData?.admins || [];
       }
       
       // Combine and mark with roles
       const allUsers = [
-        ...admins.map((a: any) => ({ ...a, role: 'Admin' })),
+        ...admins.map((a: any) => ({ ...a, firstName: a.name?.split(' ')[0] || '', lastName: a.name?.split(' ').slice(1).join(' ') || '', role: 'Admin' })),
         ...fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' })),
       ];
       
@@ -146,10 +152,30 @@ export const api = {
     // Field Agent endpoint expects firstName and lastName
     return apiRequest('/fieldAgent/signup', { method: 'POST', body: JSON.stringify(data) });
   },
-  updateUser: (id: string, data: object) =>
-    apiRequest(`/fieldAgent/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteUser: (id: string) =>
-    apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' }),
+  updateUser: (id: string, data: { firstName?: string; lastName?: string; email?: string; status?: string; password?: string; role?: string }) => {
+    // Route to appropriate endpoint based on role
+    if (data.role === 'Admin') {
+      // Admin - convert firstName/lastName to name if present
+      const adminData: Record<string, any> = { ...data };
+      if (adminData.firstName || adminData.lastName) {
+        adminData.name = `${adminData.firstName || ''} ${adminData.lastName || ''}`.trim();
+        delete adminData.firstName;
+        delete adminData.lastName;
+      }
+      delete adminData.role; // Don't send role to backend
+      return apiRequest(`/admin/${id}`, { method: 'PUT', body: JSON.stringify(adminData) });
+    }
+    // Field Agent
+    const agentData: Record<string, any> = { ...data };
+    delete agentData.role; // Don't send role to backend
+    return apiRequest(`/fieldAgent/${id}`, { method: 'PUT', body: JSON.stringify(agentData) });
+  },
+  deleteUser: (id: string, role?: string) => {
+    if (role === 'Admin') {
+      return apiRequest(`/admin/${id}`, { method: 'DELETE' });
+    }
+    return apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' });
+  },
 
   // Field Agents/Officers - with fallback for analytics report
   getFieldAgents: () => apiRequest('/fieldAgent/all'),
@@ -157,7 +183,9 @@ export const api = {
     try {
       const response = await apiRequest<{ fieldAgents: any[] }>('/fieldAgent/all');
       if (response.success && response.data) {
-        const agents = (response.data as any)?.fieldAgents || response.data || [];
+        // Handle nested response structure
+        const responseData = response.data as any;
+        const agents = responseData?.data?.fieldAgents || responseData?.fieldAgents || [];
         if (Array.isArray(agents) && agents.length > 0) {
           return {
             success: true,
@@ -258,9 +286,14 @@ export const api = {
         api.getVisitations(),
       ]);
 
-      const communities = (communitiesRes.data as any)?.communities || [];
-      const fieldAgents = (fieldAgentsRes.data as any)?.fieldAgents || [];
-      const visitations = (visitationsRes.data as any)?.visitations || [];
+      // Handle nested response structure
+      const commData = communitiesRes.data as any;
+      const agentsData = fieldAgentsRes.data as any;
+      const visitData = visitationsRes.data as any;
+      
+      const communities = commData?.data?.communities || commData?.communities || [];
+      const fieldAgents = agentsData?.data?.fieldAgents || agentsData?.fieldAgents || [];
+      const visitations = visitData?.data?.visitations || visitData?.visitations || [];
 
       const totalTests = visitations.length;
       const lastVisitation = visitations.sort((a: any, b: any) => 
@@ -299,7 +332,9 @@ export const api = {
   getRecentCommunityRecords: async (): Promise<ApiResponse<RecentRecord[]>> => {
     try {
       const communitiesRes = await api.getCommunities();
-      const communities = (communitiesRes.data as any)?.communities || [];
+      // Handle nested response structure
+      const commData = communitiesRes.data as any;
+      const communities = commData?.data?.communities || commData?.communities || [];
 
       const records: RecentRecord[] = communities.slice(0, 15).map((c: any) => ({
         community: `${c.name} ${c.lga}`,

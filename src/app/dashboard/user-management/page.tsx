@@ -116,9 +116,10 @@ export default function UserManagementPage() {
     setError(null);
     try {
       const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
-      console.log('Toggling status for user:', userId, 'to:', newStatus);
+      const user = users.find(u => u.id === userId);
+      console.log('Toggling status for user:', userId, 'role:', user?.role, 'to:', newStatus);
       
-      const res = await api.updateUser(userId, { status: newStatus });
+      const res = await api.updateUser(userId, { status: newStatus, role: user?.role });
       console.log('Toggle status response:', res);
       
       if (res.success) {
@@ -209,8 +210,9 @@ export default function UserManagementPage() {
     setActionLoading(true);
     setError(null);
     try {
-      console.log('Deleting user:', userId);
-      const res = await api.deleteUser(userId);
+      const user = users.find(u => u.id === userId);
+      console.log('Deleting user:', userId, 'role:', user?.role);
+      const res = await api.deleteUser(userId, user?.role);
       console.log('Delete user response:', res);
       
       if (res.success) {
