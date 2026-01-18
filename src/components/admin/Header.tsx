@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import NotificationsPanel from './NotificationsPanel';
 import Logo from '@/components/ui/Logo';
 
@@ -9,7 +10,13 @@ interface HeaderProps {
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
+  
+  // Determine profile URL based on current path
+  const isFieldAgent = pathname.startsWith('/dashboard/field-agent') || pathname.startsWith('/field-agent');
+  const profileUrl = isFieldAgent ? '/field-agent/profile' : '/dashboard/profile';
 
   useEffect(() => {
     if (notifOpen) {
@@ -41,9 +48,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <Image src="/icons/notification-01.svg" alt="Notifications" width={20} height={20} />
           </button>
 
-          {/* Avatar - Profile icon (no redirect, stays on current dashboard) */}
-          <div 
-            className="cursor-default overflow-hidden rounded-full size-11"
+          {/* Avatar - Profile icon (navigates to profile) */}
+          <button 
+            onClick={() => router.push(profileUrl)}
+            className="cursor-pointer overflow-hidden rounded-full size-11 hover:ring-2 hover:ring-blue-300 transition-all"
             aria-label="User profile"
           >
             <Image 
@@ -53,7 +61,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
               height={44}
               className="rounded-full object-cover"
             />
-          </div>
+          </button>
 
           {/* Mobile hamburger menu */}
           <button 
@@ -75,8 +83,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
             onClick={() => setNotifOpen(false)}
           />
           
-          {/* Panel positioned on the right - aligned with top */}
-          <div className="fixed top-[65px] right-2 sm:right-4 md:right-6 z-50 w-[calc(100%-16px)] sm:w-full max-w-md" style={{ margin: 0 }}>
+          {/* Panel positioned on the right - aligned with very top of page */}
+          <div className="fixed top-0 right-0 z-50 w-full max-w-md h-screen" style={{ margin: 0 }}>
             <NotificationsPanel onClose={() => setNotifOpen(false)} />
           </div>
         </>

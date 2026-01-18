@@ -52,10 +52,10 @@ export default function LoginPage() {
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           if (token) {
-            console.log("[Auth] Field agent token received, storing and redirecting to /dashboard/field-agent");
+            console.log("[Auth] Field agent token received, storing and redirecting to /field-agent/dashboard");
             localStorage.setItem("fieldAgentToken", token);
             localStorage.setItem("userRole", "field-agent");
-            router.push("/dashboard/field-agent");
+            router.push("/field-agent/dashboard");
           } else {
             console.error("[Auth] No token in field agent response");
             setError("Invalid field agent credentials");

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -10,6 +11,7 @@ interface HeaderProps {
 export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
   const [agentName, setAgentName] = useState('Field Agent');
   const [showNotifications, setShowNotifications] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Get agent data from localStorage
@@ -86,14 +88,17 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
           </button>
 
           {/* User Avatar */}
-          <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/field-agent/profile')}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <div className="w-11 h-11 rounded-full bg-[#2c7be5] flex items-center justify-center text-white font-poppins font-medium">
               {agentName.charAt(0).toUpperCase()}
             </div>
             <span className="hidden sm:block font-poppins text-sm text-[#212b36]">
               {agentName}
             </span>
-          </div>
+          </button>
         </div>
       </div>
     </header>

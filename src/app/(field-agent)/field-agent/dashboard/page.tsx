@@ -120,16 +120,16 @@ export default function FieldAgentDashboardPage() {
   }
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-tl-[20px] rounded-bl-[20px] overflow-hidden">
-      <div className="p-6 flex flex-col gap-6">
+    <div className="bg-white border border-[#d9d9d9] rounded-[20px] lg:rounded-tl-[20px] lg:rounded-bl-[20px] lg:rounded-tr-none lg:rounded-br-none overflow-hidden min-h-[calc(100vh-120px)]">
+      <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
         {/* Page Title */}
         <div 
-          className="h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4"
+          className="h-12 sm:h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4"
           style={{ 
             backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)' 
           }}
         >
-          <h1 className="font-poppins font-semibold text-xl text-[#212b36] uppercase">
+          <h1 className="font-poppins font-semibold text-lg sm:text-xl text-[#212b36] uppercase">
             Dashboard
           </h1>
         </div>

@@ -5,13 +5,21 @@ import { usePathname } from 'next/navigation';
 import Icon, { IconName } from './Icon';
 import Image from 'next/image';
 
-const items: ReadonlyArray<{ readonly label: string; readonly href: string; readonly iconName: IconName }> = [
+// Admin menu items (6 items)
+const adminItems: ReadonlyArray<{ readonly label: string; readonly href: string; readonly iconName: IconName }> = [
   { label: 'Dashboard', href: '/dashboard', iconName: 'dashboard' },
   { label: 'Community', href: '/dashboard/community', iconName: 'community' },
   { label: 'Test Recording', href: '/dashboard/submit-test', iconName: 'test' },
   { label: 'Patients', href: '/dashboard/view-patients', iconName: 'patients' },
   { label: 'Analytics & Reports', href: '/dashboard/report', iconName: 'analytics' },
   { label: 'User Management', href: '/dashboard/user-management', iconName: 'users' },
+];
+
+// Field Agent menu items (3 items only)
+const fieldAgentItems: ReadonlyArray<{ readonly label: string; readonly href: string; readonly iconName: IconName }> = [
+  { label: 'Dashboard', href: '/field-agent/dashboard', iconName: 'dashboard' },
+  { label: 'Community', href: '/field-agent/community', iconName: 'community' },
+  { label: 'Test Recording', href: '/field-agent/test-recording', iconName: 'test' },
 ];
 
 interface SideMenuProps {
@@ -21,6 +29,10 @@ interface SideMenuProps {
 
 const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
   const pathname = usePathname();
+  
+  // Detect if we're on field agent dashboard (either /dashboard/field-agent or /field-agent/*)
+  const isFieldAgent = pathname.startsWith('/dashboard/field-agent') || pathname.startsWith('/field-agent');
+  const items = isFieldAgent ? fieldAgentItems : adminItems;
 
   const sidebarContent = (
     <nav className="w-[200px] flex flex-col gap-[14px]">
