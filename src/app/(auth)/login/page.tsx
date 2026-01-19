@@ -23,50 +23,37 @@ export default function LoginPage() {
 
     try {
       if (role === "admin") {
-        // Admin login
-        console.log("[Auth] Attempting admin login...");
         const response = await api.login({ email, password }) as any;
-        console.log("[Auth] Admin login response:", response);
         
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           if (token) {
-            console.log("[Auth] Admin token received, storing and redirecting to /dashboard");
             localStorage.setItem("token", token);
             localStorage.setItem("userRole", "admin");
             router.push("/dashboard");
           } else {
-            console.error("[Auth] No token in admin response");
             setError("Invalid admin credentials");
           }
         } else {
-          console.error("[Auth] Admin login failed:", response.error);
           setError(response.error || "Invalid admin credentials");
         }
       } else {
-        // Field Agent login
-        console.log("[Auth] Attempting field agent login...");
         const response = await fieldAgentApi.login({ email, password }) as any;
-        console.log("[Auth] Field agent login response:", response);
         
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           if (token) {
-            console.log("[Auth] Field agent token received, storing and redirecting to /field-agent/dashboard");
             localStorage.setItem("fieldAgentToken", token);
             localStorage.setItem("userRole", "field-agent");
             router.push("/field-agent/dashboard");
           } else {
-            console.error("[Auth] No token in field agent response");
             setError("Invalid field agent credentials");
           }
         } else {
-          console.error("[Auth] Field agent login failed:", response.error);
           setError(response.error || "Invalid field agent credentials");
         }
       }
     } catch (err: any) {
-      console.error("Login error:", err);
       setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);

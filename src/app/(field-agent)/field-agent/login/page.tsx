@@ -20,10 +20,10 @@ export default function FieldAgentLoginPage() {
 
     try {
       const endpoint = loginType === 'field-agent' 
-        ? '/api/fieldAgent/login' 
-        : '/api/admin/login';
+        ? '/fieldAgent/login' 
+        : '/admin/login';
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}${endpoint}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://lunarmedtrack-api.onrender.com/api'}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

@@ -36,7 +36,9 @@ const menuItems = [
     path: '/field-agent/test-recording',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 2H15M12 10V14M12 14L14 12M12 14L10 12M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M7 3C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V9M7 3H14L19 8V9M7 3V3C7 3 14 3 14 3M14 3V8C14 8.55228 14.4477 9 15 9H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 13H15M9 17H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M12 7V11M10 9H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
   },
@@ -88,7 +90,7 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
                   key={item.path}
                   href={item.path}
                   onClick={onClose}
-                  className={`flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg transition-all ${
+                  className={`flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg transition-all cursor-pointer ${
                     isActive
                       ? 'bg-white shadow-[0px_4px_4px_rgba(118,124,129,0.19)] text-[#212b36]'
                       : 'text-[#637381] hover:bg-white/50'
@@ -104,7 +106,7 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2.5 px-1.5 py-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto"
+            className="flex items-center gap-2.5 px-1.5 py-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto cursor-pointer"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

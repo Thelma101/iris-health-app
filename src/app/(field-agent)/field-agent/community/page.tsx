@@ -4,14 +4,23 @@ import { useState, useEffect } from 'react';
 import { fieldAgentApi } from '@/lib/api/field-agent';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+interface FieldOfficer {
+  _id?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  name?: string;
+}
+
 interface CommunityDetails {
   _id: string;
   name: string;
   lga: string;
   population: number;
-  fieldOfficers: string[];
+  fieldOfficers: FieldOfficer[] | string[];
   totalTests: number;
   visitationDates: string[];
+  visitationSummary?: string;
 }
 
 export default function FieldAgentCommunityPage() {
@@ -30,14 +39,24 @@ export default function FieldAgentCommunityPage() {
         
         if (communities.length > 0) {
           const c = communities[0];
+          // Parse field officers - handle both object array and string array
+          const officers = c.fieldOfficers || [];
+          const parsedOfficers = officers.map((fo: any) => {
+            if (typeof fo === 'string') return fo;
+            if (fo.firstName || fo.lastName) return `${fo.firstName || ''} ${fo.lastName || ''}`.trim();
+            if (fo.name) return fo.name;
+            return 'Unknown Officer';
+          }).filter((name: string) => name && name !== 'Unknown Officer');
+          
           setCommunity({
             _id: c._id || c.id,
             name: c.name || 'Igbogbo',
             lga: c.lga || 'Ikorodu',
             population: c.totalPopulation || c.population || 23000,
-            fieldOfficers: c.fieldOfficers || ['Tobi Opeyemi', 'Cardoso Mark', 'Steph Oluyemi'],
+            fieldOfficers: parsedOfficers.length > 0 ? parsedOfficers : ['Tobi Opeyemi', 'Cardoso Mark', 'Steph Oluyemi'],
             totalTests: c.totalTestsConducted || 2000,
             visitationDates: c.visitationDates || ['20/02/2025', '09/12/2024'],
+            visitationSummary: c.visitationSummary,
           });
         } else {
           setCommunity({
@@ -142,7 +161,11 @@ export default function FieldAgentCommunityPage() {
                   Field Officers
                 </p>
                 <p className="font-poppins text-sm text-[#212b36]">
-                  {community.fieldOfficers.join(', ')}
+                  {Array.isArray(community.fieldOfficers) 
+                    ? community.fieldOfficers.map((fo: any) => 
+                        typeof fo === 'string' ? fo : `${fo.firstName || ''} ${fo.lastName || ''}`.trim()
+                      ).join(', ') 
+                    : 'No officers assigned'}
                 </p>
               </div>
 

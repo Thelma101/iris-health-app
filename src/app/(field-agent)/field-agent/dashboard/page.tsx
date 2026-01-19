@@ -68,17 +68,21 @@ export default function FieldAgentDashboardPage() {
       // Group visitations by community for recent records
       const communityMap = new Map<string, any>();
       visitations.forEach((v: any) => {
-        const communityName = v.community?.name || v.communityName || 'Unknown';
-        if (!communityMap.has(communityName)) {
-          communityMap.set(communityName, {
+        // Backend populates communityId with { name, lga } object
+        const communityName = v.communityId?.name || v.community?.name || v.communityName || 'Unknown';
+        const communityLga = v.communityId?.lga || v.community?.lga || '';
+        const fullCommunityName = communityLga ? `${communityName} ${communityLga}` : communityName;
+        
+        if (!communityMap.has(fullCommunityName)) {
+          communityMap.set(fullCommunityName, {
             id: v._id || v.id,
-            community: communityName,
+            community: fullCommunityName,
             totalTests: 0,
-            topPositiveTest: v.testType || 'HIV/AIDS',
+            topPositiveTest: v.diagnostics?.[0]?.testType || v.testType || 'HIV/AIDS',
             topNegativeTest: 'Hepatitis B',
           });
         }
-        communityMap.get(communityName).totalTests++;
+        communityMap.get(fullCommunityName).totalTests++;
       });
 
       setRecentRecords(Array.from(communityMap.values()).slice(0, 15));

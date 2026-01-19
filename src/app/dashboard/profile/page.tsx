@@ -42,8 +42,8 @@ export default function ProfilePage() {
       const token = adminToken || fieldAgentToken;
       const isAdmin = userRole === 'admin' || !!adminToken;
       const apiUrl = isAdmin 
-        ? 'http://localhost:8080/api/admin/profile' 
-        : 'http://localhost:8080/api/field-agent/profile';
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'https://lunarmedtrack-api.onrender.com/api'}/admin/profile` 
+        : `${process.env.NEXT_PUBLIC_API_URL || 'https://lunarmedtrack-api.onrender.com/api'}/fieldAgent/profile`;
       
       if (token) {
         const response = await fetch(apiUrl, {

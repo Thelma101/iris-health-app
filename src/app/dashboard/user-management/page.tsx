@@ -33,8 +33,6 @@ export default function UserManagementPage() {
     setError(null);
     try {
       const res = await api.getUsers() as any;
-      console.log('API Response (full):', res);
-      console.log('API Response data:', res.data);
       
       // Check for authentication errors
       if (!res.success && res.error) {
@@ -46,12 +44,8 @@ export default function UserManagementPage() {
       }
       
       // Handle the nested response structure from the backend
-      // Backend returns: { success, message, data: { fieldAgents: [...] } }
-      // apiRequest wraps it: { success, data: { success, message, data: { fieldAgents } } }
       const backendData = res.data?.data || res.data;
       const fieldAgents = backendData?.fieldAgents || backendData || [];
-      
-      console.log('Extracted fieldAgents:', fieldAgents);
       
       if (res.success && Array.isArray(fieldAgents)) {
         const mappedUsers: User[] = fieldAgents.map((u: any) => ({
@@ -65,18 +59,11 @@ export default function UserManagementPage() {
             : 'Never',
           status: u.status || 'Active',
         }));
-        console.log('Mapped users:', mappedUsers);
         setUsers(mappedUsers);
-        
-        if (mappedUsers.length === 0) {
-          console.log('No users found in database');
-        }
       } else {
-        console.log('Response structure issue - fieldAgents:', fieldAgents, 'isArray:', Array.isArray(fieldAgents));
         setUsers([]);
       }
     } catch (err: unknown) {
-      console.error('Error fetching users:', err);
       setError('Failed to fetch users from server');
       setUsers([]);
     } finally {
@@ -117,19 +104,16 @@ export default function UserManagementPage() {
     try {
       const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
       const user = users.find(u => u.id === userId);
-      console.log('Toggling status for user:', userId, 'role:', user?.role, 'to:', newStatus);
       
       const res = await api.updateUser(userId, { status: newStatus, role: user?.role });
-      console.log('Toggle status response:', res);
       
       if (res.success) {
         setSuccessMessage(`User status updated to ${newStatus}`);
-        await fetchUsers(); // Refresh from server
+        await fetchUsers();
       } else {
         setError(res.error || 'Failed to update status');
       }
     } catch (err: any) {
-      console.error('Error toggling status:', err);
       setError(err.message || 'Failed to update status');
     } finally {
       setActionLoading(false);
@@ -150,21 +134,18 @@ export default function UserManagementPage() {
         lastName: nameParts.slice(1).join(' ') || '',
         email: userData.email,
         password: userData.password,
-        role: userData.role, // Pass the role to API
+        role: userData.role,
       };
       
-      console.log('Creating user with payload:', payload);
       const res = await api.createUser(payload);
-      console.log('Create user response:', res);
       
       if (res.success) {
         setSuccessMessage(`${userData.role} added successfully!`);
-        await fetchUsers(); // Refresh the list
+        await fetchUsers();
       } else {
         setError(res.error || 'Failed to add user');
       }
     } catch (err: any) {
-      console.error('Error adding user:', err);
       setError(err.message || 'Failed to add user');
     } finally {
       setActionLoading(false);
@@ -182,12 +163,10 @@ export default function UserManagementPage() {
         lastName: nameParts.slice(1).join(' ') || '',
         email: userData.email,
         status: userData.status,
-        role: userData.role, // Preserve the role on update
+        role: userData.role,
       };
       
-      console.log('Updating user:', userData.id, 'with payload:', payload);
       const res = await api.updateUser(userData.id, payload);
-      console.log('Update user response:', res);
       
       if (res.success) {
         setSuccessMessage('User updated successfully!');
@@ -196,7 +175,6 @@ export default function UserManagementPage() {
         setError(res.error || 'Failed to update user');
       }
     } catch (err: any) {
-      console.error('Error updating user:', err);
       setError(err.message || 'Failed to update user');
     } finally {
       setActionLoading(false);
@@ -211,9 +189,7 @@ export default function UserManagementPage() {
     setError(null);
     try {
       const user = users.find(u => u.id === userId);
-      console.log('Deleting user:', userId, 'role:', user?.role);
       const res = await api.deleteUser(userId, user?.role);
-      console.log('Delete user response:', res);
       
       if (res.success) {
         setSuccessMessage('User deleted successfully!');
@@ -222,7 +198,6 @@ export default function UserManagementPage() {
         setError(res.error || 'Failed to delete user');
       }
     } catch (err: any) {
-      console.error('Error deleting user:', err);
       setError(err.message || 'Failed to delete user');
     } finally {
       setActionLoading(false);

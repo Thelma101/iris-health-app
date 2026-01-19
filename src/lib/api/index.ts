@@ -90,34 +90,25 @@ export const api = {
 
   // Users (both Admins and Field Agents)
   getUsers: async () => {
-    // Check if user has a valid token
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
-      console.warn('No auth token found - user may need to login');
       return { success: false, error: 'Authentication required. Please login.', data: { fieldAgents: [] } };
     }
     
     try {
-      // Fetch both admins and field agents
       const fieldAgentsRes = await apiRequest<{ fieldAgents: FieldAgent[] }>('/fieldAgent/all');
       
-      // Check if field agents request failed (likely 401)
       if (!fieldAgentsRes.success) {
-        console.error('Failed to fetch field agents:', fieldAgentsRes.error);
-        // If it's an auth error, propagate it
         if (fieldAgentsRes.error?.includes('401') || fieldAgentsRes.error?.includes('authorized') || fieldAgentsRes.error?.includes('token')) {
           return { success: false, error: 'Session expired. Please login again.', data: { fieldAgents: [] } };
         }
       }
       
-      // Handle nested response: apiRequest returns { success, data: backendResponse }
-      // backendResponse is { success, message, data: { fieldAgents: [...] } }
       const fieldAgentsData = fieldAgentsRes.data as any;
       const fieldAgents = fieldAgentsRes.success 
         ? (fieldAgentsData?.data?.fieldAgents || fieldAgentsData?.fieldAgents || []) 
         : [];
       
-      // Try to fetch admins if endpoint exists
       let admins: any[] = [];
       const adminsRes = await apiRequest<{ admins: any[] }>('/admin/all');
       if (adminsRes.success) {
@@ -125,7 +116,6 @@ export const api = {
         admins = adminsData?.data?.admins || adminsData?.admins || [];
       }
       
-      // Combine and mark with roles
       const allUsers = [
         ...admins.map((a: any) => ({ ...a, firstName: a.name?.split(' ')[0] || '', lastName: a.name?.split(' ').slice(1).join(' ') || '', role: 'Admin' })),
         ...fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' })),
@@ -133,7 +123,6 @@ export const api = {
       
       return { success: true, data: { fieldAgents: allUsers } };
     } catch (error) {
-      console.error('Error in getUsers:', error);
       return { success: false, error: 'Failed to fetch users', data: { fieldAgents: [] } };
     }
   },
