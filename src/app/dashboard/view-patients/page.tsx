@@ -95,7 +95,11 @@ export default function ViewPatientsPage() {
       {/* Filter and Search Section */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} />
-        <FilterBar selectedDate={selectedDate} onExport={() => handleExport(selectedDate)} />
+        <FilterBar 
+          selectedDate={selectedDate} 
+          onDateChange={setSelectedDate}
+          onExport={() => handleExport(selectedDate)} 
+        />
       </div>
 
       {/* Patients Count */}

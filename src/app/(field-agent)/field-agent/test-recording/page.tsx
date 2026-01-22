@@ -1,17 +1,12 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import FormStepIndicator from '@/components/field-agent/FormStepIndicator';
-import {
-  SelectField,
-  InputField,
-  TextAreaField,
-  DateField,
-  FileUploadField,
-} from '@/components/field-agent/FormFields';
+import React, { useState, useEffect, useCallback } from 'react';
+import CreateTestTypeModal from '@/components/admin/CreateTestTypeModal';
+import SubmitTestModal from '@/components/admin/SubmitTestModal';
+import TestTypeListModal from '@/components/admin/TestTypeListModal';
+import EditTestTypeModal from '@/components/admin/EditTestTypeModal';
+import FormProgress from '@/components/admin/submit-test/FormProgress';
+import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
 import { fieldAgentApi } from '@/lib/api/field-agent';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface PatientInfo {
   lga: string;
@@ -20,8 +15,8 @@ interface PatientInfo {
   lastName: string;
   age: string;
   gender: string;
-  phone: string;
-  isExistingPatient: boolean;
+  phoneNumber: string;
+  isExistingPatient?: boolean;
   patientId?: string;
 }
 
@@ -33,124 +28,94 @@ interface TestDetails {
   testImage: File | null;
 }
 
-interface PatientUpload {
-  patientPhoto: File | null;
+interface TestType {
+  id: number;
+  name: string;
+  results: string[];
 }
 
-const STEPS = [
-  { label: 'Patient', subLabel: ' info' },
-  { label: 'Test Details' },
-  { label: 'Upload Photos/Attachment' },
-  { label: 'Submit' },
-];
+interface CommunityOption {
+  value: string;
+  label: string;
+  lga: string;
+}
 
-const GENDERS = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-];
+export default function TestRecordingPage() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-const TEST_TYPES = [
-  { value: 'hiv', label: 'HIV 1/2 Rapid Test' },
-  { value: 'malaria', label: 'Malaria Rapid Diagnostic Test (RDT)' },
-  { value: 'hepatitis_b', label: 'Hepatitis B Surface Antigen (HBsAg)' },
-  { value: 'tb', label: 'Tuberculosis (TB) Sputum Smear' },
-  { value: 'cholera', label: 'Cholera Rapid Test' },
-  { value: 'blood_pressure', label: 'Blood Pressure' },
-  { value: 'blood_sugar', label: 'Blood Sugar' },
-];
-
-const TEST_RESULTS = [
-  { value: 'positive', label: 'Positive' },
-  { value: 'negative', label: 'Negative' },
-  { value: 'inconclusive', label: 'Inconclusive' },
-  { value: 'reactive', label: 'Reactive' },
-  { value: 'non_reactive', label: 'Non-Reactive' },
-  { value: 'invalid', label: 'Invalid' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'high', label: 'High' },
-  { value: 'low', label: 'Low' },
-  { value: 'elevated', label: 'Elevated' },
-  { value: 'high_risk', label: 'High Risk' },
-  { value: 'prehypertension', label: 'Prehypertension' },
-  { value: 'hypertension', label: 'Hypertension' },
-  { value: 'underweight', label: 'Underweight' },
-  { value: 'overweight', label: 'Overweight' },
-  { value: 'obese', label: 'Obese' },
-  { value: 'mild_anemia', label: 'Mild Anemia' },
-  { value: 'severe_anemia', label: 'Severe Anemia' },
-  { value: 'present', label: 'Present' },
-  { value: 'absent', label: 'Absent' },
-  { value: 'adequate', label: 'Adequate' },
-  { value: 'inadequate', label: 'Inadequate' },
-  { value: 'safe', label: 'Safe' },
-  { value: 'contaminated', label: 'Contaminated' },
-];
-
-export default function TestRecordingMultiStepPage() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  // Form data
-  const [communities, setCommunities] = useState<{ value: string; label: string; lga?: string }[]>([]);
+  // Communities and LGAs from API
+  const [communities, setCommunities] = useState<CommunityOption[]>([]);
   const [lgas, setLgas] = useState<{ value: string; label: string }[]>([]);
 
-  const [patientInfo, setPatientInfo] = useState<PatientInfo>({
+  // Form State
+  const [formData, setFormData] = useState<PatientInfo>({
     lga: '',
     community: '',
     firstName: '',
     lastName: '',
     age: '',
-    gender: '',
-    phone: '',
+    gender: 'male',
+    phoneNumber: '',
     isExistingPatient: false,
   });
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
-    testType: '',
+    testType: 'HIV 1/2 Rapid Test',
     dateConducted: '',
-    testResult: '',
+    testResult: 'Positive',
     officerNote: '',
     testImage: null,
   });
 
-  const [patientUpload, setPatientUpload] = useState<PatientUpload>({
-    patientPhoto: null,
-  });
-
+  const [patientPhoto, setPatientPhoto] = useState<File | null>(null);
   const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
   const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
+
+  // Modal States
+  const [isCreateTestTypeModalOpen, setIsCreateTestTypeModalOpen] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isTestTypeListModalOpen, setIsTestTypeListModalOpen] = useState(false);
+  const [isEditTestTypeModalOpen, setIsEditTestTypeModalOpen] = useState(false);
+  const [selectedTestType, setSelectedTestType] = useState<TestType | null>(null);
+
+  // Test Types State
+  const [testTypes, setTestTypes] = useState<TestType[]>([]);
+
+  // Submission State
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // Fetch communities on mount
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fieldAgentApi.getMyCommunities();
+      console.log('Communities API response:', res);
       const communitiesData =
         (res.data as any)?.data?.communities || (res.data as any)?.communities || [];
+      console.log('Parsed communities data:', communitiesData);
       
       // Extract unique LGAs
       const uniqueLgas = [...new Set(communitiesData.map((c: any) => c.lga).filter(Boolean))] as string[];
       setLgas(uniqueLgas.map((lga) => ({ value: lga, label: lga })));
       
-      setCommunities(
-        communitiesData.map((c: any) => ({
-          value: c._id || c.id,
-          label: c.name,
-          lga: c.lga,
-        }))
-      );
+      const mappedCommunities = communitiesData.map((c: any) => ({
+        value: c._id || c.id,
+        label: c.name,
+        lga: c.lga,
+      }));
+      console.log('Mapped communities with values:', mappedCommunities);
+      setCommunities(mappedCommunities);
     } catch (err) {
       console.error('Error fetching communities:', err);
-      // Set demo data
+      // Set demo data with valid ObjectId format
       setLgas([{ value: 'Ikorodu', label: 'Ikorodu' }]);
       setCommunities([
-        { value: '1', label: 'Bayeku', lga: 'Ikorodu' },
-        { value: '2', label: 'Igbogbo', lga: 'Ikorodu' },
-        { value: '3', label: 'Baiyeku Ikorodu', lga: 'Ikorodu' },
+        { value: '000000000000000000000001', label: 'Bayeku', lga: 'Ikorodu' },
+        { value: '000000000000000000000002', label: 'Igbogbo', lga: 'Ikorodu' },
+        { value: '000000000000000000000003', label: 'Baiyeku Ikorodu', lga: 'Ikorodu' },
       ]);
     } finally {
       setLoading(false);
@@ -161,440 +126,497 @@ export default function TestRecordingMultiStepPage() {
     fetchData();
   }, [fetchData]);
 
-  // Handle file preview
-  useEffect(() => {
-    if (testDetails.testImage) {
-      const url = URL.createObjectURL(testDetails.testImage);
-      setTestImagePreview(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setTestImagePreview(null);
-  }, [testDetails.testImage]);
-
-  useEffect(() => {
-    if (patientUpload.patientPhoto) {
-      const url = URL.createObjectURL(patientUpload.patientPhoto);
-      setPatientPhotoPreview(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setPatientPhotoPreview(null);
-  }, [patientUpload.patientPhoto]);
-
   // Filter communities by selected LGA
-  const filteredCommunities = patientInfo.lga
-    ? communities.filter((c) => c.lga === patientInfo.lga)
+  const filteredCommunities = formData.lga
+    ? communities.filter((c) => c.lga === formData.lga)
     : communities;
 
-  const handleNext = () => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep(currentStep + 1);
+  // Navigation
+  const nextStep = () => {
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
+  };
+
+  const previousStep = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  // Handlers
+  const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
+    if (field === 'lga') {
+      setFormData((prev) => ({ ...prev, lga: value, community: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+  const handleTestDetailsChange = (field: keyof TestDetails, value: string) => {
+    setTestDetails((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setTestDetails((prev) => ({ ...prev, testImage: file }));
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setTestImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handlePatientPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setPatientPhoto(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddTestType = (testType: string, expectedResults: string[]) => {
+    const newTestType: TestType = {
+      id: testTypes.length + 1,
+      name: testType,
+      results: expectedResults,
+    };
+    setTestTypes([...testTypes, newTestType]);
+  };
+
+  const handleEditTestType = (id: number, testType: string, expectedResults: string[]) => {
+    setTestTypes(testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t)));
+  };
+
+  const handleDeleteTestType = (id: number) => {
+    setTestTypes(testTypes.filter((t) => t.id !== id));
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-    setError(null);
-
+    setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      // Create patient if new
-      let patientId = patientInfo.patientId;
-      if (!patientInfo.isExistingPatient) {
-        const patientRes = await fieldAgentApi.createPatient({
-          firstName: patientInfo.firstName,
-          lastName: patientInfo.lastName,
-          age: parseInt(patientInfo.age),
-          gender: patientInfo.gender,
-          phone: patientInfo.phone,
-          community: patientInfo.community,
-        });
-        patientId = (patientRes.data as any)?.data?.patient?._id || 
-                    (patientRes.data as any)?.patient?._id;
+      // Validate community is selected
+      const communityId = formData.community;
+      if (!communityId) {
+        throw new Error('Please select a community');
+      }
+      
+      // Validate patient info
+      if (!formData.firstName?.trim()) {
+        throw new Error('First name is required');
+      }
+      if (!formData.lastName?.trim()) {
+        throw new Error('Last name is required');
+      }
+      if (!formData.gender) {
+        throw new Error('Gender is required');
       }
 
-      // Create visitation/test record
-      const visitationData = {
+      // Create patient first
+      const patientRes = await fieldAgentApi.createPatient({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        age: parseInt(formData.age) || 0,
+        gender: formData.gender, // 'male' or 'female' (lowercase)
+        phone: formData.phoneNumber?.trim() || '',
+        community: communityId,
+      });
+
+      console.log('Patient creation response:', patientRes);
+
+      if (!patientRes.success) {
+        throw new Error(patientRes.error || 'Failed to create patient');
+      }
+
+      const patientId = (patientRes.data as any)?.data?.patient?._id || 
+                        (patientRes.data as any)?.patient?._id;
+      
+      if (!patientId) {
+        throw new Error('Failed to get patient ID');
+      }
+
+      // Create visitation (test record)
+      const visitationRes = await fieldAgentApi.createVisitation({
         patient: patientId,
-        community: patientInfo.community,
         testType: testDetails.testType,
         testResult: testDetails.testResult,
+        note: testDetails.officerNote,
         dateConducted: testDetails.dateConducted,
-        notes: testDetails.officerNote,
-      };
+      });
 
-      await fieldAgentApi.createVisitation(visitationData);
-      setSuccess(true);
+      console.log('Visitation creation response:', visitationRes);
+
+      if (!visitationRes.success) {
+        throw new Error(visitationRes.error || 'Failed to create test record');
+      }
+
+      setSubmitSuccess(true);
+      setIsSubmitModalOpen(false);
       
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push('/field-agent/dashboard');
-      }, 2000);
+      // Reset form
+      setFormData({
+        lga: '',
+        community: '',
+        firstName: '',
+        lastName: '',
+        age: '',
+        gender: 'male',
+        phoneNumber: '',
+        isExistingPatient: false,
+      });
+      setTestDetails({
+        testType: 'HIV 1/2 Rapid Test',
+        dateConducted: '',
+        testResult: 'Positive',
+        officerNote: '',
+        testImage: null,
+      });
+      setPatientPhoto(null);
+      setTestImagePreview(null);
+      setPatientPhotoPreview(null);
+      setCurrentStep(1);
+      
     } catch (err: any) {
-      console.error('Error submitting test record:', err);
-      setError(err.message || 'Failed to submit test record');
+      console.error('Submit error:', err);
+      setSubmitError(err.message || 'Submission failed');
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2c7be5]"></div>
       </div>
     );
   }
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <div className="flex flex-col gap-6">
-            <p className="font-poppins font-medium text-xl text-[#212b36]">
-              Patient Info
-            </p>
-            <div className="flex flex-col gap-[26px]">
-              <SelectField
-                label="LGA"
-                value={patientInfo.lga}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, lga: value, community: '' })
-                }
-                options={lgas}
-                placeholder="Select LGA"
-              />
-              <SelectField
-                label="Select Community"
-                value={patientInfo.community}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, community: value })
-                }
-                options={filteredCommunities}
-                placeholder="Select Community"
-              />
-              <InputField
-                label="First Name"
-                value={patientInfo.firstName}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, firstName: value })
-                }
-                placeholder="Tayo"
-              />
-              <InputField
-                label="Last Name"
-                value={patientInfo.lastName}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, lastName: value })
-                }
-                placeholder="Ayo"
-              />
-              <InputField
-                label="Age"
-                value={patientInfo.age}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, age: value })
-                }
-                placeholder="67"
-                type="number"
-              />
-              <SelectField
-                label="Gender"
-                value={patientInfo.gender}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, gender: value })
-                }
-                options={GENDERS}
-                placeholder="Select Gender"
-              />
-              <InputField
-                label="Phone Number"
-                value={patientInfo.phone}
-                onChange={(value) =>
-                  setPatientInfo({ ...patientInfo, phone: value })
-                }
-                placeholder="080537736267"
-                type="tel"
-              />
-            </div>
-          </div>
-        );
+  return (
+    <main className="space-y-4 sm:space-y-6">
+      {/* Page Header */}
+      <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
+        <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
+      </div>
 
-      case 1:
-        return (
-          <div className="flex flex-col gap-6">
-            <p className="font-poppins font-medium text-xl text-[#212b36]">
-              Test Details
-            </p>
-            <div className="flex flex-col gap-[26px]">
-              <SelectField
-                label="Test Type"
-                value={testDetails.testType}
-                onChange={(value) =>
-                  setTestDetails({ ...testDetails, testType: value })
-                }
-                options={TEST_TYPES}
-                placeholder="Select Test Type"
-              />
-              <DateField
-                label="Date Conducted"
-                value={testDetails.dateConducted}
-                onChange={(value) =>
-                  setTestDetails({ ...testDetails, dateConducted: value })
-                }
-              />
-              <SelectField
-                label="Test Result"
-                value={testDetails.testResult}
-                onChange={(value) =>
-                  setTestDetails({ ...testDetails, testResult: value })
-                }
-                options={TEST_RESULTS}
-                placeholder="Select Result"
-              />
-              <TextAreaField
-                label="Officer Note"
-                value={testDetails.officerNote}
-                onChange={(value) =>
-                  setTestDetails({ ...testDetails, officerNote: value })
-                }
-                placeholder="Add notes here..."
-              />
-              <FileUploadField
-                label=""
-                value={testDetails.testImage}
-                onChange={(file) =>
-                  setTestDetails({ ...testDetails, testImage: file })
-                }
-                placeholder="Upload Test Image"
-                preview={testImagePreview}
-              />
-            </div>
-          </div>
-        );
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <button
+          onClick={() => setIsCreateTestTypeModalOpen(true)}
+          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          Create New Test Type
+        </button>
+        <div className="flex-1" />
+        <button
+          onClick={() => setIsTestTypeListModalOpen(true)}
+          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
+        >
+          View All the Test Type
+        </button>
+      </div>
 
-      case 2:
-        return (
-          <div className="flex flex-col gap-6">
-            <p className="font-poppins font-medium text-xl text-[#212b36]">
-              Upload photo/attachment
-            </p>
-            <FileUploadField
-              label="Patient photo"
-              value={patientUpload.patientPhoto}
-              onChange={(file) =>
-                setPatientUpload({ ...patientUpload, patientPhoto: file })
-              }
-              placeholder="Upload Patient Image"
-              preview={patientPhotoPreview}
-            />
-          </div>
-        );
+      <div className="h-px bg-[#d9d9d9]" />
 
-      case 3:
-        return (
-          <div className="flex flex-col gap-6">
-            <p className="font-poppins font-medium text-lg text-[#212b36]">
-              Summary
-            </p>
+      {/* Success Message */}
+      {submitSuccess && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>Test record submitted successfully!</span>
+          <button onClick={() => setSubmitSuccess(false)} className="text-green-700 hover:text-green-900">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
-            {/* Patient Info Section */}
-            <div className="flex flex-col gap-[11px]">
-              <div className="bg-[#e8f1ff] border-b border-[#2c7be5] px-1 py-1">
-                <p className="font-poppins font-medium text-base text-[#212b36]">
-                  Patient Info
-                </p>
-              </div>
+      {/* Error Message */}
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{submitError}</span>
+          <button onClick={() => setSubmitError(null)} className="text-red-700 hover:text-red-900">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Form Card */}
+      <div className="flex justify-center">
+        <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
+          <FormProgress currentStep={currentStep} />
+          
+          <div className="max-w-[517px] mx-auto">
+            <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
+              {currentStep === 1 && 'Patient Info'}
+              {currentStep === 2 && 'Test Details'}
+              {currentStep === 3 && 'Upload photo/attachment'}
+              {currentStep === 4 && 'Summary'}
+            </h2>
+
+            {/* Step 1: Patient Info */}
+            {currentStep === 1 && (
               <div className="flex flex-col gap-[26px]">
-                <SummaryField label="LGA" value={patientInfo.lga} hasDropdown />
-                <SummaryField label="Select Community" value={communities.find(c => c.value === patientInfo.community)?.label || patientInfo.community} hasDropdown />
-                <SummaryField label="First Name" value={patientInfo.firstName} />
-                <SummaryField label="Last Name" value={patientInfo.lastName} />
-                <SummaryField label="Age" value={patientInfo.age} />
-                <SummaryField label="Gender" value={patientInfo.gender} hasDropdown />
-                <SummaryField label="Phone Number" value={patientInfo.phone} />
-              </div>
-            </div>
-
-            {/* Test Details Section */}
-            <div className="flex flex-col gap-6">
-              <div className="bg-[#e8f1ff] border-b border-[#2c7be5] h-[30px] flex items-center px-1">
-                <p className="font-poppins font-medium text-base text-[#212b36]">
-                  Test Details
-                </p>
-              </div>
-              <div className="flex flex-col gap-[26px]">
-                <SummaryField label="Test Type" value={TEST_TYPES.find(t => t.value === testDetails.testType)?.label || testDetails.testType} hasDropdown />
-                <SummaryField label="Date Conducted" value={testDetails.dateConducted} />
-                <SummaryField label="Test Result" value={TEST_RESULTS.find(r => r.value === testDetails.testResult)?.label || testDetails.testResult} hasDropdown />
-                <div className="flex flex-col gap-[6px]">
-                  <p className="font-poppins font-medium text-sm text-[#637381]">
-                    Officer Note
-                  </p>
-                  <div className="h-[95px] bg-white border border-[#d9d9d9] rounded p-4 overflow-auto">
-                    <p className="font-poppins text-sm text-[#212b36]">
-                      {testDetails.officerNote || '-'}
-                    </p>
+                {/* LGA */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">LGA</label>
+                  <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+                    <select
+                      value={formData.lga}
+                      onChange={(e) => handlePatientInfoChange('lga', e.target.value)}
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
+                    >
+                      <option value="">Select LGA</option>
+                      {lgas.map((lga) => (
+                        <option key={lga.value} value={lga.value}>
+                          {lga.label}
+                        </option>
+                      ))}
+                    </select>
+                    <svg className="absolute top-1/2 right-[10px] -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
                 </div>
-                {testImagePreview && (
-                  <div className="border border-dashed border-[#d9d9d9] rounded p-2 flex items-center justify-center">
-                    <img
-                      src={testImagePreview}
-                      alt="Test"
-                      className="max-h-[70px] object-contain"
+
+                {/* Community */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Select Community</label>
+                  <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+                    <select
+                      value={formData.community}
+                      onChange={(e) => handlePatientInfoChange('community', e.target.value)}
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
+                    >
+                      <option value="">Select Community</option>
+                      {filteredCommunities.map((community) => (
+                        <option key={community.value} value={community.value}>
+                          {community.label}
+                        </option>
+                      ))}
+                    </select>
+                    <svg className="absolute top-1/2 right-[10px] -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* First Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">First Name</label>
+                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) => handlePatientInfoChange('firstName', e.target.value)}
+                      placeholder="Tayo"
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
                     />
+                  </div>
+                </div>
+
+                {/* Last Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Last Name</label>
+                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) => handlePatientInfoChange('lastName', e.target.value)}
+                      placeholder="Ayo"
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                    />
+                  </div>
+                </div>
+
+                {/* Age */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Age</label>
+                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                    <input
+                      type="number"
+                      value={formData.age}
+                      onChange={(e) => handlePatientInfoChange('age', e.target.value)}
+                      placeholder="67"
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                    />
+                  </div>
+                </div>
+
+                {/* Gender */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Gender</label>
+                  <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => handlePatientInfoChange('gender', e.target.value)}
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                    <svg className="absolute top-1/2 right-[10px] -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Phone Number */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Phone Number</label>
+                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                    <input
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handlePatientInfoChange('phoneNumber', e.target.value)}
+                      placeholder="080537736267"
+                      className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Test Details */}
+            {currentStep === 2 && (
+              <TestDetailsForm 
+                testDetails={testDetails} 
+                onChange={handleTestDetailsChange} 
+                onImageChange={handleTestImageChange} 
+              />
+            )}
+
+            {/* Step 3: Upload Photos */}
+            {currentStep === 3 && (
+              <div className="flex flex-col gap-[26px]">
+                {testImagePreview && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Image Preview</label>
+                    <img src={testImagePreview} alt="Test" className="max-w-[300px] rounded border border-[#d9d9d9]" />
+                  </div>
+                )}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo</label>
+                  <div className="flex flex-col gap-3">
+                    <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-[#2c7be5] text-white border border-[#2c7be5] rounded font-poppins font-medium hover:bg-blue-600 transition-colors cursor-pointer">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Snap Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handlePatientPhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                    <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-white border border-[#d9d9d9] text-[#637381] rounded font-poppins font-medium hover:bg-gray-50 transition-colors cursor-pointer">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Upload Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePatientPhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+                {patientPhotoPreview && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo Preview</label>
+                    <img src={patientPhotoPreview} alt="Patient" className="max-w-[300px] rounded border border-[#d9d9d9]" />
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
-            {/* Patient Image Section */}
-            <div className="flex flex-col gap-6">
-              <div className="bg-[#e8f1ff] border-b border-[#2c7be5] h-[30px] flex items-center px-1">
-                <p className="font-poppins font-medium text-base text-[#212b36]">
-                  Patient Image
-                </p>
-              </div>
-              <div className="flex flex-col gap-[6px]">
-                <p className="font-poppins font-medium text-sm text-[#637381]">
-                  Patient photo
-                </p>
-                <div className="h-[125px] border border-dashed border-[#d9d9d9] rounded flex items-center justify-center">
-                  {patientPhotoPreview ? (
-                    <img
-                      src={patientPhotoPreview}
-                      alt="Patient"
-                      className="max-h-[109px] object-contain"
-                    />
-                  ) : (
-                    <p className="text-[#637381] text-sm">No image uploaded</p>
+            {/* Step 4: Summary */}
+            {currentStep === 4 && (
+              <div className="flex flex-col gap-4 text-sm">
+                <div className="border border-[#d9d9d9] rounded p-4">
+                  <h3 className="font-semibold text-[#212b36] mb-2">Patient Information</h3>
+                  <p className="text-[#637381]">
+                    {formData.firstName} {formData.lastName} | {formData.age} | {formData.gender} | {filteredCommunities.find(c => c.value === formData.community)?.label || formData.community}, {formData.lga}
+                  </p>
+                </div>
+                <div className="border border-[#d9d9d9] rounded p-4">
+                  <h3 className="font-semibold text-[#212b36] mb-2">Test Details</h3>
+                  <p className="text-[#637381]">{testDetails.testType} - {testDetails.testResult}</p>
+                  {testDetails.dateConducted && (
+                    <p className="text-[#637381] mt-1">Date: {testDetails.dateConducted}</p>
+                  )}
+                  {testDetails.officerNote && (
+                    <p className="text-[#637381] mt-1">Note: {testDetails.officerNote}</p>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="bg-white border border-[#d9d9d9] rounded-tl-[20px] rounded-bl-[20px] overflow-hidden min-h-screen">
-      <div className="p-6">
-        {/* Page Title */}
-        <div
-          className="h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4 mb-6"
-          style={{
-            backgroundImage:
-              'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
-          }}
-        >
-          <h1 className="font-poppins font-semibold text-xl text-[#212b36] uppercase">
-            TEST RECORDING
-          </h1>
-        </div>
-
-        {/* Form Container */}
-        <div className="max-w-[768px] mx-auto bg-white border border-[#d9d9d9] rounded-lg p-6">
-          {/* Step Indicator */}
-          <div className="flex justify-center mb-8">
-            <FormStepIndicator currentStep={currentStep} steps={STEPS} />
+            )}
           </div>
 
-          {/* Success Message */}
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded text-green-700">
-              Test record submitted successfully! Redirecting...
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded text-red-700">
-              {error}
-            </div>
-          )}
-
-          {/* Step Content */}
-          <div className="max-w-[517px] mx-auto mb-8">{renderStepContent()}</div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center max-w-[654px] mx-auto">
-            {currentStep > 0 ? (
+          {/* Navigation Buttons - Back on left, Next on right per Figma */}
+          <div className="flex justify-between items-center mt-8">
+            {currentStep > 1 ? (
               <button
-                onClick={handleBack}
-                className="h-12 px-6 bg-white border border-[#2c7be5] rounded-[10px] font-inter font-medium text-base text-[#2c7be5] hover:bg-blue-50 transition-colors"
+                onClick={previousStep}
+                className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
               >
                 Back
               </button>
             ) : (
               <div />
             )}
-            {currentStep < STEPS.length - 1 ? (
+            {currentStep < 4 ? (
               <button
-                onClick={handleNext}
-                className="h-12 px-6 bg-[#2c7be5] rounded-[10px] font-inter font-medium text-base text-white hover:bg-blue-600 transition-colors"
+                onClick={nextStep}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
               >
                 Next
               </button>
             ) : (
               <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="h-12 px-6 bg-[#2c7be5] rounded-[10px] font-inter font-medium text-base text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
+                onClick={() => setIsSubmitModalOpen(true)}
+                disabled={isSubmitting}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {submitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-// Summary field component
-function SummaryField({
-  label,
-  value,
-  hasDropdown = false,
-}: {
-  label: string;
-  value: string;
-  hasDropdown?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-[6px]">
-      <p className="font-poppins font-medium text-sm text-[#637381]">{label}</p>
-      <div className="relative h-12 bg-white border border-[#d9d9d9] rounded flex items-center px-[21px]">
-        <p className="font-poppins text-sm text-[#212b36]">{value || '-'}</p>
-        {hasDropdown && (
-          <div className="absolute right-[9px] top-1/2 -translate-y-1/2">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6 9L12 15L18 9"
-                stroke="#637381"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        )}
-      </div>
-    </div>
+      {/* Modals */}
+      <CreateTestTypeModal
+        isOpen={isCreateTestTypeModalOpen}
+        onClose={() => setIsCreateTestTypeModalOpen(false)}
+        onAdd={handleAddTestType}
+      />
+      <TestTypeListModal 
+        isOpen={isTestTypeListModalOpen} 
+        onClose={() => setIsTestTypeListModalOpen(false)} 
+        testTypes={testTypes}
+        onEdit={(testType) => {
+          setSelectedTestType(testType);
+          setIsEditTestTypeModalOpen(true);
+        }}
+        onDelete={handleDeleteTestType}
+      />
+      <EditTestTypeModal
+        isOpen={isEditTestTypeModalOpen}
+        onClose={() => setIsEditTestTypeModalOpen(false)}
+        testType={selectedTestType}
+        onSave={handleEditTestType}
+      />
+      <SubmitTestModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => setIsSubmitModalOpen(false)}
+        onConfirm={handleSubmit}
+      />
+    </main>
   );
 }

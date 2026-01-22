@@ -10,6 +10,7 @@ interface ProfileData {
   name: string;
   email: string;
   role: string;
+  address: string;
 }
 
 export default function FieldAgentProfilePage() {
@@ -17,7 +18,19 @@ export default function FieldAgentProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
   const [profileImage, setProfileImage] = useState<string>('/icons/ellipse1.png');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    address: '',
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -32,10 +45,18 @@ export default function FieldAgentProfilePage() {
         ? `${firstName} ${lastName}` 
         : data?.name || 'Field Agent';
 
-      setProfile({
+      const profileInfo = {
         name: fullName,
         email: data?.email || '',
         role: 'Field Officer',
+        address: data?.address || '',
+      };
+      
+      setProfile(profileInfo);
+      setFormData({
+        name: profileInfo.name,
+        email: profileInfo.email,
+        address: profileInfo.address,
       });
       
       if (data?.profileImage) {
@@ -47,6 +68,12 @@ export default function FieldAgentProfilePage() {
         name: 'GreenLunar',
         email: 'Greenlunar@gmail.com',
         role: 'Field Officer',
+        address: '',
+      });
+      setFormData({
+        name: 'GreenLunar',
+        email: 'Greenlunar@gmail.com',
+        address: '',
       });
     } finally {
       setLoading(false);
@@ -82,6 +109,23 @@ export default function FieldAgentProfilePage() {
     fileInputRef.current?.click();
   };
 
+  const handleSave = async () => {
+    setProfile({
+      ...profile!,
+      ...formData,
+    });
+    setEditing(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    setShowChangePassword(false);
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('fieldAgentToken');
     localStorage.removeItem('fieldAgentData');
@@ -113,7 +157,7 @@ export default function FieldAgentProfilePage() {
         </div>
 
         {/* Profile Content */}
-        <div className="flex flex-col gap-5 sm:gap-[26px] items-center max-w-[663px] mx-auto">
+        <div className="flex flex-col gap-5 sm:gap-[26px] items-center max-w-[600px] mx-auto">
           {/* Hidden file input */}
           <input
             ref={fileInputRef}
@@ -150,62 +194,196 @@ export default function FieldAgentProfilePage() {
           {/* Form Fields */}
           <div className="flex flex-col gap-5 sm:gap-[26px] w-full">
             {/* Name Field */}
-            <div className="flex flex-col gap-1.5 sm:gap-[6px]">
+            <div className="flex flex-col gap-[6px]">
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Name
               </label>
-              <div className="w-full h-11 sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
-                <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.name}</span>
-              </div>
+              {editing ? (
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5] bg-white"
+                />
+              ) : (
+                <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+                  <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.name}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Address Field */}
+            <div className="flex flex-col gap-[6px]">
+              <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
+                Address
+              </label>
+              {editing ? (
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5] bg-white"
+                />
+              ) : (
+                <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+                  <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.address || '-'}</span>
+                </div>
+              )}
             </div>
 
             {/* Role Field */}
-            <div className="flex flex-col gap-1.5 sm:gap-[6px]">
+            <div className="flex flex-col gap-[6px]">
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Role
               </label>
-              <div className="w-full h-11 sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-[#f9fafb]">
                 <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.role}</span>
               </div>
             </div>
 
             {/* Email Field */}
-            <div className="flex flex-col gap-1.5 sm:gap-[6px]">
+            <div className="flex flex-col gap-[6px]">
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Email
               </label>
-              <div className="w-full h-11 sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
-                <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.email}</span>
-              </div>
+              {editing ? (
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5] bg-white"
+                />
+              ) : (
+                <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+                  <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.email}</span>
+                </div>
+              )}
             </div>
 
             {/* Password Field */}
-            <div className="flex flex-col gap-1.5 sm:gap-[6px]">
+            <div className="flex flex-col gap-[6px]">
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Password
               </label>
-              <div className="w-full h-11 sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center justify-between bg-white">
                 <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">**********************</span>
+                <button
+                  onClick={() => setShowChangePassword(true)}
+                  className="text-[12px] sm:text-[14px] font-poppins text-[#2c7be5] hover:text-[#1e5aa8] transition-colors whitespace-nowrap uppercase cursor-pointer"
+                >
+                  CHANGE PASSWORD
+                </button>
               </div>
             </div>
 
+            {/* Action Buttons */}
+            <div className="pt-3 sm:pt-[17px]">
+              {editing ? (
+                <div className="flex gap-3 sm:gap-4">
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="flex-1 h-[44px] sm:h-[48px] border border-[#d9d9d9] text-[#637381] rounded-[4px] text-[13px] sm:text-[14px] font-medium hover:bg-[#f4f5f7] transition-colors font-poppins cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="flex-1 h-[44px] sm:h-[48px] bg-[#2c7be5] text-white rounded-[4px] text-[13px] sm:text-[14px] font-medium hover:bg-[#1e5aa8] transition-colors font-poppins cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="w-full h-[44px] sm:h-[48px] bg-[#2c7be5] text-white rounded-[4px] text-[13px] sm:text-[14px] font-medium hover:bg-[#1e5aa8] transition-colors font-poppins cursor-pointer"
+                >
+                  Edit Profile
+                </button>
+              )}
+            </div>
+
             {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-[10px] mt-3 sm:mt-[17px] group"
-            >
+            <div className="flex items-center gap-[10px] mt-3 sm:mt-[17px]">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="#D64545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M10 17L15 12L10 7" stroke="#D64545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M15 12H3" stroke="#D64545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-[13px] sm:text-[14px] font-poppins text-[#d64545] group-hover:text-[#b53a3a] transition-colors">
+              <button
+                onClick={handleLogout}
+                className="text-[13px] sm:text-[14px] font-poppins text-[#d64545] hover:text-[#b53a3a] transition-colors cursor-pointer"
+              >
                 logout
-              </span>
-            </button>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm" 
+            onClick={() => setShowChangePassword(false)}
+          />
+          <div className="relative bg-white rounded-[15px] p-4 sm:p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins mb-4 sm:mb-6">
+              Change Password
+            </h3>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-2">
+                <label className="text-[13px] sm:text-[14px] text-[#637381] font-poppins">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  className="w-full h-[40px] sm:h-[44px] px-4 border border-[#d9d9d9] rounded-lg text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[13px] sm:text-[14px] text-[#637381] font-poppins">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  className="w-full h-[40px] sm:h-[44px] px-4 border border-[#d9d9d9] rounded-lg text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5]"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[13px] sm:text-[14px] text-[#637381] font-poppins">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  className="w-full h-[40px] sm:h-[44px] px-4 border border-[#d9d9d9] rounded-lg text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5]"
+                />
+              </div>
+              <div className="flex gap-3 sm:gap-4 pt-3 sm:pt-4">
+                <button
+                  onClick={() => setShowChangePassword(false)}
+                  className="flex-1 h-[40px] sm:h-[44px] border border-[#d9d9d9] text-[#637381] rounded-lg text-[13px] sm:text-[14px] font-medium hover:bg-[#f4f5f7] transition-colors font-poppins cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleChangePassword}
+                  className="flex-1 h-[40px] sm:h-[44px] bg-[#2c7be5] text-white rounded-lg text-[13px] sm:text-[14px] font-medium hover:bg-[#1e5aa8] transition-colors font-poppins cursor-pointer"
+                >
+                  Update Password
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

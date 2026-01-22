@@ -32,12 +32,17 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
 
   const handleSubmit = () => {
     if (testType && expectedResults.some(r => r.trim())) {
+      const savedTestType = testType;
       onAdd?.(testType, expectedResults.filter(r => r.trim()));
-      setSuccessMessage(`Test type "${testType}" has been added successfully!`);
-      setShowSuccessModal(true);
       setTestType('');
       setExpectedResults(['', '']);
-      onClose();
+      // Show success message IMMEDIATELY before closing
+      setSuccessMessage(`Test type "${savedTestType}" has been added successfully!`);
+      setShowSuccessModal(true);
+      // Close modal after a brief delay to let user see success
+      setTimeout(() => {
+        onClose();
+      }, 100);
     } else {
       setSuccessMessage('Please enter a test type name and at least one expected result.');
       setShowSuccessModal(true);

@@ -9,12 +9,12 @@ export default function DashboardLayout({ children }: { readonly children: React
   const [mobileDashboardOpen, setMobileDashboardOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <Header onMenuClick={() => setSidebarOpen(true)} />
-      <div className="mx-auto w-full max-w-[1444px]">
+      <div className="mx-auto w-full max-w-[1444px] overflow-hidden">
         <div className="mx-auto w-full flex flex-col lg:flex-row">
           <SideMenu isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-x-auto">{children}</main>
         </div>
       </div>
       <MobileDashboard isOpen={mobileDashboardOpen} onClose={() => setMobileDashboardOpen(false)} />

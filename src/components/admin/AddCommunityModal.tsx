@@ -7,6 +7,11 @@ interface AddCommunityModalProps {
   onSubmit?: (data: { community: string; lga: string; fieldOfficers: string[] }) => void;
 }
 
+interface FieldErrors {
+  community?: string;
+  lga?: string;
+}
+
 const fieldOfficersAvailable = ['Tope Barakat', 'Musa Mohammed', 'John Allah', 'Opeyemi Braka', 'Michael Tokunbo', 'Adekunle Ahmed'];
 
 export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddCommunityModalProps) {
@@ -15,19 +20,26 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
     lga: '',
     selectedOfficers: [] as string[],
   });
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
+    setFieldErrors({});
     
-    // Validate required fields
+    const errors: FieldErrors = {};
+    
+    // Validate required fields with inline errors
     if (!formData.community.trim()) {
-      setValidationError('Community name is required');
-      return;
+      errors.community = 'Community name is required';
     }
     if (!formData.lga.trim()) {
-      setValidationError('Local Government Area (LGA) is required');
+      errors.lga = 'Local Government Area (LGA) is required';
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
     
@@ -106,11 +118,15 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
                 value={formData.community}
                 onChange={(e) => {
                   setFormData({ ...formData, community: e.target.value });
+                  if (fieldErrors.community) setFieldErrors((prev) => ({ ...prev, community: undefined }));
                   if (validationError) setValidationError(null);
                 }}
                 placeholder="Enter community name"
-                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins placeholder-[#999] bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
+                className={`w-full px-4 py-2.5 sm:py-3 border rounded-sm text-sm sm:text-base text-[#212b36] font-poppins placeholder-[#999] bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors ${fieldErrors.community ? 'border-red-500' : 'border-[#d9d9d9]'}`}
               />
+              {fieldErrors.community && (
+                <p className="text-red-500 text-xs mt-1 font-poppins">{fieldErrors.community}</p>
+              )}
             </div>
 
             {/* LGA Field */}
@@ -123,11 +139,15 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
                 value={formData.lga}
                 onChange={(e) => {
                   setFormData({ ...formData, lga: e.target.value });
+                  if (fieldErrors.lga) setFieldErrors((prev) => ({ ...prev, lga: undefined }));
                   if (validationError) setValidationError(null);
                 }}
                 placeholder="Enter Local Government Area"
-                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins placeholder-[#999] bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
+                className={`w-full px-4 py-2.5 sm:py-3 border rounded-sm text-sm sm:text-base text-[#212b36] font-poppins placeholder-[#999] bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors ${fieldErrors.lga ? 'border-red-500' : 'border-[#d9d9d9]'}`}
               />
+              {fieldErrors.lga && (
+                <p className="text-red-500 text-xs mt-1 font-poppins">{fieldErrors.lga}</p>
+              )}
             </div>
 
             {/* Field Officer Field - Multi-select */}
@@ -142,7 +162,7 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
                     e.target.value = '';
                   }
                 }}
-                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-[4px] text-sm sm:text-base text-[#212b36] font-poppins appearance-none bg-white cursor-pointer hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
+                className="w-full px-4 py-2.5 sm:py-3 border border-[#d9d9d9] rounded-sm text-sm sm:text-base text-[#212b36] font-poppins appearance-none bg-white cursor-pointer hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] focus:ring-2 focus:ring-[#2c7be5]/10 transition-colors"
                 defaultValue=""
               >
                 <option value="">Select field officer...</option>

@@ -53,8 +53,16 @@ export default function FieldAgentLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="w-full max-w-[400px] flex flex-col items-center gap-8">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: 'url(/images/login-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="w-full max-w-[400px] flex flex-col items-center gap-8 bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
         {/* Logo and Tagline */}
         <div className="flex flex-col items-center gap-6 w-full">
           <div className="flex items-center gap-4">

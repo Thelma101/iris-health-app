@@ -194,7 +194,8 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const cameraRef = React.useRef<HTMLInputElement>(null);
 
-  const handleClick = () => {
+  const handleUploadClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     inputRef.current?.click();
   };
 
@@ -215,10 +216,8 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
           {label}
         </label>
       )}
-      <div
-        onClick={handleClick}
-        className="w-full min-h-[125px] bg-white border border-dashed border-[#d9d9d9] rounded cursor-pointer flex flex-col items-center justify-center hover:border-[#2c7be5] transition-colors p-4"
-      >
+      <div className="w-full min-h-[125px] bg-white border border-dashed border-[#d9d9d9] rounded flex flex-col items-center justify-center hover:border-[#2c7be5] transition-colors p-4">
+        {/* Hidden file input for gallery/folders */}
         <input
           ref={inputRef}
           type="file"
@@ -226,7 +225,7 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
           onChange={handleChange}
           className="hidden"
         />
-        {/* Camera input for mobile devices */}
+        {/* Hidden camera input for direct camera access */}
         <input
           ref={cameraRef}
           type="file"
@@ -242,10 +241,40 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
               alt="Preview"
               className="max-h-[80px] max-w-full object-contain"
             />
-            <p className="font-poppins text-xs text-[#637381]">Tap to change</p>
+            <div className="flex gap-2 mt-2">
+              {enableCamera && (
+                <button
+                  type="button"
+                  onClick={handleCameraClick}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#2c7be5] text-white rounded text-xs font-poppins hover:bg-blue-600 transition-colors cursor-pointer"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="13" r="4" stroke="white" strokeWidth="2"/>
+                  </svg>
+                  Retake
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleUploadClick}
+                className="flex items-center gap-1 px-3 py-1.5 bg-white border border-[#d9d9d9] text-[#637381] rounded text-xs font-poppins hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Change
+              </button>
+            </div>
           </div>
         ) : value ? (
-          <p className="font-poppins text-sm text-[#212b36]">{value.name}</p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="font-poppins text-sm text-[#212b36]">{value.name}</p>
+            <button
+              type="button"
+              onClick={handleUploadClick}
+              className="text-xs text-[#2c7be5] hover:underline cursor-pointer"
+            >
+              Change file
+            </button>
+          </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
             <svg
@@ -281,11 +310,42 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
               />
             </svg>
             <p className="font-poppins text-sm text-[#212b36] text-center">{placeholder}</p>
-            {enableCamera && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              {enableCamera && (
+                <button
+                  type="button"
+                  onClick={handleCameraClick}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-[#2c7be5] text-white rounded-lg text-sm font-poppins hover:bg-blue-600 transition-colors cursor-pointer"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="13"
+                      r="4"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                  Take Photo
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handleCameraClick}
-                className="flex items-center gap-2 px-4 py-2 bg-[#2c7be5] text-white rounded-lg text-sm font-poppins hover:bg-blue-600 transition-colors"
+                onClick={handleUploadClick}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-[#d9d9d9] text-[#637381] rounded-lg text-sm font-poppins hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <svg
                   width="16"
@@ -295,23 +355,33 @@ const FileUploadField: React.FC<FileUploadFieldProps> = ({
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z"
-                    stroke="white"
+                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                    stroke="#637381"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  <circle
-                    cx="12"
-                    cy="13"
-                    r="4"
-                    stroke="white"
+                  <polyline
+                    points="17,8 12,3 7,8"
+                    stroke="#637381"
                     strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <line
+                    x1="12"
+                    y1="3"
+                    x2="12"
+                    y2="15"
+                    stroke="#637381"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
-                Take Photo
+                Upload Image
               </button>
-            )}
+            </div>
           </div>
         )}
       </div>

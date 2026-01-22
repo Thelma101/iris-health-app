@@ -66,12 +66,11 @@ export default function EditPatientModal({
   const handleUpdate = async () => {
     setIsSaving(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      onUpdate(formData);
-      onClose();
+      // Call the actual update callback with form data
+      await onUpdate(formData);
     } catch (error) {
       // Error handling connected to logging service
+      console.error('Error updating patient:', error);
     } finally {
       setIsSaving(false);
     }

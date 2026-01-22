@@ -30,22 +30,22 @@ export default function Header({ onMenuClick }: HeaderProps) {
   }, [notifOpen]);
 
   return (
-    <header className="w-full h-[65px] bg-white rounded-[3.969px] border border-[#d9d9d9] relative z-20 overflow-visible">
-      <div className="h-full max-w-[1444px] mx-auto px-4 sm:px-6 flex items-center justify-between">
-        {/* Logo container (left) - matches Figma design 1:838 */}
-        <div className="bg-white h-[46px] overflow-clip rounded-[4px] flex items-center">
+    <header className="w-full h-[65px] bg-white rounded border border-[#d9d9d9] relative z-20 overflow-visible">
+      <div className="h-full flex items-center justify-between">
+        {/* Logo container (left) - positioned at far left per Figma */}
+        <div className="absolute left-0 bg-white h-[46px] w-[244px] overflow-clip rounded flex items-center justify-center ml-6">
           <Logo textSize="md" />
         </div>
 
-        {/* Right cluster - notification + avatar */}
-        <div className="flex items-center gap-[21px]">
-          {/* Notification bell - circular button */}
+        {/* Right cluster - notification + avatar + mobile menu */}
+        <div className="absolute right-[35px] flex items-center gap-[21px]">
+          {/* Notification bell - circular button matching Figma exactly */}
           <button 
             aria-label="Notifications" 
             onClick={() => setNotifOpen(true)}
-            className="size-8 grid place-items-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors overflow-clip"
+            className="relative size-8 flex items-center justify-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors"
           >
-            <Image src="/icons/notification-01.svg" alt="Notifications" width={20} height={20} />
+            <Image src="/icons/notification-01.svg" alt="Notifications" width={24} height={24} />
           </button>
 
           {/* Avatar - Profile icon (navigates to profile) */}
@@ -69,7 +69,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
             onClick={() => onMenuClick?.()} 
             className="lg:hidden size-8 grid place-items-center cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
           >
-            <Image src="/icons/menu-01.svg" alt="Menu" width={20} height={20} />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12H21M3 6H21M3 18H21" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
       </div>

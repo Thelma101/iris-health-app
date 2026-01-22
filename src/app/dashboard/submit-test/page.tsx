@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CreateTestTypeModal from '@/components/admin/CreateTestTypeModal';
 import SubmitTestModal from '@/components/admin/SubmitTestModal';
 import TestTypeListModal from '@/components/admin/TestTypeListModal';
@@ -8,7 +8,6 @@ import FormProgress from '@/components/admin/submit-test/FormProgress';
 import PatientInfoForm from '@/components/admin/submit-test/PatientInfoForm';
 import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
 import { useFormStep } from '@/hooks/useFormStep';
-import { LGA_OPTIONS, COMMUNITY_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/location-options';
 import api from '@/lib/api/index';
 
 interface PatientInfo {
@@ -35,17 +34,28 @@ interface TestType {
   results: string[];
 }
 
+interface CommunityOption {
+  value: string;
+  label: string;
+  lga: string;
+}
+
 export default function SubmitTestPage() {
   const { currentStep, nextStep, previousStep } = useFormStep(1);
 
+  // Communities and LGAs from API
+  const [communities, setCommunities] = useState<CommunityOption[]>([]);
+  const [lgas, setLgas] = useState<{ value: string; label: string }[]>([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(true);
+
   // Form State
   const [formData, setFormData] = useState<PatientInfo>({
-    lga: 'Ikorodu',
-    community: 'Bayeku',
+    lga: '',
+    community: '',
     firstName: '',
     lastName: '',
     age: '',
-    gender: 'Male',
+    gender: 'male',
     phoneNumber: '',
   });
 
@@ -76,9 +86,51 @@ export default function SubmitTestPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Fetch communities on mount
+  const fetchCommunities = useCallback(async () => {
+    setLoadingCommunities(true);
+    try {
+      const res = await api.getCommunities();
+      console.log('Communities API response:', res);
+      // Access data from ApiResponse wrapper, then extract communities array
+      const communitiesData = (res.data as any)?.communities || [];
+      console.log('Parsed communities data:', communitiesData);
+
+      // Extract unique LGAs
+      const uniqueLgas = [...new Set(communitiesData.map((c: any) => c.lga).filter(Boolean))] as string[];
+      setLgas(uniqueLgas.map((lga) => ({ value: lga, label: lga })));
+
+      const mappedCommunities = communitiesData.map((c: any) => ({
+        value: c._id || c.id,
+        label: c.name,
+        lga: c.lga,
+      }));
+      console.log('Mapped communities with values:', mappedCommunities);
+      setCommunities(mappedCommunities);
+    } catch (err) {
+      console.error('Error fetching communities:', err);
+      // Set fallback data with valid ObjectId format
+      setLgas([{ value: 'Ikorodu', label: 'Ikorodu' }]);
+      setCommunities([
+        { value: '000000000000000000000001', label: 'Bayeku', lga: 'Ikorodu' },
+        { value: '000000000000000000000002', label: 'Igbogbo', lga: 'Ikorodu' },
+      ]);
+    } finally {
+      setLoadingCommunities(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCommunities();
+  }, [fetchCommunities]);
+
   // Handlers
   const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === 'lga') {
+      setFormData((prev) => ({ ...prev, lga: value, community: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleTestDetailsChange = (field: keyof TestDetails, value: string) => {
@@ -220,7 +272,15 @@ export default function SubmitTestPage() {
               {currentStep === 3 && 'Upload photo/attachment'}
               {currentStep === 4 && 'Summary'}
             </h2>
-            {currentStep === 1 && <PatientInfoForm formData={formData} onChange={handlePatientInfoChange} />}
+            {currentStep === 1 && (
+              <PatientInfoForm
+                formData={formData}
+                onChange={handlePatientInfoChange}
+                communities={communities}
+                lgas={lgas}
+                loading={loadingCommunities}
+              />
+            )}
             {currentStep === 2 && (
               <TestDetailsForm testDetails={testDetails} onChange={handleTestDetailsChange} onImageChange={handleTestImageChange} />
             )}
@@ -286,26 +346,28 @@ export default function SubmitTestPage() {
               </div>
             )}
           </div>
-          <div className="flex gap-4 justify-end mt-8">
-            {currentStep > 1 && (
+          <div className="flex justify-between items-center mt-8">
+            {currentStep > 1 ? (
               <button
                 onClick={previousStep}
-                className="h-12 px-6 rounded-[10px] bg-white border border-[#d9d9d9] text-[#637381] font-medium font-inter hover:bg-gray-50 transition-colors"
+                className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
               >
-                Previous
+                Back
               </button>
+            ) : (
+              <div />
             )}
             {currentStep < 4 ? (
               <button
                 onClick={nextStep}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
               >
                 Next
               </button>
             ) : (
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors"
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
               >
                 Submit
               </button>

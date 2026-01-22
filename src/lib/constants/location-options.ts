@@ -2,4 +2,5 @@ export const LGA_OPTIONS = ['Ikorodu', 'Kosofe', 'Alimosho', 'Ikeja', 'Surulere'
 
 export const COMMUNITY_OPTIONS = ['Bayeku', 'Ketu', 'Igbogbo', 'Ikeja GRA', 'Lekki Phase 1', 'Badagry'];
 
-export const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+// Value/label pairs for gender - backend expects lowercase
+export const GENDER_OPTIONS = ['male', 'female'];

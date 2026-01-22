@@ -58,31 +58,13 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[270px] bg-[#ecf4ff] z-40 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-[267px] bg-[#ecf4ff] z-40 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full py-8 px-6">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
-            <Image
-              src="/images/favicon.svg"
-              alt="MedTrack"
-              width={28}
-              height={30}
-              className="w-7 h-[30px]"
-            />
-            <Image
-              src="/images/logo.svg"
-              alt="MedTrack"
-              width={140}
-              height={24}
-              className="h-6 w-auto"
-            />
-          </div>
-
+        <div className="flex flex-col h-full pt-[109px] px-[35px]">
           {/* Navigation */}
-          <nav className="flex flex-col gap-3.5 flex-1">
+          <nav className="flex flex-col gap-[14px] w-[200px]">
             {menuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
@@ -90,10 +72,10 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
                   key={item.path}
                   href={item.path}
                   onClick={onClose}
-                  className={`flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex items-center gap-[10px] p-[6px] rounded-[8px] transition-all cursor-pointer w-full ${
                     isActive
                       ? 'bg-white shadow-[0px_4px_4px_rgba(118,124,129,0.19)] text-[#212b36]'
-                      : 'text-[#637381] hover:bg-white/50'
+                      : 'bg-[#ecf4ff] text-[#637381] hover:bg-white/50'
                   }`}
                 >
                   <span className="w-6 h-6">{item.icon}</span>
@@ -102,17 +84,6 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
               );
             })}
           </nav>
-
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2.5 px-1.5 py-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto cursor-pointer"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="font-poppins text-sm">Logout</span>
-          </button>
         </div>
       </aside>
     </>

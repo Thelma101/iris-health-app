@@ -1,181 +1,145 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Logo from '@/components/ui/Logo';
 
 interface HeaderProps {
   onMenuClick?: () => void;
 }
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
+type NotificationItem = {
+  readonly id: string;
+  readonly text: string;
+  readonly date: string;
+  readonly unread: boolean;
+};
+
+const NOTIFICATION_ITEMS: ReadonlyArray<NotificationItem> = [
+  { id: "n1", text: "New community assignment received", date: "Jan 22, 2026 at 9:50 AM", unread: true },
+  { id: "n2", text: "Test record submitted successfully", date: "Jan 21, 2026 at 2:30 PM", unread: false },
+  { id: "n3", text: "Profile updated successfully", date: "Jan 20, 2026 at 11:00 AM", unread: false },
+  { id: "n4", text: "New patient registered", date: "Jan 19, 2026 at 4:15 PM", unread: false },
+];
 
 export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
-  const [agentName, setAgentName] = useState('Field Agent');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: '1', title: 'New Assignment', message: 'You have been assigned to Ikeja Central community', time: '2 hours ago', read: false },
-    { id: '2', title: 'Test Reminder', message: 'Complete pending test reports for today', time: '5 hours ago', read: false },
-    { id: '3', title: 'System Update', message: 'App will undergo maintenance tonight', time: '1 day ago', read: true },
-  ]);
-  const notificationRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
-    // Get agent data from localStorage
-    const agentData = localStorage.getItem('fieldAgentData');
-    if (agentData) {
-      try {
-        const data = JSON.parse(agentData);
-        setAgentName(`${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Field Agent');
-      } catch (err) {
-        console.error('Error parsing agent data:', err);
-      }
+    if (notifOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  }, []);
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [notifOpen]);
 
-  // Close notifications when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setShowNotifications(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  const unreadCount = NOTIFICATION_ITEMS.filter(n => n.unread).length;
 
   return (
-    <header className="sticky top-0 z-20 bg-white border-b border-[#d9d9d9] lg:border lg:rounded-none">
-      <div className="h-14 lg:h-[65px] px-4 lg:px-8 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <Image
-            src="/images/favicon.svg"
-            alt="MedTrack"
-            width={20}
-            height={22}
-            className="w-5 h-[22px] lg:w-6 lg:h-[26px]"
-            loading="eager"
-          />
-          <Image
-            src="/images/logo.svg"
-            alt="MedTrack"
-            width={130}
-            height={18}
-            className="h-[18px] lg:h-6 w-auto"
-            loading="eager"
-            style={{ width: 'auto' }}
-          />
+    <header className="w-full h-[65px] bg-white rounded border border-[#d9d9d9] relative z-20 overflow-visible">
+      <div className="h-full flex items-center justify-between">
+        {/* Logo container (left) - positioned at far left per Figma */}
+        <div className="absolute left-0 bg-white h-[46px] w-[244px] overflow-clip rounded flex items-center justify-center ml-6">
+          <Logo textSize="md" />
         </div>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-4 lg:gap-5">
-          {/* Notification Bell */}
-          <div className="relative" ref={notificationRef}>
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative w-8 h-8 flex items-center justify-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] hover:bg-gray-200 transition-colors cursor-pointer"
-              aria-label="Notifications"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.35419 21C10.0593 21.6224 10.9856 22 12 22C13.0145 22 13.9407 21.6224 14.6458 21M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.0902 5.22047 13.206 4.34966 14.6054C3.61513 15.7859 3.24786 16.3761 3.26132 16.5408C3.27624 16.7231 3.31486 16.7926 3.46178 16.9016C3.59446 17 4.19259 17 5.38885 17H18.6112C19.8074 17 20.4056 17 20.5382 16.9016C20.6852 16.7926 20.7238 16.7231 20.7387 16.5408C20.7522 16.3761 20.3849 15.7859 19.6503 14.6054C18.7795 13.206 18 11.0902 18 8Z" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#d64545] rounded-full text-white text-[10px] font-medium flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notification Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-[#d9d9d9] flex items-center justify-between">
-                  <h3 className="font-poppins font-semibold text-sm text-[#212b36]">Notifications</h3>
-                  {unreadCount > 0 && (
-                    <button 
-                      onClick={markAllAsRead}
-                      className="text-xs text-[#2c7be5] hover:underline cursor-pointer"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
-                </div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-8 text-center text-[#637381] text-sm">
-                      No notifications
-                    </div>
-                  ) : (
-                    notifications.map(notification => (
-                      <div 
-                        key={notification.id}
-                        onClick={() => markAsRead(notification.id)}
-                        className={`px-4 py-3 border-b border-[#f4f5f7] cursor-pointer hover:bg-[#f9fafb] transition-colors ${!notification.read ? 'bg-[#f0f7ff]' : ''}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!notification.read ? 'bg-[#2c7be5]' : 'bg-transparent'}`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-poppins font-medium text-sm text-[#212b36] truncate">{notification.title}</p>
-                            <p className="font-poppins text-xs text-[#637381] mt-0.5 line-clamp-2">{notification.message}</p>
-                            <p className="font-poppins text-xs text-[#919eab] mt-1">{notification.time}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <div className="px-4 py-2 border-t border-[#d9d9d9]">
-                  <button className="w-full text-center text-sm text-[#2c7be5] hover:underline cursor-pointer py-1">
-                    View all notifications
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* User Avatar - Desktop Only */}
-          <button
-            onClick={() => router.push('/field-agent/profile')}
-            className="hidden lg:flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+        {/* Right cluster - notification + avatar + mobile menu */}
+        <div className="absolute right-[35px] flex items-center gap-[21px]">
+          {/* Notification bell - circular button matching Figma exactly */}
+          <button 
+            aria-label="Notifications" 
+            onClick={() => setNotifOpen(true)}
+            className="relative size-8 flex items-center justify-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors"
           >
-            <div className="w-11 h-11 rounded-full bg-[#2c7be5] flex items-center justify-center text-white font-poppins font-medium">
-              {agentName.charAt(0).toUpperCase()}
-            </div>
-            <span className="font-poppins text-sm text-[#212b36]">
-              {agentName}
-            </span>
+            <Image src="/icons/notification-01.svg" alt="Notifications" width={24} height={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#d64545] rounded-full text-white text-[10px] font-medium flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-1 text-[#637381] hover:text-[#212b36] cursor-pointer"
-            aria-label="Open menu"
+          {/* Avatar - Profile icon (navigates to profile) */}
+          <button 
+            onClick={() => router.push('/field-agent/profile')}
+            className="cursor-pointer overflow-hidden rounded-full size-11 hover:ring-2 hover:ring-blue-300 transition-all"
+            aria-label="User profile"
+          >
+            <Image 
+              src="/icons/ellipse1.png" 
+              alt="Profile" 
+              width={44} 
+              height={44}
+              className="rounded-full object-cover"
+            />
+          </button>
+
+          {/* Mobile hamburger menu */}
+          <button 
+            aria-label="Menu" 
+            onClick={() => onMenuClick?.()} 
+            className="lg:hidden size-8 grid place-items-center cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 12H21M3 6H21M3 18H21" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </div>
       </div>
+
+      {/* Notifications overlay - same as admin */}
+      {notifOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-[6px] z-40" 
+            onClick={() => setNotifOpen(false)}
+          />
+          
+          {/* Panel positioned on the right - aligned with very top of page */}
+          <div className="fixed top-0 right-0 z-50 w-full max-w-md h-screen" style={{ margin: 0 }}>
+            {/* Notifications Panel */}
+            <section className="w-full max-w-[466px] bg-white rounded-[10px] border border-zinc-300 overflow-hidden shadow-lg m-0">
+              {/* Header */}
+              <div className="h-12 w-full bg-white border-b border-[#d9d9d9] flex items-center justify-between px-4 sm:px-6 m-0">
+                <h2 className="text-gray-800 text-lg sm:text-xl font-medium font-poppins m-0">Notifications</h2>
+                <button 
+                  aria-label="Close" 
+                  onClick={() => setNotifOpen(false)} 
+                  className="size-6 grid place-items-center cursor-pointer hover:bg-gray-100 rounded-md transition-colors m-0 p-0"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Notifications List */}
+              <div className="max-h-96 overflow-y-auto p-4 sm:p-6 m-0">
+                <div className="flex flex-col gap-3 sm:gap-4 m-0">
+                  {NOTIFICATION_ITEMS.map((it) => (
+                    <div key={it.id} className="flex items-start gap-2.5 m-0">
+                      {/* Indicator dot */}
+                      <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 m-0 ${it.unread ? 'bg-[#2C7BE5]' : 'bg-zinc-300'}`} />
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 m-0">
+                        <p className="text-gray-800 text-xs sm:text-sm font-normal font-poppins leading-snug m-0">{it.text}</p>
+                        <p className="text-gray-500 text-xs font-normal font-poppins mt-1 m-0">{it.date}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+        </>
+      )}
     </header>
   );
 }
