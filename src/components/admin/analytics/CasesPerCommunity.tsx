@@ -146,21 +146,21 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
                 {/* Circle point */}
                 <circle cx={x} cy={y} r="6" fill="#2C7BE5" />
                 
-                {/* Value badge */}
-                <rect x={x - 15} y={y + 10} width="30" height="20" rx="10" fill="#2c7be5" />
-                <text x={x} y={y + 24} textAnchor="middle" fill="white" fontSize="10" fontWeight="600" fontFamily="Poppins">
+                {/* Value badge - positioned above the point */}
+                <rect x={x - 15} y={y - 30} width="30" height="20" rx="10" fill="#2c7be5" />
+                <text x={x} y={y - 16} textAnchor="middle" fill="white" fontSize="10" fontWeight="600" fontFamily="Poppins">
                   {item.value}
                 </text>
               </g>
             );
           })}
 
-          {/* X-axis labels */}
+          {/* X-axis labels - numbered 1, 2, 3, etc. */}
           {chartData.map((item, index) => {
             const x = getX(index, chartData.length);
             return (
               <text key={index} x={x} y="180" textAnchor="middle" fill="#637381" fontSize="12" fontWeight="600" fontFamily="Poppins">
-                {item.label}
+                {index + 1}
               </text>
             );
           })}

@@ -46,7 +46,7 @@ export default function ReportPage() {
   };
 
   return (
-    <main className="bg-white border border-[#d9d9d9] rounded-bl-[20px] rounded-tl-[20px] overflow-hidden w-full min-h-full">
+    <main className="bg-white border border-[#d9d9d9] rounded-bl-[20px] rounded-tl-[20px] w-full min-h-full">
       {/* Header */}
       <div
         className="border-2 border-[#fff9e6] h-[50px] mx-4 lg:mx-[26px] my-[13px] overflow-hidden rounded-[8px] flex items-center px-[17px]"
@@ -61,16 +61,18 @@ export default function ReportPage() {
 
       {/* Content Container */}
       <div className="flex flex-col gap-[20px] sm:gap-[30px] lg:gap-[45px] px-4 lg:px-[26px] pt-[23px] pb-[40px]">
-        {/* Filters */}
-        <AnalyticsFilters
-          onCommunityChange={setSelectedCommunity}
-          onTestTypeChange={setSelectedTestType}
-          onDateChange={setSelectedDate}
-          onExport={handleExport}
-        />
+        {/* Filters - needs to be above charts */}
+        <div className="relative z-20">
+          <AnalyticsFilters
+            onCommunityChange={setSelectedCommunity}
+            onTestTypeChange={setSelectedTestType}
+            onDateChange={setSelectedDate}
+            onExport={handleExport}
+          />
+        </div>
 
         {/* Charts and Reports */}
-        <div className="flex flex-col gap-[20px] sm:gap-[26px] lg:gap-[30px] w-full">
+        <div className="flex flex-col gap-[20px] sm:gap-[26px] lg:gap-[30px] w-full relative z-10">
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px] sm:gap-[26px] w-full">
             <CasesPerCommunity />

@@ -342,31 +342,50 @@ export const api = {
     }
   },
 
-  // Analytics - will show empty state if backend endpoints don't exist
+  // Analytics - compute from patient data
   getCasesPerCommunity: async (): Promise<ApiResponse<Array<{ label: string; value: number }>>> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/cases-per-community`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(typeof window !== 'undefined' && localStorage.getItem('token') 
-            ? { Authorization: `Bearer ${localStorage.getItem('token')}` } 
-            : {}),
-        },
+      // Fetch communities and patients to compute cases per community
+      const [communitiesRes, patientsRes] = await Promise.all([
+        api.getCommunities(),
+        api.getPatients(),
+      ]);
+
+      const commData = communitiesRes.data as any;
+      const patData = patientsRes.data as any;
+      const communities = commData?.data?.communities || commData?.communities || [];
+      const patients = patData?.data?.patients || patData?.patients || [];
+
+      // Count tests per community
+      const communityTestCounts: Record<string, { name: string; count: number }> = {};
+      
+      communities.forEach((c: any) => {
+        communityTestCounts[c._id] = { name: c.name, count: c.totalTestsConducted || 0 };
       });
-      
-      // Check if we got HTML instead of JSON (backend not available)
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API endpoint not available');
-      }
-      
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || `API Error: ${response.status}`);
-      }
-      return { success: true, data };
+
+      // Also count from patients
+      patients.forEach((p: any) => {
+        const commId = p.community?._id || p.community;
+        if (commId && communityTestCounts[commId]) {
+          // Add tests from patient's testDetails
+          const testCount = p.testDetails?.length || 0;
+          if (testCount > 0 && p.numberOfTests === 0) {
+            communityTestCounts[commId].count += testCount;
+          }
+        }
+      });
+
+      const chartData = Object.values(communityTestCounts)
+        .filter((c) => c.count > 0)
+        .map((c) => ({
+          label: c.name.length > 15 ? c.name.substring(0, 15) + '...' : c.name,
+          value: c.count,
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 6);
+
+      return { success: true, data: chartData };
     } catch (error) {
-      // Return error - let component handle empty state
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Analytics data not available',
@@ -375,31 +394,34 @@ export const api = {
     }
   },
 
-  // Test Rate - will show empty state if backend endpoints don't exist
+  // Test Rate - compute from patient data
   getTestRatePerType: async (): Promise<ApiResponse<{ positivePercentage: number; negativePercentage: number }>> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/test-rate-per-type`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(typeof window !== 'undefined' && localStorage.getItem('token') 
-            ? { Authorization: `Bearer ${localStorage.getItem('token')}` } 
-            : {}),
-        },
+      const patientsRes = await api.getPatients();
+      const patData = patientsRes.data as any;
+      const patients = patData?.data?.patients || patData?.patients || [];
+
+      let positiveCount = 0;
+      let negativeCount = 0;
+
+      patients.forEach((p: any) => {
+        const tests = p.testDetails || [];
+        tests.forEach((test: any) => {
+          const result = (test.testResult || '').toLowerCase();
+          if (result.includes('positive') || result.includes('high') || result.includes('hypertension')) {
+            positiveCount++;
+          } else if (result.includes('negative') || result.includes('normal')) {
+            negativeCount++;
+          }
+        });
       });
-      
-      // Check if we got HTML instead of JSON (backend not available)
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API endpoint not available');
-      }
-      
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || `API Error: ${response.status}`);
-      }
-      return { success: true, data };
+
+      const total = positiveCount + negativeCount;
+      const positivePercentage = total > 0 ? Math.round((positiveCount / total) * 100) : 0;
+      const negativePercentage = total > 0 ? Math.round((negativeCount / total) * 100) : 0;
+
+      return { success: true, data: { positivePercentage, negativePercentage } };
     } catch (error) {
-      // Return error - let component handle empty state
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Analytics data not available',

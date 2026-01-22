@@ -1,6 +1,8 @@
 'use client';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import ModalBackdrop from './ModalBackdrop';
+import api from '@/lib/api/index';
 
 interface PatientTestRecord {
   index: number;
@@ -24,20 +26,33 @@ export default function OfficerTestListModal({
   patients,
   onPatientSelect,
 }: Readonly<OfficerTestListModalProps>) {
-  const defaultPatients: PatientTestRecord[] = [
-    { index: 1, name: 'Tee George' },
-    { index: 2, name: 'Green Lunar' },
-    { index: 3, name: 'Kathryn Murphy' },
-    { index: 4, name: 'Jerome Bell' },
-    { index: 5, name: 'Adebayo Smith' },
-    { index: 6, name: 'Chiamaka Johnson' },
-    { index: 7, name: 'Oluwaseun Adeyemi' },
-    { index: 8, name: 'Michael Tokunbo' },
-    { index: 9, name: 'Opeyemi Braka' },
-    { index: 10, name: 'Brooklyn Simmons' },
-  ];
+  const [apiPatients, setApiPatients] = useState<PatientTestRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const data = patients || defaultPatients;
+  useEffect(() => {
+    if (isOpen && !patients) {
+      setLoading(true);
+      api.getPatients()
+        .then((res) => {
+          const patData = res.data as any;
+          const patientsArray = patData?.data?.patients || patData?.patients || [];
+          const mapped = patientsArray.map((p: any, idx: number) => ({
+            index: idx + 1,
+            name: `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Unknown',
+          }));
+          setApiPatients(mapped);
+        })
+        .catch((err) => {
+          console.error('Error fetching patients:', err);
+          setApiPatients([]);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [isOpen, patients]);
+
+  const data = patients || apiPatients;
 
   if (!isOpen) return null;
 
@@ -66,20 +81,26 @@ export default function OfficerTestListModal({
 
               {/* Patient List */}
               <div className="space-y-[17px]">
-                {data.map((patient, idx) => (
-                  <button
-                    type="button"
-                    key={patient.index}
-                    onClick={() => onPatientSelect?.(patient.name)}
-                    onKeyDown={(e) => e.key === 'Enter' && onPatientSelect?.(patient.name)}
-                    className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] text-left w-full bg-transparent border-none p-0 ${
-                      idx === 2 ? 'bg-[#f4f5f7] -mx-[22px] px-[22px] py-2' : ''
-                    }`}
-                  >
-                    <span className="text-[#637381] w-[16px] flex-shrink-0">{patient.index}</span>
-                    <span className="text-[#637381] flex-1 hover:text-[#2c7be5]">{patient.name}</span>
-                  </button>
-                ))}
+                {loading ? (
+                  <p className="text-[#637381] text-[14px] font-poppins">Loading patients...</p>
+                ) : data.length === 0 ? (
+                  <p className="text-[#637381] text-[14px] font-poppins">No patients found</p>
+                ) : (
+                  data.map((patient, idx) => (
+                    <button
+                      type="button"
+                      key={patient.index}
+                      onClick={() => onPatientSelect?.(patient.name)}
+                      onKeyDown={(e) => e.key === 'Enter' && onPatientSelect?.(patient.name)}
+                      className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] text-left w-full bg-transparent border-none p-0 ${
+                        idx === 2 ? 'bg-[#f4f5f7] -mx-[22px] px-[22px] py-2' : ''
+                      }`}
+                    >
+                      <span className="text-[#637381] w-[16px] flex-shrink-0">{patient.index}</span>
+                      <span className="text-[#637381] flex-1 hover:text-[#2c7be5]">{patient.name}</span>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </div>
