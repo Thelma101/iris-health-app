@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -14,7 +19,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "MedTrack - Bringing Healthcare Closer",
+  title: "Lunar Med-Track",
   description: "Your personal medication tracking companion",
 };
 
@@ -29,7 +34,7 @@ export default function RootLayout({
         <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
       </head>
       <body
-        className={`${inter.variable} ${poppins.variable} antialiased theme-light`}
+        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} antialiased theme-light`}
       >
         {children}
       </body>
