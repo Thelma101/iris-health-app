@@ -36,8 +36,15 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
   const items = isFieldAgent ? fieldAgentItems : adminItems;
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('adminData');
+    if (isFieldAgent) {
+      // Clear field agent specific tokens
+      localStorage.removeItem('fieldAgentToken');
+      localStorage.removeItem('fieldAgentData');
+    } else {
+      // Clear admin tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('adminData');
+    }
     localStorage.removeItem('userRole');
     router.push('/login');
   };

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import FieldAgentSidebar from '@/components/field-agent/Sidebar';
-import FieldAgentHeader from '@/components/field-agent/Header';
+import SideMenu from '@/components/admin/SideMenu';
+import Header from '@/components/admin/Header';
 
 export default function FieldAgentLayout({
   children,
@@ -36,7 +36,7 @@ export default function FieldAgentLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#ecf4ff]">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2c7be5]"></div>
       </div>
     );
@@ -47,28 +47,14 @@ export default function FieldAgentLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#ecf4ff] flex">
-      {/* Sidebar */}
-      <FieldAgentSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-[267px]">
-        {/* Header */}
-        <FieldAgentHeader onMenuClick={() => setSidebarOpen(true)} />
-
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6">
-          {children}
-        </main>
+    <div className="min-h-screen bg-white overflow-x-hidden">
+      <Header onMenuClick={() => setSidebarOpen(true)} />
+      <div className="mx-auto w-full max-w-[1444px] overflow-hidden">
+        <div className="mx-auto w-full flex flex-col lg:flex-row">
+          <SideMenu isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-x-auto">{children}</main>
+        </div>
       </div>
-
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 }
