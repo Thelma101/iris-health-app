@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -63,23 +62,7 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full py-8 px-6">
-          {/* Logo */}
-          <div className="flex items-center gap-[11px] mb-8">
-            <Image
-              src="/images/medtrack-icon.svg"
-              alt="MedTrack Icon"
-              width={24}
-              height={26}
-            />
-            <Image
-              src="/images/medtrack-text.svg"
-              alt="MedTrack"
-              width={154}
-              height={24}
-            />
-          </div>
-
+        <div className="flex flex-col h-full pt-[100px] pb-8 px-6">
           {/* Navigation */}
           <nav className="flex flex-col gap-[14px] flex-1">
             {menuItems.map((item) => {

@@ -55,7 +55,16 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="w-full h-[65px] bg-white rounded border border-[#d9d9d9] relative z-20 overflow-visible">
-      <div className="h-full flex items-center justify-end px-4 lg:px-6">
+      <div className="h-full flex items-center justify-between px-4 lg:px-6">
+        {/* Logo - Left side */}
+        <div className="flex items-center gap-[11px]">
+          <svg width="24" height="26" viewBox="0 0 24 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.9998 0.5L14.0221 8.02778L21.7128 5.29275L16.0223 11.5L21.7128 17.7072L14.0221 14.9722L11.9998 22.5L9.97748 14.9722L2.28679 17.7072L7.97728 11.5L2.28679 5.29275L9.97748 8.02778L11.9998 0.5Z" fill="#2ECC71"/>
+            <circle cx="12" cy="11.5" r="3" fill="white"/>
+          </svg>
+          <span className="font-poppins text-xl font-semibold text-[#2c7be5]">MedTrack</span>
+        </div>
+
         {/* Right cluster - notification + avatar + mobile menu */}
         <div className="flex items-center gap-4 lg:gap-[21px]">
           {/* Notification bell - circular button */}
