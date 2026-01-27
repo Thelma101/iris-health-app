@@ -6,6 +6,8 @@ import CommunityDetailsModal from '@/components/admin/CommunityDetailsModal';
 import EditCommunityModal from '@/components/admin/EditCommunityModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import SuccessModal from '@/components/admin/SuccessModal';
+import ErrorModal from '@/components/ui/ErrorModal';
 
 interface Community {
   _id: string;
@@ -21,6 +23,22 @@ interface Community {
   visitationDates?: string[];
 }
 
+// Helper function to format date
+const formatDate = (dateString: string | undefined): string => {
+  if (!dateString || dateString === '-') return '-';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch {
+    return '-';
+  }
+};
+
 export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -35,6 +53,9 @@ export default function CommunityPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   // Fetch communities from API
   const fetchCommunities = useCallback(async () => {
@@ -48,9 +69,14 @@ export default function CommunityPage() {
           _id: c._id,
           name: c.name,
           lga: c.lga,
-          dateVisited: c.dateVisited || '-',
+          dateVisited: formatDate(c.dateVisited),
           fieldOfficers: c.fieldOfficers,
-          fieldOfficer: c.fieldOfficers?.map(fo => `${fo.firstName} ${fo.lastName}`).join(', ') || '-',
+          fieldOfficer: c.fieldOfficers && c.fieldOfficers.length > 0
+            ? c.fieldOfficers
+              .filter(fo => fo && fo.firstName && fo.lastName)
+              .map(fo => `${fo.firstName} ${fo.lastName}`)
+              .join(', ') || '-'
+            : '-',
           totalPopulation: c.totalPopulation,
           totalTestsConducted: c.totalTestsConducted,
         }));
@@ -107,23 +133,24 @@ export default function CommunityPage() {
       const payload = {
         name: data.community,
         lga: data.lga,
-        fieldOfficers: data.fieldOfficers,
+        fieldOfficers: data.fieldOfficers, // Now contains ObjectIds from the modal
       };
       const res = await api.createCommunity(payload);
       if (res?.success && res.data) {
         setSuccessMessage('Community added successfully!');
+        setShowSuccessModal(true);
         setIsModalOpen(false);
         fetchCommunities(); // Refresh the list
       } else {
-        // Show error but keep modal open for retry
-        const errorMsg = res?.error || 'Failed to add community. Please check if backend server is running.';
-        setError(errorMsg);
-        // Don't close modal on error
+        // Show error modal with detailed message
+        const errorMsg = res?.error || 'Failed to add community. Please check if all fields are correctly filled.';
+        setErrorModalMessage(errorMsg);
+        setShowErrorModal(true);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add community. Server may be unavailable.';
-      setError(errorMessage);
-      // Don't close modal on error
+      setErrorModalMessage(errorMessage);
+      setShowErrorModal(true);
     } finally {
       setActionLoading(false);
     }
@@ -136,15 +163,18 @@ export default function CommunityPage() {
       const res = await api.updateCommunity(id, updatedData);
       if (res?.success && res.data) {
         setSuccessMessage('Community updated successfully!');
+        setShowSuccessModal(true);
         setIsEditModalOpen(false);
         setSelectedCommunity(null);
         fetchCommunities(); // Refresh the list
       } else {
-        setError(res?.error || 'Failed to update community');
+        setErrorModalMessage(res?.error || 'Failed to update community');
+        setShowErrorModal(true);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update community';
-      setError(errorMessage);
+      setErrorModalMessage(errorMessage);
+      setShowErrorModal(true);
     } finally {
       setActionLoading(false);
     }
@@ -152,21 +182,24 @@ export default function CommunityPage() {
 
   const handleDeleteCommunity = async () => {
     if (!communityToDelete) return;
-    
+
     setActionLoading(true);
     setError(null);
     try {
       const res = await api.deleteCommunity(communityToDelete._id);
       if (res?.success) {
         setSuccessMessage('Community deleted successfully!');
+        setShowSuccessModal(true);
         setCommunities((prev) => prev.filter((c) => c._id !== communityToDelete._id));
         setFilteredData((prev) => prev.filter((c) => c._id !== communityToDelete._id));
       } else {
-        setError(res?.error || 'Failed to delete community');
+        setErrorModalMessage(res?.error || 'Failed to delete community');
+        setShowErrorModal(true);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete community';
-      setError(errorMessage);
+      setErrorModalMessage(errorMessage);
+      setShowErrorModal(true);
     } finally {
       setActionLoading(false);
       setIsDeleteModalOpen(false);
@@ -190,7 +223,7 @@ export default function CommunityPage() {
       c.totalPopulation?.toString() || '',
       c.totalTestsConducted?.toString() || ''
     ]);
-    
+
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -229,7 +262,7 @@ export default function CommunityPage() {
       )}
 
       {/* Header */}
-      <div 
+      <div
         className="h-12 sm:h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4 sm:px-5"
         style={{
           backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
@@ -271,7 +304,7 @@ export default function CommunityPage() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 sm:gap-4">
-          <button 
+          <button
             onClick={handleExport}
             disabled={communities.length === 0}
             className="bg-white border border-[#d9d9d9] text-[#637381] rounded-[10px] h-10 sm:h-12 px-6 font-medium text-sm sm:text-base hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins"
@@ -290,8 +323,8 @@ export default function CommunityPage() {
       </div>
 
       {/* Add Community Modal */}
-      <AddCommunityModal 
-        isOpen={isModalOpen} 
+      <AddCommunityModal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddCommunity}
       />
@@ -338,6 +371,22 @@ export default function CommunityPage() {
         />
       )}
 
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Success"
+        message={successMessage || ''}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        message={errorModalMessage}
+      />
+
       {/* Loading State */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -377,9 +426,8 @@ export default function CommunityPage() {
                 {filteredData.map((community, index) => (
                   <tr
                     key={community._id}
-                    className={`border-b border-[#f4f5f7] hover:bg-gray-50 transition-colors ${
-                      index === filteredData.length - 1 ? 'border-0' : ''
-                    }`}
+                    className={`border-b border-[#f4f5f7] hover:bg-gray-50 transition-colors ${index === filteredData.length - 1 ? 'border-0' : ''
+                      }`}
                   >
                     <td className="text-left px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-[#637381] font-poppins">
                       {community.name}

@@ -39,13 +39,20 @@ export default function FilterBar({ selectedDate, onDateChange, onExport }: Filt
   };
 
   const handleCalendarClick = () => {
-    dateInputRef.current?.showPicker();
+    // Try showPicker first (modern browsers), fallback to click
+    if (dateInputRef.current) {
+      try {
+        dateInputRef.current.showPicker();
+      } catch {
+        dateInputRef.current.click();
+      }
+    }
   };
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-auto">
-      <div 
-        className="flex items-center gap-3 h-12 px-3 rounded-[10px] bg-white border border-[#d9d9d9] w-full sm:w-auto cursor-pointer hover:border-[#2c7be5] transition-colors"
+      <div
+        className="relative flex items-center gap-3 h-12 px-3 rounded-[10px] bg-white border border-[#d9d9d9] w-full sm:w-auto cursor-pointer hover:border-[#2c7be5] transition-colors"
         onClick={handleCalendarClick}
       >
         <span className="text-[#637381] text-sm font-medium font-inter">{selectedDate}</span>
@@ -54,9 +61,10 @@ export default function FilterBar({ selectedDate, onDateChange, onExport }: Filt
           type="date"
           value={formatDateForInput(selectedDate)}
           onChange={handleDateChange}
-          className="sr-only"
+          className="absolute inset-0 opacity-0 cursor-pointer"
+          aria-label="Select date"
         />
-        <svg className="w-6 h-6 text-[#637381] cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-[#637381] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>

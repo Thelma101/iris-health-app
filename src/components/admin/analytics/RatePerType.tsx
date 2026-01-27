@@ -63,7 +63,7 @@ export default function RatePerType() {
 
   return (
     <div className="bg-white border border-[#d9d9d9] rounded-lg h-[280px] sm:h-[334px] overflow-hidden w-full p-4 sm:p-6">
-      <p className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize mb-4 sm:mb-6">
+      <p className="text-[18px] sm:text-[20px] font-semibold text-[#212b36] font-poppins mb-4 sm:mb-6">
         Rate Per Type
       </p>
       {loading ? (

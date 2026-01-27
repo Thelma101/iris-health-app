@@ -14,13 +14,14 @@ import api from '@/lib/api';
 
 export default function ViewPatientsPage() {
   const [selectedDate, setSelectedDate] = useState('02/10/25');
-  const { searchQuery, setSearchQuery, filteredPatients, handleSearch, handleExport, loading, error } = usePatientSearch();
+  const { searchQuery, setSearchQuery, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleViewPatient = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -46,14 +47,33 @@ export default function ViewPatientsPage() {
 
   const handleUpdatePatient = async (updatedPatient: any) => {
     setActionLoading(true);
+    setErrorMessage(null);
     try {
-      const res = await api.updatePatient(updatedPatient.id, updatedPatient);
+      // Prepare the update payload with proper field mapping
+      const updatePayload = {
+        firstName: updatedPatient.firstName,
+        lastName: updatedPatient.lastName,
+        age: updatedPatient.age,
+        gender: updatedPatient.gender,
+        lga: updatedPatient.lga,
+        community: updatedPatient.community,
+        phone: updatedPatient.phoneNumber,
+      };
+
+      const res = await api.updatePatient(updatedPatient.id, updatePayload);
       if (res.success) {
         setSuccessMessage('Patient updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
+        // Refresh the patient list to show updated data
+        await refetch();
+      } else {
+        setErrorMessage(res.error || 'Failed to update patient');
+        setTimeout(() => setErrorMessage(null), 5000);
       }
-    } catch {
-      // Silently handle - local state update will still work
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update patient';
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(null), 5000);
     } finally {
       setActionLoading(false);
       setShowEditModal(false);
@@ -82,6 +102,13 @@ export default function ViewPatientsPage() {
         </div>
       )}
 
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          {errorMessage}
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {actionLoading && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-40">
@@ -95,10 +122,10 @@ export default function ViewPatientsPage() {
       {/* Filter and Search Section */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} />
-        <FilterBar 
-          selectedDate={selectedDate} 
+        <FilterBar
+          selectedDate={selectedDate}
           onDateChange={setSelectedDate}
-          onExport={() => handleExport(selectedDate)} 
+          onExport={() => handleExport(selectedDate)}
         />
       </div>
 
@@ -113,7 +140,7 @@ export default function ViewPatientsPage() {
       ) : error ? (
         <div className="text-center py-12 text-red-500">{error}</div>
       ) : (
-        <PatientsTable 
+        <PatientsTable
           patients={filteredPatients}
           onViewPatient={handleViewPatient}
           onEditPatient={handleEditPatient}

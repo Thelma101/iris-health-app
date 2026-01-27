@@ -31,14 +31,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="w-full h-[65px] bg-white rounded border border-[#d9d9d9] relative z-20 overflow-visible">
-      <div className="h-full flex items-center justify-between">
-        {/* Logo container (left) - positioned at far left per Figma */}
-        <div className="absolute left-0 bg-white h-[46px] w-[244px] overflow-clip rounded flex items-center justify-center ml-6">
-          <Logo textSize="md" />
+      <div className="h-full flex items-center justify-between px-6">
+        {/* Logo container (left) */}
+        <div className="flex items-center">
+          <Logo size="lg" />
         </div>
 
         {/* Right cluster - notification + avatar + mobile menu */}
-        <div className="absolute right-[35px] flex items-center gap-[21px]">
+        <div className="flex items-center gap-[21px]">
           {/* Notification bell - circular button matching Figma exactly */}
           <button 
             aria-label="Notifications" 

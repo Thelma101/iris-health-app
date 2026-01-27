@@ -85,11 +85,9 @@ pids
 # Backend node_modules only
 Backend/LunarMedtrack/node_modules/
 Backend/LunarMedtrack/.env
-LunarMedtrackAPI/
-
-# Documentation
-docs/
-*.md
+LunarMedtrackAPI/node_modules/
+LunarMedtrackAPI/.env
 
 # Misc
 build.log
+*.log

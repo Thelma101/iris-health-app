@@ -49,18 +49,18 @@ export default function ReportPage() {
     <main className="bg-white border border-[#d9d9d9] rounded-bl-[20px] rounded-tl-[20px] w-full min-h-full">
       {/* Header */}
       <div
-        className="border-2 border-[#fff9e6] h-[50px] mx-4 lg:mx-[26px] my-[13px] overflow-hidden rounded-[8px] flex items-center px-[17px]"
+        className="border-2 border-[#fff9e6] h-12 sm:h-[50px] mx-4 lg:mx-6 my-3 overflow-hidden rounded-lg flex items-center px-4 sm:px-5"
         style={{
           backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
         }}
       >
-        <p className="text-[16px] sm:text-[18px] lg:text-[20px] font-semibold uppercase text-[#212b36] font-poppins">
+        <p className="text-base sm:text-lg lg:text-xl font-semibold uppercase text-[#212b36] font-poppins">
           Analytics & Reports
         </p>
       </div>
 
       {/* Content Container */}
-      <div className="flex flex-col gap-[20px] sm:gap-[30px] lg:gap-[45px] px-4 lg:px-[26px] pt-[23px] pb-[40px]">
+      <div className="flex flex-col gap-5 sm:gap-6 lg:gap-8 px-4 lg:px-6 pt-4 sm:pt-6 pb-8 sm:pb-10">
         {/* Filters - needs to be above charts */}
         <div className="relative z-20">
           <AnalyticsFilters
@@ -72,9 +72,9 @@ export default function ReportPage() {
         </div>
 
         {/* Charts and Reports */}
-        <div className="flex flex-col gap-[20px] sm:gap-[26px] lg:gap-[30px] w-full relative z-10">
+        <div className="flex flex-col gap-5 sm:gap-6 w-full relative z-10">
           {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[20px] sm:gap-[26px] w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 w-full">
             <CasesPerCommunity />
             <RatePerType />
           </div>

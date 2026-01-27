@@ -5,12 +5,17 @@ interface CommunityDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   community?: {
+    _id?: string;
     name: string;
     population?: string;
     lga: string;
     fieldOfficer?: string;
+    fieldOfficers?: Array<{ _id: string; firstName: string; lastName: string; email: string }>;
     totalTests?: string;
+    totalPopulation?: number;
+    totalTestsConducted?: number;
     visitationDates?: string[];
+    dateVisited?: string;
     mapImageUrl?: string;
   };
 }
@@ -18,32 +23,41 @@ interface CommunityDetailsModalProps {
 export default function CommunityDetailsModal({
   isOpen,
   onClose,
-  community = {
-    name: 'Igbogbo',
-    population: '23,000',
-    lga: 'Ikorodu',
-    fieldOfficer: 'Michael Tokunbo',
-    totalTests: '2,000',
-    visitationDates: ['20/02/2025', '09/12/2024'],
-    mapImageUrl: '/images/map-placeholder.png',
-  },
+  community,
 }: CommunityDetailsModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen || !community) return null;
+
+  // Format population number
+  const formatNumber = (num: number | undefined): string => {
+    if (num === undefined || num === null) return '-';
+    return num.toLocaleString();
+  };
+
+  // Get field officers display
+  const getFieldOfficers = (): string => {
+    if (community.fieldOfficers && community.fieldOfficers.length > 0) {
+      return community.fieldOfficers
+        .filter(fo => fo && fo.firstName && fo.lastName)
+        .map(fo => `${fo.firstName} ${fo.lastName}`)
+        .join(', ') || '-';
+    }
+    return community.fieldOfficer || '-';
+  };
 
   return (
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <button
-        className="absolute inset-0 bg-black/20 backdrop-blur-[10px] cursor-pointer"
+        className="absolute inset-0 bg-black/20 backdrop-blur-[2px] cursor-pointer"
         onClick={onClose}
         aria-label="Close modal"
       />
 
-      {/* Modal - Responsive layout */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[625px] bg-white rounded-[10px] shadow-lg max-h-[90vh] overflow-y-auto">
+      {/* Right Side Drawer */}
+      <div className="absolute right-0 top-0 h-full w-full max-w-[420px] bg-white shadow-xl overflow-y-auto animate-[slideInRight_0.3s_ease-out]">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-white flex items-center justify-between border-b border-[#d9d9d9] px-4 sm:px-6 py-3 sm:py-4 z-10">
-          <h2 className="text-lg sm:text-xl font-medium text-[#212b36] font-poppins">{community.name}</h2>
+        <div className="sticky top-0 bg-white flex items-center justify-between border-b border-[#d9d9d9] px-6 py-4 z-10">
+          <h2 className="text-xl font-medium text-[#212b36] font-poppins">{community.name}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -56,61 +70,66 @@ export default function CommunityDetailsModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
+        <div className="p-6 space-y-0">
           {/* Map Section */}
-          <div className="bg-gray-100 h-32 sm:h-40 rounded-lg overflow-hidden border border-[#d9d9d9] flex items-center justify-center">
-            <div className="text-center">
-              <svg className="w-12 h-12 mx-auto text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <p className="text-sm text-[#637381] mt-2 font-poppins">{community.name} Location</p>
-            </div>
+          <div className="bg-gray-100 h-48 rounded-lg overflow-hidden border border-[#e5e7eb] mb-6">
+            <iframe
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(community.name + ' ' + community.lga + ' Nigeria')}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+              className="w-full h-full"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
 
           {/* Details Sections */}
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-0">
             {/* Population */}
-            {community.population && (
-              <div className="border-b border-[#d9d9d9] pb-4">
-                <h3 className="text-sm sm:text-base font-semibold text-[#212b36] font-poppins mb-2">Population</h3>
-                <p className="text-sm sm:text-base text-[#637381] font-poppins">{community.population}</p>
-              </div>
-            )}
+            <div className="border-b border-[#e5e7eb] py-4">
+              <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Population</h3>
+              <p className="text-sm text-[#637381] font-poppins">
+                {formatNumber(community.totalPopulation) || community.population || '-'}
+              </p>
+            </div>
 
             {/* LGA */}
-            <div className="border-b border-[#d9d9d9] pb-4">
-              <h3 className="text-sm sm:text-base font-semibold text-[#212b36] font-poppins mb-2">LGA</h3>
-              <p className="text-sm sm:text-base text-[#637381] font-poppins">{community.lga}</p>
+            <div className="border-b border-[#e5e7eb] py-4">
+              <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">LGA</h3>
+              <p className="text-sm text-[#637381] font-poppins">{community.lga}</p>
             </div>
 
             {/* Field Officers */}
-            <div className="border-b border-[#d9d9d9] pb-4">
-              <h3 className="text-sm sm:text-base font-semibold text-[#212b36] font-poppins mb-2">Field Officer Assigned</h3>
-              <p className="text-sm sm:text-base text-[#637381] font-poppins">{community.fieldOfficer || 'N/A'}</p>
+            <div className="border-b border-[#e5e7eb] py-4">
+              <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Field Officers</h3>
+              <p className="text-sm text-[#637381] font-poppins">{getFieldOfficers()}</p>
             </div>
 
             {/* Total Tests Conducted */}
-            {community.totalTests && (
-              <div className="border-b border-[#d9d9d9] pb-4">
-                <h3 className="text-sm sm:text-base font-semibold text-[#212b36] font-poppins mb-2">Total Tests Conducted</h3>
-                <p className="text-sm sm:text-base text-[#637381] font-poppins">{community.totalTests}</p>
-              </div>
-            )}
+            <div className="border-b border-[#e5e7eb] py-4">
+              <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Total Tests Conducted</h3>
+              <p className="text-sm text-[#637381] font-poppins">
+                {formatNumber(community.totalTestsConducted) || community.totalTests || '-'}
+              </p>
+            </div>
 
             {/* Visitation Summary */}
-            {community.visitationDates && community.visitationDates.length > 0 && (
-              <div className="border-b border-[#d9d9d9] pb-4">
-                <h3 className="text-sm sm:text-base font-semibold text-[#212b36] font-poppins mb-2">Visitation Summary</h3>
-                <div className="space-y-1">
-                  {community.visitationDates.map((date, index) => (
-                    <p key={index} className="text-sm sm:text-base text-[#637381] font-poppins">
+            <div className="border-b border-[#e5e7eb] py-4">
+              <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Visitation Summary</h3>
+              <div className="space-y-1">
+                {community.visitationDates && community.visitationDates.length > 0 ? (
+                  community.visitationDates.map((date, index) => (
+                    <p key={index} className="text-sm text-[#637381] font-poppins">
                       {date}
                     </p>
-                  ))}
-                </div>
+                  ))
+                ) : community.dateVisited && community.dateVisited !== '-' ? (
+                  <p className="text-sm text-[#637381] font-poppins">{community.dateVisited}</p>
+                ) : (
+                  <p className="text-sm text-[#637381] font-poppins">-</p>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

@@ -36,24 +36,24 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
 
   const data = apiOfficers || officers || [];
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-[8px] overflow-hidden w-full">
-      <div className="px-[15px] sm:px-[18px] py-[11px] sm:py-[14px]">
-        <p className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">
-          Field officer report
+    <div className="bg-white border border-[#d9d9d9] rounded-lg overflow-hidden w-full">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <p className="text-[18px] sm:text-[20px] font-semibold text-[#212b36] font-poppins">
+          Field Officer Report
         </p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[400px]">
           <thead>
             <tr className="bg-[#f4f5f7] border-b border-[#d9d9d9]">
-              <th className="px-[10px] sm:px-[15px] py-[10px] text-left">
-                <p className="text-[14px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">Name</p>
+              <th className="px-4 sm:px-6 py-3 text-left w-[45%]">
+                <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">Name</p>
               </th>
-              <th className="px-[10px] sm:px-[15px] py-[10px] text-center">
-                <p className="text-[14px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">No. of Tests</p>
+              <th className="px-4 sm:px-6 py-3 text-left w-[35%]">
+                <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">No. Of Tests</p>
               </th>
-              <th className="px-[10px] sm:px-[15px] py-[10px] text-right">
-                <p className="text-[14px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">Action</p>
+              <th className="px-4 sm:px-6 py-3 text-left w-[20%]">
+                <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">Action</p>
               </th>
             </tr>
           </thead>
@@ -63,15 +63,15 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
                 key={officer.id}
                 className="border-b border-[#d9d9d9] hover:bg-[#f9f9f9] transition-colors"
               >
-                <td className="px-[10px] sm:px-[15px] py-[10px]">
-                  <p className="text-[12px] sm:text-[14px] text-[#212b36] font-poppins capitalize">{officer.name}</p>
+                <td className="px-4 sm:px-6 py-3">
+                  <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.name}</p>
                 </td>
-                <td className="px-[10px] sm:px-[15px] py-[10px] text-center">
-                  <p className="text-[12px] sm:text-[14px] text-[#212b36] font-poppins">{officer.testCount}</p>
+                <td className="px-4 sm:px-6 py-3 text-left">
+                  <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.testCount}</p>
                 </td>
-                <td className="px-[10px] sm:px-[15px] py-[10px] text-right">
+                <td className="px-4 sm:px-6 py-3 text-left">
                   <button
-                    className="text-[#2c7be5] hover:underline text-[12px] sm:text-[14px] font-poppins"
+                    className="text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins"
                     onClick={() => onViewTests?.(officer.id, officer.name)}
                   >
                     View Tests

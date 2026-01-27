@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ModalBackdrop from './ModalBackdrop';
 
 interface PatientData {
@@ -28,7 +28,7 @@ interface TestDetails {
 interface EditPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (updatedPatient: PatientData) => void;
+  onUpdate: (updatedPatient: PatientData) => Promise<void> | void;
   patient: PatientData;
   testDetails?: TestDetails;
   patientImage?: string;
@@ -52,6 +52,18 @@ export default function EditPatientModal({
     }
   );
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sync formData with patient prop when it changes
+  useEffect(() => {
+    setFormData(patient);
+  }, [patient]);
+
+  // Sync testData with testDetails prop when it changes
+  useEffect(() => {
+    if (testDetails) {
+      setTestData(testDetails);
+    }
+  }, [testDetails]);
 
   if (!isOpen) return null;
 

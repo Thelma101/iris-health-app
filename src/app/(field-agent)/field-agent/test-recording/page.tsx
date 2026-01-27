@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import CreateTestTypeModal from '@/components/admin/CreateTestTypeModal';
 import SubmitTestModal from '@/components/admin/SubmitTestModal';
 import TestTypeListModal from '@/components/admin/TestTypeListModal';
@@ -71,6 +71,11 @@ export default function TestRecordingPage() {
   const [patientPhoto, setPatientPhoto] = useState<File | null>(null);
   const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
   const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+
+  // Refs for file inputs
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal States
   const [isCreateTestTypeModalOpen, setIsCreateTestTypeModalOpen] = useState(false);
@@ -96,11 +101,11 @@ export default function TestRecordingPage() {
       const communitiesData =
         (res.data as any)?.data?.communities || (res.data as any)?.communities || [];
       console.log('Parsed communities data:', communitiesData);
-      
+
       // Extract unique LGAs
       const uniqueLgas = [...new Set(communitiesData.map((c: any) => c.lga).filter(Boolean))] as string[];
       setLgas(uniqueLgas.map((lga) => ({ value: lga, label: lga })));
-      
+
       const mappedCommunities = communitiesData.map((c: any) => ({
         value: c._id || c.id,
         label: c.name,
@@ -199,7 +204,7 @@ export default function TestRecordingPage() {
       if (!communityId) {
         throw new Error('Please select a community');
       }
-      
+
       // Validate patient info
       if (!formData.firstName?.trim()) {
         throw new Error('First name is required');
@@ -227,9 +232,9 @@ export default function TestRecordingPage() {
         throw new Error(patientRes.error || 'Failed to create patient');
       }
 
-      const patientId = (patientRes.data as any)?.data?.patient?._id || 
-                        (patientRes.data as any)?.patient?._id;
-      
+      const patientId = (patientRes.data as any)?.data?.patient?._id ||
+        (patientRes.data as any)?.patient?._id;
+
       if (!patientId) {
         throw new Error('Failed to get patient ID');
       }
@@ -251,7 +256,7 @@ export default function TestRecordingPage() {
 
       setSubmitSuccess(true);
       setIsSubmitModalOpen(false);
-      
+
       // Reset form
       setFormData({
         lga: '',
@@ -274,7 +279,7 @@ export default function TestRecordingPage() {
       setTestImagePreview(null);
       setPatientPhotoPreview(null);
       setCurrentStep(1);
-      
+
     } catch (err: any) {
       console.error('Submit error:', err);
       setSubmitError(err.message || 'Submission failed');
@@ -345,7 +350,7 @@ export default function TestRecordingPage() {
       <div className="flex justify-center">
         <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
           <FormProgress currentStep={currentStep} />
-          
+
           <div className="max-w-[517px] mx-auto">
             <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
               {currentStep === 1 && 'Patient Info'}
@@ -479,10 +484,10 @@ export default function TestRecordingPage() {
 
             {/* Step 2: Test Details */}
             {currentStep === 2 && (
-              <TestDetailsForm 
-                testDetails={testDetails} 
-                onChange={handleTestDetailsChange} 
-                onImageChange={handleTestImageChange} 
+              <TestDetailsForm
+                testDetails={testDetails}
+                onChange={handleTestDetailsChange}
+                onImageChange={handleTestImageChange}
               />
             )}
 
@@ -496,35 +501,79 @@ export default function TestRecordingPage() {
                   </div>
                 )}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo</label>
-                  <div className="flex flex-col gap-3">
-                    <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-[#2c7be5] text-white border border-[#2c7be5] rounded font-poppins font-medium hover:bg-blue-600 transition-colors cursor-pointer">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
+                  {/* Hidden file inputs */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePatientPhotoChange}
+                    className="hidden"
+                  />
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handlePatientPhotoChange}
+                    className="hidden"
+                  />
+
+                  {/* Upload box with dashed border */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPhotoOptions(!showPhotoOptions)}
+                      className="w-full h-[140px] rounded bg-white border-2 border-dashed border-[#2c7be5] flex flex-col items-center justify-center gap-2 hover:bg-blue-50/30 transition-colors cursor-pointer"
+                    >
+                      {/* Camera Icon */}
+                      <svg className="w-12 h-12 text-[#2c7be5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Snap Photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handlePatientPhotoChange}
-                        className="hidden"
-                      />
-                    </label>
-                    <label className="flex items-center justify-center gap-2 h-12 px-[22px] bg-white border border-[#d9d9d9] text-[#637381] rounded font-poppins font-medium hover:bg-gray-50 transition-colors cursor-pointer">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      Upload Photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePatientPhotoChange}
-                        className="hidden"
-                      />
-                    </label>
+                      <span className="text-[#2c7be5] text-base font-medium font-poppins">Upload</span>
+                    </button>
+
+                    {/* Upload Options Popup - inside the box area */}
+                    {showPhotoOptions && (
+                      <>
+                        {/* Backdrop to close popup */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setShowPhotoOptions(false)}
+                        />
+                        {/* Options menu - positioned at bottom center */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-56 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPhotoOptions(false);
+                              cameraInputRef.current?.click();
+                            }}
+                            className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors border-b border-[#d9d9d9]"
+                          >
+                            Take photo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPhotoOptions(false);
+                              fileInputRef.current?.click();
+                            }}
+                            className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors"
+                          >
+                            Choose existing photo
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
+
+                  {patientPhoto && (
+                    <p className="mt-1 text-sm text-[#637381] font-poppins">
+                      Selected: {patientPhoto.name}
+                    </p>
+                  )}
                 </div>
                 {patientPhotoPreview && (
                   <div className="flex flex-col gap-1.5">
@@ -596,9 +645,9 @@ export default function TestRecordingPage() {
         onClose={() => setIsCreateTestTypeModalOpen(false)}
         onAdd={handleAddTestType}
       />
-      <TestTypeListModal 
-        isOpen={isTestTypeListModalOpen} 
-        onClose={() => setIsTestTypeListModalOpen(false)} 
+      <TestTypeListModal
+        isOpen={isTestTypeListModalOpen}
+        onClose={() => setIsTestTypeListModalOpen(false)}
         testTypes={testTypes}
         onEdit={(testType) => {
           setSelectedTestType(testType);

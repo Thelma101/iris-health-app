@@ -76,17 +76,17 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
 
   return (
     <div
-      className="h-[280px] sm:h-[334px] overflow-hidden rounded-lg w-full p-4 sm:p-6"
+      className="h-[280px] sm:h-[334px] overflow-hidden rounded-lg w-full p-4 sm:p-6 border border-[#e8f1ff]"
       style={{
-        backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.29) 3.64%, rgba(232, 241, 255, 0.29) 100.8%)',
+        backgroundImage: 'linear-gradient(118.89deg, rgba(255, 249, 230, 0.15) 3.64%, rgba(232, 241, 255, 0.15) 100.8%)',
       }}
     >
       <div className="flex flex-col gap-[5px] mb-4 sm:mb-6">
-        <p className="text-[16px] sm:text-[18px] font-semibold text-[#212b36] font-poppins capitalize">
+        <p className="text-[18px] sm:text-[20px] font-semibold text-[#212b36] font-poppins">
           Cases Per Community
         </p>
-        <p className="text-[10px] text-[#b1b9c0] font-poppins capitalize">
-          Number of test carried on every visit
+        <p className="text-[11px] sm:text-[12px] text-[#b1b9c0] font-poppins">
+          Number Of Test Carried On Every Visit
         </p>
       </div>
       <div className="w-full h-[180px] sm:h-[220px]">

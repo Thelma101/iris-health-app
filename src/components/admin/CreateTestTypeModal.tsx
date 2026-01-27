@@ -36,16 +36,20 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
       onAdd?.(testType, expectedResults.filter(r => r.trim()));
       setTestType('');
       setExpectedResults(['', '']);
-      // Show success message IMMEDIATELY before closing
+      // Show success message IMMEDIATELY and keep modal open briefly
       setSuccessMessage(`Test type "${savedTestType}" has been added successfully!`);
       setShowSuccessModal(true);
-      // Close modal after a brief delay to let user see success
-      setTimeout(() => {
-        onClose();
-      }, 100);
     } else {
       setSuccessMessage('Please enter a test type name and at least one expected result.');
       setShowSuccessModal(true);
+    }
+  };
+
+  // Handle success modal close - close parent modal after user acknowledges
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    if (successMessage.includes('successfully')) {
+      onClose();
     }
   };
 
@@ -54,11 +58,11 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer" 
+      <div
+        className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative w-full max-w-[625px] rounded-[10px] bg-white overflow-hidden shadow-lg mx-4">
         {/* Header */}
@@ -145,7 +149,7 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
       {/* Success Modal */}
       <SuccessModal
         isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
+        onClose={handleSuccessModalClose}
         title={successMessage.includes('successfully') ? 'Success!' : 'Error'}
         message={successMessage}
       />

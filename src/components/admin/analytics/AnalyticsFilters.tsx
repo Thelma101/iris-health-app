@@ -19,7 +19,7 @@ interface CommunityOption {
 const formatDateInput = (value: string) => {
   // Remove all non-numeric characters
   const digits = value.replace(/\D/g, '');
-  
+
   // Apply formatting based on length
   if (digits.length <= 2) {
     return digits;
@@ -128,8 +128,8 @@ export default function AnalyticsFilters({
 
   return (
     <div className="w-full relative z-20">
-      {/* All filters in a single horizontal row with flex-nowrap */}
-      <div className="flex flex-nowrap items-center gap-3 w-full pb-2">
+      {/* All filters in a single horizontal row - wrap on mobile, nowrap on desktop */}
+      <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full pb-2">
         {/* Community Dropdown */}
         <div ref={communityRef} className="relative flex-shrink-0 z-30">
           <button
@@ -214,8 +214,8 @@ export default function AnalyticsFilters({
             onChange={handleCalendarChange}
             className="sr-only"
           />
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleCalendarClick}
             className="cursor-pointer hover:opacity-70 transition-opacity"
           >

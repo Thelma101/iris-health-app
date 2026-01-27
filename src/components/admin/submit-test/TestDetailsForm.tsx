@@ -135,7 +135,7 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
           onChange={onImageChange}
           className="hidden"
         />
-        
+
         {/* Upload Button with dashed border */}
         <button
           type="button"
@@ -151,16 +151,16 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
           <span className="text-[#2c7be5] text-base font-medium font-poppins">Upload</span>
         </button>
 
-        {/* Upload Options Popup */}
+        {/* Upload Options Popup - positioned inside the upload box */}
         {showUploadOptions && (
           <>
             {/* Backdrop to close popup */}
-            <div 
-              className="fixed inset-0 z-40" 
+            <div
+              className="fixed inset-0 z-40"
               onClick={() => setShowUploadOptions(false)}
             />
-            {/* Options menu */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
+            {/* Options menu - positioned at bottom center of the upload box */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-56 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
               <button
                 type="button"
                 onClick={handleTakePhoto}
