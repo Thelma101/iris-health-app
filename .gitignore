@@ -82,11 +82,14 @@ pids
 .yarn-integrity
 .node_repl_history
 
-# Backend node_modules only
+# Backend folders
 Backend/LunarMedtrack/node_modules/
 Backend/LunarMedtrack/.env
-LunarMedtrackAPI/node_modules/
-LunarMedtrackAPI/.env
+LunarMedtrackAPI/
+
+# Documentation
+*.md
+docs/
 
 # Misc
 build.log

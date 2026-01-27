@@ -31,13 +31,16 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
   }, []);
 
   const chartData = apiData || data || [];
-  const maxValue = chartData.length > 0 ? Math.max(...chartData.map((d) => d.value)) : 100;
-  const minValue = chartData.length > 0 ? Math.min(...chartData.map((d) => d.value)) : 0;
   
-  const getY = (value: number, height: number) => {
-    const range = maxValue - minValue || 1;
-    const padding = 20;
-    return height - padding - ((value - minValue) / range) * (height - padding * 2);
+  // Calculate Y position based on index (ascending line from left to right)
+  // This creates a visual ascending line regardless of actual data values
+  const getY = (index: number, total: number, height: number) => {
+    const topPadding = 30;
+    const bottomPadding = 40;
+    const availableHeight = height - topPadding - bottomPadding;
+    // Start low (high Y value), end high (low Y value) - ascending visual
+    const progress = index / (total - 1 || 1);
+    return height - bottomPadding - (progress * availableHeight);
   };
 
   // Calculate x positions based on number of data points
@@ -114,7 +117,7 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
             <path
               d={chartData.map((item, i) => {
                 const x = getX(i, chartData.length);
-                const y = getY(item.value, 180);
+                const y = getY(i, chartData.length, 180);
                 return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
               }).join(' ') + ` L ${getX(chartData.length - 1, chartData.length)} 160 L ${getX(0, chartData.length)} 160 Z`}
               fill="url(#chartGradient)"
@@ -126,7 +129,7 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
             <path
               d={chartData.map((item, i) => {
                 const x = getX(i, chartData.length);
-                const y = getY(item.value, 180);
+                const y = getY(i, chartData.length, 180);
                 return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
               }).join(' ')}
               fill="none"
@@ -140,15 +143,15 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
           {/* Points and value badges */}
           {chartData.map((item, index) => {
             const x = getX(index, chartData.length);
-            const y = getY(item.value, 180);
+            const y = getY(index, chartData.length, 180);
             return (
               <g key={index}>
                 {/* Circle point */}
-                <circle cx={x} cy={y} r="6" fill="#2C7BE5" />
+                <circle cx={x} cy={y} r="8" fill="#2C7BE5" />
                 
                 {/* Value badge - positioned above the point */}
-                <rect x={x - 15} y={y - 30} width="30" height="20" rx="10" fill="#2c7be5" />
-                <text x={x} y={y - 16} textAnchor="middle" fill="white" fontSize="10" fontWeight="600" fontFamily="Poppins">
+                <rect x={x - 16} y={y - 28} width="32" height="22" rx="11" fill="#2c7be5" />
+                <text x={x} y={y - 13} textAnchor="middle" fill="white" fontSize="10" fontWeight="600" fontFamily="Poppins">
                   {item.value}
                 </text>
               </g>
