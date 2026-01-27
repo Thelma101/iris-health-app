@@ -39,10 +39,12 @@ export default function FieldAgentLoginPage() {
       if (loginType === 'field-agent') {
         localStorage.setItem('fieldAgentToken', data.data?.token || data.token);
         localStorage.setItem('fieldAgentData', JSON.stringify(data.data?.fieldAgent || data.fieldAgent));
+        localStorage.setItem('userRole', 'field-agent');
         router.push('/field-agent/dashboard');
       } else {
         localStorage.setItem('token', data.data?.token || data.token);
         localStorage.setItem('adminData', JSON.stringify(data.data?.admin || data.admin));
+        localStorage.setItem('userRole', 'admin');
         router.push('/dashboard');
       }
     } catch (err: any) {
@@ -65,20 +67,18 @@ export default function FieldAgentLoginPage() {
       <div className="w-full max-w-[400px] flex flex-col items-center gap-8 bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
         {/* Logo and Tagline */}
         <div className="flex flex-col items-center gap-6 w-full">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-[11px]">
             <Image
-              src="/images/favicon.svg"
+              src="/images/medtrack-icon.svg"
               alt="MedTrack Icon"
-              width={35}
-              height={38}
-              className="w-[35px] h-[38px]"
+              width={24}
+              height={26}
             />
             <Image
-              src="/images/logo.svg"
+              src="/images/medtrack-text.svg"
               alt="MedTrack"
-              width={223}
-              height={34}
-              className="h-[34px] w-auto"
+              width={154}
+              height={24}
             />
           </div>
           <p className="font-poppins font-medium text-2xl text-[#212b36] text-center">
