@@ -51,6 +51,7 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
   const handleLogout = () => {
     localStorage.removeItem('fieldAgentToken');
     localStorage.removeItem('fieldAgentData');
+    localStorage.removeItem('userRole');
     router.push('/field-agent/login');
   };
 
@@ -62,9 +63,25 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full pt-[109px] px-[35px]">
+        <div className="flex flex-col h-full py-8 px-6">
+          {/* Logo */}
+          <div className="flex items-center gap-[11px] mb-8">
+            <Image
+              src="/images/medtrack-icon.svg"
+              alt="MedTrack Icon"
+              width={24}
+              height={26}
+            />
+            <Image
+              src="/images/medtrack-text.svg"
+              alt="MedTrack"
+              width={154}
+              height={24}
+            />
+          </div>
+
           {/* Navigation */}
-          <nav className="flex flex-col gap-[14px] w-[200px]">
+          <nav className="flex flex-col gap-[14px] flex-1">
             {menuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
@@ -84,6 +101,17 @@ export default function FieldAgentSidebar({ isOpen, onClose }: SidebarProps) {
               );
             })}
           </nav>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2.5 px-1.5 py-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-poppins text-sm">Logout</span>
+          </button>
         </div>
       </aside>
     </>

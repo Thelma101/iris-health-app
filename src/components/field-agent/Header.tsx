@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Logo from '@/components/ui/Logo';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -26,6 +25,20 @@ const NOTIFICATION_ITEMS: ReadonlyArray<NotificationItem> = [
 export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [agentName, setAgentName] = useState('Field Agent');
+
+  useEffect(() => {
+    // Get agent data from localStorage
+    const agentData = localStorage.getItem('fieldAgentData');
+    if (agentData) {
+      try {
+        const data = JSON.parse(agentData);
+        setAgentName(`${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Field Agent');
+      } catch (err) {
+        console.error('Error parsing agent data:', err);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (notifOpen) {
@@ -42,21 +55,18 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="w-full h-[65px] bg-white rounded border border-[#d9d9d9] relative z-20 overflow-visible">
-      <div className="h-full flex items-center justify-between px-6">
-        {/* Logo container (left) */}
-        <div className="flex items-center">
-          <Logo size="lg" />
-        </div>
-
+      <div className="h-full flex items-center justify-end px-4 lg:px-6">
         {/* Right cluster - notification + avatar + mobile menu */}
-        <div className="flex items-center gap-[21px]">
-          {/* Notification bell - circular button matching Figma exactly */}
+        <div className="flex items-center gap-4 lg:gap-[21px]">
+          {/* Notification bell - circular button */}
           <button 
             aria-label="Notifications" 
             onClick={() => setNotifOpen(true)}
             className="relative size-8 flex items-center justify-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors"
           >
-            <Image src="/icons/notification-01.svg" alt="Notifications" width={24} height={24} />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.35419 21C10.0593 21.6224 10.9856 22 12 22C13.0145 22 13.9407 21.6224 14.6458 21M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 11.0902 5.22047 13.206 4.34966 14.6054C3.61513 15.7859 3.24786 16.3761 3.26132 16.5408C3.27624 16.7231 3.31486 16.7926 3.46178 16.9016C3.59446 17 4.19259 17 5.38885 17H18.6112C19.8074 17 20.4056 17 20.5382 16.9016C20.6852 16.7926 20.7238 16.7231 20.7387 16.5408C20.7522 16.3761 20.3849 15.7859 19.6503 14.6054C18.7795 13.206 18 11.0902 18 8Z" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#d64545] rounded-full text-white text-[10px] font-medium flex items-center justify-center">
                 {unreadCount}
@@ -67,16 +77,15 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
           {/* Avatar - Profile icon (navigates to profile) */}
           <button 
             onClick={() => router.push('/field-agent/profile')}
-            className="cursor-pointer overflow-hidden rounded-full size-11 hover:ring-2 hover:ring-blue-300 transition-all"
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             aria-label="User profile"
           >
-            <Image 
-              src="/icons/ellipse1.png" 
-              alt="Profile" 
-              width={44} 
-              height={44}
-              className="rounded-full object-cover"
-            />
+            <div className="w-11 h-11 rounded-full bg-[#2c7be5] flex items-center justify-center text-white font-poppins font-medium">
+              {agentName.charAt(0).toUpperCase()}
+            </div>
+            <span className="hidden sm:block font-poppins text-sm text-[#212b36]">
+              {agentName}
+            </span>
           </button>
 
           {/* Mobile hamburger menu */}
@@ -92,7 +101,7 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
         </div>
       </div>
 
-      {/* Notifications overlay - same as admin */}
+      {/* Notifications overlay */}
       {notifOpen && (
         <>
           {/* Backdrop */}
@@ -101,7 +110,7 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
             onClick={() => setNotifOpen(false)}
           />
           
-          {/* Panel positioned on the right - aligned with very top of page */}
+          {/* Panel positioned on the right */}
           <div className="fixed top-0 right-0 z-50 w-full max-w-md h-screen" style={{ margin: 0 }}>
             {/* Notifications Panel */}
             <section className="w-full max-w-[466px] bg-white rounded-[10px] border border-zinc-300 overflow-hidden shadow-lg m-0">

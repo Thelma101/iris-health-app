@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Icon, { IconName } from './Icon';
 import Image from 'next/image';
 
@@ -29,32 +29,53 @@ interface SideMenuProps {
 
 const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
   const pathname = usePathname();
+  const router = useRouter();
   
   // Detect if we're on field agent dashboard (either /dashboard/field-agent or /field-agent/*)
   const isFieldAgent = pathname.startsWith('/dashboard/field-agent') || pathname.startsWith('/field-agent');
   const items = isFieldAgent ? fieldAgentItems : adminItems;
 
-  const sidebarContent = (
-    <nav className="w-[200px] flex flex-col gap-[14px]">
-      {items.map((item) => {
-        const active = pathname === item.href;
-        const baseClasses = "w-full relative rounded-lg flex items-center p-[6px] gap-2.5 text-sm font-poppins transition-all cursor-pointer";
-        const activeClasses = active 
-          ? "bg-white text-[#212b36] shadow-[0px_4px_4px_0px_rgba(118,124,129,0.19)]" 
-          : "text-[#637381] hover:bg-white/50";
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('adminData');
+    localStorage.removeItem('userRole');
+    router.push('/login');
+  };
 
-        return (
-          <Link 
-            key={item.href} 
-            href={item.href} 
-            className={`${baseClasses} ${activeClasses}`}
-            onClick={() => onClose?.()}
-          >
-            <Icon name={item.iconName} size={24} alt="" />
-            <span className="relative whitespace-pre-wrap leading-normal">{item.label}</span>
-          </Link>
-        );
-      })}
+  const sidebarContent = (
+    <nav className="w-[200px] flex flex-col gap-[14px] h-full">
+      <div className="flex flex-col gap-[14px] flex-1">
+        {items.map((item) => {
+          const active = pathname === item.href;
+          const baseClasses = "w-full relative rounded-lg flex items-center p-[6px] gap-2.5 text-sm font-poppins transition-all cursor-pointer";
+          const activeClasses = active 
+            ? "bg-white text-[#212b36] shadow-[0px_4px_4px_0px_rgba(118,124,129,0.19)]" 
+            : "text-[#637381] hover:bg-white/50";
+
+          return (
+            <Link 
+              key={item.href} 
+              href={item.href} 
+              className={`${baseClasses} ${activeClasses}`}
+              onClick={() => onClose?.()}
+            >
+              <Icon name={item.iconName} size={24} alt="" />
+              <span className="relative whitespace-pre-wrap leading-normal">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+      
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-2.5 p-[6px] text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span className="font-poppins text-sm">Logout</span>
+      </button>
     </nav>
   );
 
@@ -62,7 +83,9 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
     <>
       {/* Desktop Sidebar - matches Figma design 1:793 */}
       <aside className="hidden lg:flex w-[267px] min-h-screen bg-[#ecf4ff] flex-col pt-[109px] pl-[35px] pr-[32px] pb-8">
-        {sidebarContent}
+        <div className="flex flex-col h-[calc(100vh-109px-32px)]">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile Sidebar Drawer */}
