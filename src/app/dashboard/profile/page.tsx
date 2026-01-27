@@ -42,8 +42,8 @@ export default function ProfilePage() {
       const token = adminToken || fieldAgentToken;
       const isAdmin = userRole === 'admin' || !!adminToken;
       const apiUrl = isAdmin 
-        ? `${process.env.NEXT_PUBLIC_API_URL || 'https://lunarmedtrack-api.onrender.com/api'}/admin/profile` 
-        : `${process.env.NEXT_PUBLIC_API_URL || 'https://lunarmedtrack-api.onrender.com/api'}/fieldAgent/profile`;
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/admin/profile` 
+        : `${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/fieldAgent/profile`;
       
       if (token) {
         const response = await fetch(apiUrl, {

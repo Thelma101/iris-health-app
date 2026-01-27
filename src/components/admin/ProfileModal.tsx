@@ -36,7 +36,7 @@ export default function ProfileModal({ isOpen, onClose, onLogout }: ProfileModal
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://lunarmedtrack-api.onrender.com/api'}/admin/profile`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/admin/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
