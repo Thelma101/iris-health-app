@@ -381,16 +381,107 @@ export default function SubmitTestPage() {
               </div>
             )}
             {currentStep === 4 && (
-              <div className="flex flex-col gap-4 text-sm">
-                <div className="border border-[#d9d9d9] rounded p-4">
-                  <h3 className="font-semibold text-[#212b36] mb-2">Patient Information</h3>
-                  <p className="text-[#637381]">
-                    {formData.firstName} {formData.lastName} | {formData.age} | {formData.gender} | {formData.community}, {formData.lga}
-                  </p>
+              <div className="flex flex-col gap-6">
+                {/* Patient Info Section */}
+                <div className="flex flex-col gap-4">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Info</span>
+                  </div>
+
+                  {/* LGA */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">LGA</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.lga || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Select Community */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Select Community</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.community || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* First Name */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">First Name</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.firstName || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Last Name */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Last Name</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.lastName || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Age */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Age</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.age || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Gender</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm capitalize">{formData.gender || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Phone Number</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.phoneNumber || '-'}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="border border-[#d9d9d9] rounded p-4">
-                  <h3 className="font-semibold text-[#212b36] mb-2">Test Details</h3>
-                  <p className="text-[#637381]">{testDetails.testType} - {testDetails.testResult}</p>
+
+                {/* Test Details Section */}
+                <div className="flex flex-col gap-4">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Test Details</span>
+                  </div>
+
+                  {/* Test Type */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Date Conducted */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.dateConducted || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Test Result */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testResult || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Officer Note */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
+                    <div className="min-h-20 rounded bg-white border border-[#d9d9d9] flex items-start p-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.officerNote || '-'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

@@ -48,7 +48,7 @@ export default function DashboardPage() {
       <section className="bg-white rounded-tl-[20px] rounded-bl-[20px] border border-[#d9d9d9]">
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Dashboard Header */}
-          <div 
+          <div
             className="w-full h-[50px] relative rounded-lg border-2 border-[#fff9e6] overflow-hidden flex items-center px-4 sm:px-[17px]"
             style={{
               backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
@@ -65,7 +65,7 @@ export default function DashboardPage() {
               {error}
             </div>
           )}
-          
+
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <LoadingSpinner />
@@ -107,35 +107,75 @@ export default function DashboardPage() {
               {/* Recent Records Section */}
               <section className="space-y-2.5">
                 <p className="text-[#637381] text-sm font-normal font-poppins">Recent record</p>
-                <div className="rounded-lg border border-[#d9d9d9] overflow-hidden">
-                  {/* Table Header */}
-                  <div className="bg-[#f4f5f7] px-1 py-1.5 flex items-center gap-[114px] overflow-x-auto">
-                    <div className="min-w-[211px] text-[#637381] text-sm font-semibold font-poppins px-1">Communities</div>
-                    <div className="min-w-[143px] text-[#637381] text-sm font-semibold font-poppins">Total Test</div>
-                    <div className="min-w-[202px] text-[#637381] text-sm font-semibold font-poppins">Top Tests +ve</div>
-                    <div className="min-w-[188px] text-[#637381] text-sm font-semibold font-poppins hidden sm:block">Top Tests -ve</div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {recentRecords.length > 0 ? (
+                    recentRecords.map((record, idx) => (
+                      <div
+                        key={`mobile-${record.community}-${idx}`}
+                        className="bg-white rounded-lg border border-[#d9d9d9] overflow-hidden"
+                      >
+                        <div className="bg-[#f4f5f7] px-3 py-2">
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Communities</p>
+                        </div>
+                        <div className="px-3 py-2">
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.community}</p>
+                        </div>
+                        <div className="bg-[#f4f5f7] px-3 py-2">
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Total Test</p>
+                        </div>
+                        <div className="px-3 py-2">
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.totalTests}</p>
+                        </div>
+                        <div className="bg-[#f4f5f7] px-3 py-2">
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Top Tests +ve</p>
+                        </div>
+                        <div className="px-3 py-2">
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.topPositiveTest}</p>
+                        </div>
+                        <div className="bg-[#f4f5f7] px-3 py-2">
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Top Tests -ve</p>
+                        </div>
+                        <div className="px-3 py-2">
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.topNegativeTest}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="bg-white rounded-lg border border-[#d9d9d9] flex items-center justify-center py-8">
+                      <p className="text-[#637381] text-sm font-poppins">No records available</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block rounded-lg border border-[#d9d9d9] overflow-hidden">
+                  <div className="bg-[#f4f5f7] px-4 py-2 grid grid-cols-4 gap-4">
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Communities</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Total Test</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Top Tests +ve</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Top Tests -ve</div>
                   </div>
 
-                  {/* Table Body */}
                   <div className="divide-y divide-[#e5e7eb]">
                     {recentRecords.length > 0 ? (
                       recentRecords.map((record, idx) => (
                         <div
-                          key={`${record.community}-${idx}`}
-                          className={`px-1 py-1.5 flex items-center gap-[114px] overflow-x-auto transition-colors hover:bg-gray-50 ${
-                            idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'
-                          }`}
+                          key={`desktop-${record.community}-${idx}`}
+                          className={`px-4 py-2 grid grid-cols-4 gap-4 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'
+                            }`}
                         >
-                          <div className="min-w-[211px] text-[#637381] text-sm font-normal font-poppins px-1 truncate">
+                          <div className="text-[#637381] text-sm font-normal font-poppins truncate">
                             {record.community}
                           </div>
-                          <div className="min-w-[143px] text-[#637381] text-sm font-normal font-poppins">
+                          <div className="text-[#637381] text-sm font-normal font-poppins">
                             {record.totalTests}
                           </div>
-                          <div className="min-w-[202px] text-[#637381] text-sm font-normal font-poppins">
+                          <div className="text-[#637381] text-sm font-normal font-poppins">
                             {record.topPositiveTest}
                           </div>
-                          <div className="min-w-[188px] text-[#637381] text-sm font-normal font-poppins hidden sm:block">
+                          <div className="text-[#637381] text-sm font-normal font-poppins">
                             {record.topNegativeTest}
                           </div>
                         </div>

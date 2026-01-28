@@ -579,7 +579,7 @@ export default function TestRecordingPage() {
                   <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
                     <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Info</span>
                   </div>
-                  
+
                   {/* LGA */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">LGA</label>
