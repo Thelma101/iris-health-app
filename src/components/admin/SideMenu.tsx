@@ -1,11 +1,10 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Icon, { IconName } from './Icon';
 import Image from 'next/image';
 
-// Admin menu items (6 items)
 const adminItems: ReadonlyArray<{ readonly label: string; readonly href: string; readonly iconName: IconName }> = [
   { label: 'Dashboard', href: '/dashboard', iconName: 'dashboard' },
   { label: 'Community', href: '/dashboard/community', iconName: 'community' },
@@ -15,7 +14,6 @@ const adminItems: ReadonlyArray<{ readonly label: string; readonly href: string;
   { label: 'User Management', href: '/dashboard/user-management', iconName: 'users' },
 ];
 
-// Field Agent menu items (3 items only)
 const fieldAgentItems: ReadonlyArray<{ readonly label: string; readonly href: string; readonly iconName: IconName }> = [
   { label: 'Dashboard', href: '/field-agent/dashboard', iconName: 'dashboard' },
   { label: 'Community', href: '/field-agent/community', iconName: 'community' },
@@ -30,40 +28,61 @@ interface SideMenuProps {
 const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const [userName, setUserName] = useState('User');
+  const [userEmail, setUserEmail] = useState('user@email.com');
+  const [userInitials, setUserInitials] = useState('U');
   
-  // Detect if we're on field agent dashboard (either /dashboard/field-agent or /field-agent/*)
   const isFieldAgent = pathname.startsWith('/dashboard/field-agent') || pathname.startsWith('/field-agent');
   const items = isFieldAgent ? fieldAgentItems : adminItems;
 
+  useEffect(() => {
+    const dataKey = isFieldAgent ? 'fieldAgentData' : 'adminData';
+    const userData = localStorage.getItem(dataKey);
+    
+    if (userData) {
+      try {
+        const data = JSON.parse(userData);
+        const firstName = data.firstName || '';
+        const lastName = data.lastName || '';
+        const name = `${firstName} ${lastName}`.trim() || 'User';
+        const email = data.email || 'user@email.com';
+        const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'U';
+        
+        setUserName(name);
+        setUserEmail(email);
+        setUserInitials(initials);
+      } catch (err) {
+        console.error('Error parsing user data:', err);
+      }
+    }
+  }, [isFieldAgent]);
+
   const handleLogout = () => {
     if (isFieldAgent) {
-      // Clear field agent specific tokens
       localStorage.removeItem('fieldAgentToken');
       localStorage.removeItem('fieldAgentData');
+      localStorage.removeItem('userRole');
+      router.push('/field-agent/login');
     } else {
-      // Clear admin tokens
       localStorage.removeItem('token');
       localStorage.removeItem('adminData');
+      localStorage.removeItem('userRole');
+      router.push('/login');
     }
-    localStorage.removeItem('userRole');
-    router.push('/login');
   };
 
   const sidebarContent = (
-    <nav className="w-[200px] flex flex-col gap-[14px] h-full">
-      <div className="flex flex-col gap-[14px] flex-1">
+    <nav className="w-[200px] flex flex-col gap-3.5 h-full">
+      <div className="flex flex-col gap-3.5 flex-1">
         {items.map((item) => {
           const active = pathname === item.href;
-          const baseClasses = "w-full relative rounded-lg flex items-center p-[6px] gap-2.5 text-sm font-poppins transition-all cursor-pointer";
-          const activeClasses = active 
-            ? "bg-white text-[#212b36] shadow-[0px_4px_4px_0px_rgba(118,124,129,0.19)]" 
-            : "text-[#637381] hover:bg-white/50";
-
           return (
             <Link 
               key={item.href} 
               href={item.href} 
-              className={`${baseClasses} ${activeClasses}`}
+              className={`w-full relative rounded-lg flex items-center p-1.5 gap-2.5 text-sm font-poppins transition-all cursor-pointer ${
+                active ? "bg-white text-[#212b36] shadow-[0px_4px_4px_0px_rgba(118,124,129,0.19)]" : "text-[#637381] hover:bg-white/50"
+              }`}
               onClick={() => onClose?.()}
             >
               <Icon name={item.iconName} size={24} alt="" />
@@ -73,11 +92,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
         })}
       </div>
       
-      {/* Logout Button */}
-      <button
-        onClick={handleLogout}
-        className="flex items-center gap-2.5 p-[6px] text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto"
-      >
+      <button onClick={handleLogout} className="flex items-center gap-2.5 p-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -88,66 +103,44 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
 
   return (
     <>
-      {/* Desktop Sidebar - matches Figma design 1:793 */}
-      <aside className="hidden lg:flex w-[267px] min-h-screen bg-[#ecf4ff] flex-col pt-[109px] pl-[35px] pr-[32px] pb-8">
+      <aside className="hidden lg:flex w-[267px] min-h-screen bg-[#ecf4ff] flex-col pt-[109px] pl-[35px] pr-8 pb-8">
         <div className="flex flex-col h-[calc(100vh-109px-32px)]">
           {sidebarContent}
         </div>
       </aside>
 
-      {/* Mobile Sidebar Drawer */}
       <div className="lg:hidden">
-        {/* Overlay */}
         {isOpen && (
-          <button
-            className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm"
-            onClick={onClose}
-            aria-label="Close menu"
-          />
+          <button className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm" onClick={onClose} aria-label="Close menu" />
         )}
 
-        {/* Slide-in Sidebar from RIGHT */}
-        <aside 
-          className={`fixed right-0 top-0 h-screen w-72 sm:w-80 bg-[#ecf4ff] flex flex-col z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto ${
-            isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        >
-          {/* Close Button Header */}
+        <aside className={`fixed right-0 top-0 h-screen w-72 sm:w-80 bg-[#ecf4ff] flex flex-col z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex justify-end p-4 sm:p-6 border-b border-[#d9d9d9]">
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-              aria-label="Close menu"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-white/50 rounded-lg transition-colors" aria-label="Close menu">
               <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
             </button>
           </div>
 
-          {/* User Profile Section */}
           <div className="flex flex-col gap-8 sm:gap-10 p-4 sm:p-6">
-            {/* User Info */}
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-blue-400 flex items-center justify-center text-white font-semibold text-sm sm:text-base">
-                TA
+                {userInitials}
               </div>
               <div className="flex flex-col gap-1.5">
-                <p className="text-[#212b36] text-xs sm:text-sm font-normal font-poppins">Thelma Akpata</p>
-                <p className="text-[#637381] text-xs font-normal font-poppins truncate">thelmaakpata@gmail.com</p>
+                <p className="text-[#212b36] text-xs sm:text-sm font-normal font-poppins">{userName}</p>
+                <p className="text-[#637381] text-xs font-normal font-poppins truncate">{userEmail}</p>
               </div>
             </div>
 
-            {/* Navigation Items */}
-            <div className="flex flex-col gap-[14px]">
+            <div className="flex flex-col gap-3.5">
               {items.map((item) => {
                 const active = pathname === item.href;
                 return (
                   <Link 
                     key={item.href} 
                     href={item.href} 
-                    className={`flex items-center gap-2.5 p-[6px] rounded-lg transition-colors text-sm ${
-                      active 
-                        ? "bg-white text-[#212b36] shadow-[0px_4px_4px_0px_rgba(118,124,129,0.19)]" 
-                        : "text-[#637381] hover:bg-white/50"
+                    className={`flex items-center gap-2.5 p-1.5 rounded-lg transition-colors text-sm ${
+                      active ? "bg-white text-[#212b36] shadow-[0px_4px_4px_0px_rgba(118,124,129,0.19)]" : "text-[#637381] hover:bg-white/50"
                     }`}
                     onClick={() => onClose?.()}
                   >
@@ -157,6 +150,13 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
                 );
               })}
             </div>
+
+            <button onClick={handleLogout} className="flex items-center gap-2.5 p-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-8">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="font-poppins text-sm">Logout</span>
+            </button>
           </div>
         </aside>
       </div>

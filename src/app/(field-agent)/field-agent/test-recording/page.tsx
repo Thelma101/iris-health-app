@@ -494,12 +494,6 @@ export default function TestRecordingPage() {
             {/* Step 3: Upload Photos */}
             {currentStep === 3 && (
               <div className="flex flex-col gap-[26px]">
-                {testImagePreview && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Image Preview</label>
-                    <img src={testImagePreview} alt="Test" className="max-w-[300px] rounded border border-[#d9d9d9]" />
-                  </div>
-                )}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
                   {/* Hidden file inputs */}
@@ -524,25 +518,18 @@ export default function TestRecordingPage() {
                     <button
                       type="button"
                       onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-                      className="w-full h-[140px] rounded bg-white border-2 border-dashed border-[#2c7be5] flex flex-col items-center justify-center gap-2 hover:bg-blue-50/30 transition-colors cursor-pointer"
+                      className="w-full h-[140px] rounded bg-white border-2 border-dashed border-[#d9d9d9] flex flex-col items-center justify-center gap-2 hover:border-[#2c7be5] hover:bg-blue-50/30 transition-colors cursor-pointer"
                     >
-                      {/* Camera Icon */}
-                      <svg className="w-12 h-12 text-[#2c7be5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-[#2c7be5] text-base font-medium font-poppins">Upload</span>
+                      <span className="text-[#637381] text-base font-normal font-poppins">Upload Patient  Image</span>
                     </button>
 
-                    {/* Upload Options Popup - inside the box area */}
+                    {/* Upload Options Popup */}
                     {showPhotoOptions && (
                       <>
-                        {/* Backdrop to close popup */}
                         <div
                           className="fixed inset-0 z-40"
                           onClick={() => setShowPhotoOptions(false)}
                         />
-                        {/* Options menu - positioned at bottom center */}
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-56 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
                           <button
                             type="button"
@@ -586,22 +573,148 @@ export default function TestRecordingPage() {
 
             {/* Step 4: Summary */}
             {currentStep === 4 && (
-              <div className="flex flex-col gap-4 text-sm">
-                <div className="border border-[#d9d9d9] rounded p-4">
-                  <h3 className="font-semibold text-[#212b36] mb-2">Patient Information</h3>
-                  <p className="text-[#637381]">
-                    {formData.firstName} {formData.lastName} | {formData.age} | {formData.gender} | {filteredCommunities.find(c => c.value === formData.community)?.label || formData.community}, {formData.lga}
-                  </p>
+              <div className="flex flex-col gap-6">
+                {/* Patient Info Section */}
+                <div className="flex flex-col gap-4">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Info</span>
+                  </div>
+                  
+                  {/* LGA */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">LGA</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.lga || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Select Community */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Select Community</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{filteredCommunities.find(c => c.value === formData.community)?.label || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* First Name */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">First Name</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.firstName || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Last Name */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Last Name</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.lastName || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Age */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Age</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.age || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Gender */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Gender</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm capitalize">{formData.gender || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Phone Number</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{formData.phoneNumber || '-'}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="border border-[#d9d9d9] rounded p-4">
-                  <h3 className="font-semibold text-[#212b36] mb-2">Test Details</h3>
-                  <p className="text-[#637381]">{testDetails.testType} - {testDetails.testResult}</p>
-                  {testDetails.dateConducted && (
-                    <p className="text-[#637381] mt-1">Date: {testDetails.dateConducted}</p>
+
+                {/* Test Details Section */}
+                <div className="flex flex-col gap-4">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Test Details</span>
+                  </div>
+
+                  {/* Test Type */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Date Conducted */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.dateConducted || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Test Result */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testResult || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Officer Note */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
+                    <div className="min-h-[80px] rounded bg-white border border-[#d9d9d9] flex items-start p-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.officerNote || '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Test Image Preview */}
+                  {testImagePreview && (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="w-full max-w-[150px] h-[100px] rounded border border-[#d9d9d9] overflow-hidden relative">
+                        <img src={testImagePreview} alt="Test" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTestDetails(prev => ({ ...prev, testImage: null }));
+                            setTestImagePreview(null);
+                          }}
+                          className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-100"
+                        >
+                          <svg className="w-3 h-3 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   )}
-                  {testDetails.officerNote && (
-                    <p className="text-[#637381] mt-1">Note: {testDetails.officerNote}</p>
-                  )}
+                </div>
+
+                {/* Patient Image Section */}
+                <div className="flex flex-col gap-4">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Image</span>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
+                    {patientPhotoPreview ? (
+                      <div className="w-full max-w-[200px] h-[150px] rounded border border-[#d9d9d9] overflow-hidden">
+                        <img src={patientPhotoPreview} alt="Patient" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                        <span className="text-[#637381] font-poppins text-sm">No photo uploaded</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
