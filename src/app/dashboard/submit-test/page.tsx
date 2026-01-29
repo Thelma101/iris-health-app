@@ -61,7 +61,7 @@ export default function SubmitTestPage() {
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
     testType: 'HIV 1/2 Rapid Test',
-    dateConducted: '',
+    dateConducted: new Date().toISOString().split('T')[0], // Default to today's date
     testResult: 'Positive',
     officerNote: '',
     testImage: null,
@@ -205,35 +205,93 @@ export default function SubmitTestPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
+    
+    // Validate required patient info fields
+    if (!formData.firstName?.trim()) {
+      setSubmitError('Please enter patient first name');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.lastName?.trim()) {
+      setSubmitError('Please enter patient last name');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.phoneNumber?.trim()) {
+      setSubmitError('Please enter patient phone number');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!formData.community) {
+      setSubmitError('Please select a community');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!testDetails.dateConducted) {
+      setSubmitError('Please enter the date the test was conducted');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!testDetails.testType) {
+      setSubmitError('Please select a test type');
+      setIsSubmitting(false);
+      return;
+    }
+    if (!testDetails.testResult) {
+      setSubmitError('Please select a test result');
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
-      // Prepare payload for API
+      // Prepare payload for API - community should be the ObjectId
       const payload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phoneNumber,
-        age: formData.age,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        phone: formData.phoneNumber.trim(),
+        age: formData.age ? parseInt(formData.age, 10) : undefined,
         gender: formData.gender,
-        community: formData.community,
-        lga: formData.lga,
+        community: formData.community, // This should be the community _id
         testDetails: [
           {
             testType: testDetails.testType,
             dateConducted: testDetails.dateConducted,
             testResult: testDetails.testResult,
-            officerNote: testDetails.officerNote,
-            // testImage: testDetails.testImage, // handle file upload separately if needed
+            officerNote: testDetails.officerNote || undefined,
           },
         ],
       };
+      
+      console.log('Submitting patient with payload:', JSON.stringify(payload, null, 2));
+      
       const res = await api.createPatient(payload);
+      console.log('Create patient response:', res);
+      
       if (res.success) {
         setSubmitSuccess(true);
         setIsSubmitModalOpen(false);
-        // Optionally reset form or show success UI
+        // Reset form after successful submission
+        setFormData({
+          lga: '',
+          community: '',
+          firstName: '',
+          lastName: '',
+          age: '',
+          gender: 'male',
+          phoneNumber: '',
+        });
+        setTestDetails({
+          testType: 'HIV 1/2 Rapid Test',
+          dateConducted: '',
+          testResult: 'Positive',
+          officerNote: '',
+          testImage: null,
+        });
       } else {
         setSubmitError(res.error || 'Submission failed');
       }
     } catch (err: any) {
+      console.error('Submit error:', err);
       setSubmitError(err.message || 'Submission failed');
     } finally {
       setIsSubmitting(false);
@@ -400,7 +458,9 @@ export default function SubmitTestPage() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Select Community</label>
                     <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{formData.community || '-'}</span>
+                      <span className="text-[#212b36] font-poppins text-sm">
+                        {communities.find(c => c.value === formData.community)?.label || formData.community || '-'}
+                      </span>
                     </div>
                   </div>
 
@@ -541,6 +601,36 @@ export default function SubmitTestPage() {
         onClose={() => setIsSubmitModalOpen(false)}
         onConfirm={handleSubmit}
       />
+      
+      {/* Error Toast */}
+      {submitError && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-md bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+          <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="font-medium">{submitError}</span>
+          <button onClick={() => setSubmitError(null)} className="ml-2 hover:opacity-80">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {/* Success Toast */}
+      {submitSuccess && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-md bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+          <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="font-medium">Test recording submitted successfully!</span>
+          <button onClick={() => setSubmitSuccess(false)} className="ml-2 hover:opacity-80">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
     </main>
   );
 }

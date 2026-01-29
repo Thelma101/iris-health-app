@@ -62,7 +62,7 @@ export default function TestRecordingPage() {
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
     testType: 'HIV 1/2 Rapid Test',
-    dateConducted: '',
+    dateConducted: new Date().toISOString().split('T')[0], // Default to today's date
     testResult: 'Positive',
     officerNote: '',
     testImage: null,
@@ -215,6 +215,17 @@ export default function TestRecordingPage() {
       if (!formData.gender) {
         throw new Error('Gender is required');
       }
+      
+      // Validate test details
+      if (!testDetails.testType?.trim()) {
+        throw new Error('Test type is required');
+      }
+      if (!testDetails.testResult?.trim()) {
+        throw new Error('Test result is required');
+      }
+      if (!testDetails.dateConducted) {
+        throw new Error('Date conducted is required');
+      }
 
       // Create patient first
       const patientRes = await fieldAgentApi.createPatient({
@@ -270,7 +281,7 @@ export default function TestRecordingPage() {
       });
       setTestDetails({
         testType: 'HIV 1/2 Rapid Test',
-        dateConducted: '',
+        dateConducted: new Date().toISOString().split('T')[0], // Default to today's date
         testResult: 'Positive',
         officerNote: '',
         testImage: null,

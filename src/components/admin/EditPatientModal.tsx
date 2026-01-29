@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ModalBackdrop from './ModalBackdrop';
+import { toISODateFormat, toDisplayDateFormat, normalizeAge } from '@/lib/utils/validation';
 
 interface PatientData {
   id: string;
@@ -43,25 +44,29 @@ export default function EditPatientModal({
   patientImage,
 }: EditPatientModalProps) {
   const [formData, setFormData] = useState<PatientData>(patient);
-  const [testData, setTestData] = useState<TestDetails>(
-    testDetails || {
-      testType: '',
-      testResult: '',
-      dateConducted: '',
-      officerNote: '',
-    }
-  );
+  const [testData, setTestData] = useState<TestDetails>(() => ({
+    testType: testDetails?.testType || '',
+    testResult: testDetails?.testResult || '',
+    dateConducted: toISODateFormat(testDetails?.dateConducted || ''),
+    officerNote: testDetails?.officerNote || '',
+  }));
   const [isSaving, setIsSaving] = useState(false);
 
   // Sync formData with patient prop when it changes
   useEffect(() => {
-    setFormData(patient);
+    setFormData({
+      ...patient,
+      age: normalizeAge(patient.age),
+    });
   }, [patient]);
 
   // Sync testData with testDetails prop when it changes
   useEffect(() => {
     if (testDetails) {
-      setTestData(testDetails);
+      setTestData({
+        ...testDetails,
+        dateConducted: toISODateFormat(testDetails.dateConducted),
+      });
     }
   }, [testDetails]);
 

@@ -24,7 +24,19 @@ async function fieldAgentRequest<T>(
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    let data: any;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // Non-JSON response (e.g., HTML error page)
+      const text = await response.text();
+      console.error('Non-JSON response:', text.substring(0, 200));
+      throw new Error(`Server returned non-JSON response: ${response.status}`);
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `API Error: ${response.status}`);
@@ -33,6 +45,7 @@ async function fieldAgentRequest<T>(
     return { success: true, data };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Field Agent API Error [${endpoint}]:`, message);
     return { success: false, error: message };
   }
 }
@@ -43,7 +56,7 @@ export const fieldAgentApi = {
     fieldAgentRequest('/fieldAgent/login', { method: 'POST', body: JSON.stringify(credentials) }),
 
   getProfile: () => fieldAgentRequest('/fieldAgent/profile'),
-  
+
   updateProfile: (data: object) =>
     fieldAgentRequest('/fieldAgent/profile', { method: 'PUT', body: JSON.stringify(data) }),
 
@@ -85,12 +98,12 @@ export const fieldAgentApi = {
         fieldAgentApi.getMyCommunities(),
       ]);
 
-      const visitations = (visitationsRes.data as any)?.data?.visitations || 
-                          (visitationsRes.data as any)?.visitations || [];
-      const patients = (patientsRes.data as any)?.data?.patients || 
-                       (patientsRes.data as any)?.patients || [];
-      const communities = (communitiesRes.data as any)?.data?.communities || 
-                          (communitiesRes.data as any)?.communities || [];
+      const visitations = (visitationsRes.data as any)?.data?.visitations ||
+        (visitationsRes.data as any)?.visitations || [];
+      const patients = (patientsRes.data as any)?.data?.patients ||
+        (patientsRes.data as any)?.patients || [];
+      const communities = (communitiesRes.data as any)?.data?.communities ||
+        (communitiesRes.data as any)?.communities || [];
 
       const lastVisitation = visitations.sort((a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -104,12 +117,12 @@ export const fieldAgentApi = {
           totalCommunities: communities.length,
           lastTestDate: lastVisitation?.createdAt
             ? new Date(lastVisitation.createdAt).toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: '2-digit',
-                year: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-              }).replace(',', '')
+              day: '2-digit',
+              month: '2-digit',
+              year: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            }).replace(',', '')
             : 'N/A',
         },
       };

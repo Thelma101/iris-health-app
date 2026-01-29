@@ -31,7 +31,7 @@ export default function FieldAgentDashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Fetch visitations/tests for the field agent
       const [visitationsRes] = await Promise.all([
@@ -39,30 +39,30 @@ export default function FieldAgentDashboardPage() {
       ]) as any[];
 
       const visitations = visitationsRes.data?.data?.visitations || visitationsRes.data?.visitations || [];
-      
+
       // Calculate stats
       const totalTests = visitations.length;
-      const lastVisitation = visitations.sort((a: any, b: any) => 
+      const lastVisitation = visitations.sort((a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0];
 
       setStats({
         totalTests,
-        lastTestDate: lastVisitation?.createdAt 
+        lastTestDate: lastVisitation?.createdAt
           ? new Date(lastVisitation.createdAt).toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: '2-digit',
-              year: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).replace(',', '')
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).replace(',', '')
           : new Date().toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: '2-digit',
-              year: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).replace(',', ''),
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).replace(',', ''),
       });
 
       // Group visitations by community for recent records
@@ -72,7 +72,7 @@ export default function FieldAgentDashboardPage() {
         const communityName = v.communityId?.name || v.community?.name || v.communityName || 'Unknown';
         const communityLga = v.communityId?.lga || v.community?.lga || '';
         const fullCommunityName = communityLga ? `${communityName} ${communityLga}` : communityName;
-        
+
         if (!communityMap.has(fullCommunityName)) {
           communityMap.set(fullCommunityName, {
             id: v._id || v.id,
@@ -89,13 +89,13 @@ export default function FieldAgentDashboardPage() {
     } catch (err: any) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data');
-      
+
       // Set fallback demo data
       setStats({
         totalTests: 10000,
         lastTestDate: '23/06/25 6:00PM',
       });
-      
+
       setRecentRecords([
         { id: '1', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
         { id: '2', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
@@ -127,10 +127,10 @@ export default function FieldAgentDashboardPage() {
     <div className="bg-white border border-[#d9d9d9] rounded-[20px] lg:rounded-tl-[20px] lg:rounded-bl-[20px] lg:rounded-tr-none lg:rounded-br-none overflow-hidden min-h-[calc(100vh-120px)]">
       <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
         {/* Page Title */}
-        <div 
+        <div
           className="h-12 sm:h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4"
-          style={{ 
-            backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)' 
+          style={{
+            backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)'
           }}
         >
           <h1 className="font-poppins font-semibold text-lg sm:text-xl text-[#212b36] uppercase">
@@ -139,10 +139,12 @@ export default function FieldAgentDashboardPage() {
         </div>
 
         {/* Stats Card */}
-        <TestsStatCard
-          totalTests={stats.totalTests}
-          lastTestDate={stats.lastTestDate}
-        />
+        <div className="max-w-md">
+          <TestsStatCard
+            totalTests={stats.totalTests}
+            lastTestDate={stats.lastTestDate}
+          />
+        </div>
 
         {/* Recent Records Table */}
         <div className="flex flex-col gap-2.5">

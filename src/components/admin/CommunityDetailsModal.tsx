@@ -1,6 +1,9 @@
 'use client';
 import React from 'react';
 
+// Field officer can be either a full object (from GET) or just an ID (for PUT/POST)
+type FieldOfficerRef = string | { _id: string; firstName: string; lastName: string; email: string };
+
 interface CommunityDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,7 +13,7 @@ interface CommunityDetailsModalProps {
     population?: string;
     lga: string;
     fieldOfficer?: string;
-    fieldOfficers?: Array<{ _id: string; firstName: string; lastName: string; email: string }>;
+    fieldOfficers?: FieldOfficerRef[];
     totalTests?: string;
     totalPopulation?: number;
     totalTestsConducted?: number;
@@ -37,8 +40,8 @@ export default function CommunityDetailsModal({
   const getFieldOfficers = (): string => {
     if (community.fieldOfficers && community.fieldOfficers.length > 0) {
       return community.fieldOfficers
-        .filter(fo => fo && fo.firstName && fo.lastName)
-        .map(fo => `${fo.firstName} ${fo.lastName}`)
+        .filter(fo => fo && typeof fo === 'object' && fo.firstName && fo.lastName)
+        .map(fo => typeof fo === 'object' ? `${fo.firstName} ${fo.lastName}` : fo)
         .join(', ') || '-';
     }
     return community.fieldOfficer || '-';

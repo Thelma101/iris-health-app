@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import NotificationsPanel from './NotificationsPanel';
 import Logo from '@/components/ui/Logo';
+import api from '@/lib/api';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -13,10 +14,30 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
-  
+  const [hasUnread, setHasUnread] = useState(false);
+
   // Determine profile URL based on current path
   const isFieldAgent = pathname.startsWith('/dashboard/field-agent') || pathname.startsWith('/field-agent');
   const profileUrl = isFieldAgent ? '/field-agent/profile' : '/dashboard/profile';
+
+  // Check for unread notifications on mount
+  useEffect(() => {
+    const checkNotifications = async () => {
+      try {
+        const res = await api.getVisitations() as any;
+        const visitations = res.data?.visitations || res.data?.data?.visitations || [];
+        // Mark as unread if there are any visitations in the last 24 hours
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentVisits = visitations.filter((v: any) =>
+          v.createdAt && new Date(v.createdAt) > oneDayAgo
+        );
+        setHasUnread(recentVisits.length > 0);
+      } catch (err) {
+        // Silently fail
+      }
+    };
+    checkNotifications();
+  }, []);
 
   useEffect(() => {
     if (notifOpen) {
@@ -40,37 +61,44 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Right cluster - notification + avatar + mobile menu */}
         <div className="flex items-center gap-[21px]">
           {/* Notification bell - circular button matching Figma exactly */}
-          <button 
-            aria-label="Notifications" 
-            onClick={() => setNotifOpen(true)}
+          <button
+            aria-label="Notifications"
+            onClick={() => {
+              setNotifOpen(true);
+              setHasUnread(false); // Mark as read when opened
+            }}
             className="relative size-8 flex items-center justify-center bg-[#f4f5f7] rounded-full border border-[#d9d9d9] cursor-pointer hover:bg-gray-200 transition-colors"
           >
             <Image src="/icons/notification-01.svg" alt="Notifications" width={24} height={24} />
+            {/* Red notification badge */}
+            {hasUnread && (
+              <span className="absolute -top-0.5 -right-0.5 size-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+            )}
           </button>
 
           {/* Avatar - Profile icon (navigates to profile) */}
-          <button 
+          <button
             onClick={() => router.push(profileUrl)}
             className="cursor-pointer overflow-hidden rounded-full size-11 hover:ring-2 hover:ring-blue-300 transition-all"
             aria-label="User profile"
           >
-            <Image 
-              src="/icons/ellipse1.png" 
-              alt="Profile" 
-              width={44} 
+            <Image
+              src="/icons/ellipse1.png"
+              alt="Profile"
+              width={44}
               height={44}
               className="rounded-full object-cover"
             />
           </button>
 
           {/* Mobile hamburger menu */}
-          <button 
-            aria-label="Menu" 
-            onClick={() => onMenuClick?.()} 
+          <button
+            aria-label="Menu"
+            onClick={() => onMenuClick?.()}
             className="lg:hidden size-8 grid place-items-center cursor-pointer hover:bg-gray-100 rounded-md transition-colors"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 12H21M3 6H21M3 18H21" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 12H21M3 6H21M3 18H21" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
@@ -79,14 +107,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
       {/* Notifications overlay */}
       {notifOpen && (
         <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/20 backdrop-blur-[6px] z-40" 
+          {/* Backdrop - z-[9998] ensures it's above everything */}
+          <div
+            className="fixed inset-0 bg-black/20 backdrop-blur-[6px] z-[9998]"
             onClick={() => setNotifOpen(false)}
           />
-          
-          {/* Panel positioned on the right - aligned with very top of page */}
-          <div className="fixed top-0 right-0 z-50 w-full max-w-md h-screen" style={{ margin: 0 }}>
+
+          {/* Panel positioned on the right - z-[9999] ensures it's the topmost */}
+          <div className="fixed top-0 right-0 z-[9999] w-full max-w-md h-screen" style={{ margin: 0 }}>
             <NotificationsPanel onClose={() => setNotifOpen(false)} />
           </div>
         </>

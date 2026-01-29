@@ -9,13 +9,16 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import SuccessModal from '@/components/admin/SuccessModal';
 import ErrorModal from '@/components/ui/ErrorModal';
 
+// Field officer can be either a full object (from GET) or just an ID (for PUT/POST)
+type FieldOfficerRef = string | { _id: string; firstName: string; lastName: string; email: string };
+
 interface Community {
   _id: string;
   name: string;
   lga: string;
   dateVisited?: string;
   fieldOfficer?: string;
-  fieldOfficers?: Array<{ _id: string; firstName: string; lastName: string; email: string }>;
+  fieldOfficers?: FieldOfficerRef[];
   population?: string;
   totalTests?: string;
   totalPopulation?: number;
@@ -105,7 +108,29 @@ export default function CommunityPage() {
     }
   }, [successMessage]);
 
+  // Reactive search with debouncing - filter when search term changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!searchTerm.trim()) {
+        setFilteredData(communities);
+        return;
+      }
+      const query = searchTerm.toLowerCase();
+      const filtered = communities.filter(
+        (community) =>
+          community.name.toLowerCase().includes(query) ||
+          community.lga.toLowerCase().includes(query) ||
+          (community.fieldOfficer || '').toLowerCase().includes(query)
+      );
+      setFilteredData(filtered);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, communities]);
+
   const handleSearch = () => {
+    // Search is already reactive via useEffect above
+    // This function is for explicit search button clicks
     if (!searchTerm.trim()) {
       setFilteredData(communities);
       return;
@@ -357,15 +382,16 @@ export default function CommunityPage() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           community={{
+            _id: selectedCommunity._id,
             name: selectedCommunity.name,
             lga: selectedCommunity.lga,
-            fieldOfficers: selectedCommunity.fieldOfficer ? [selectedCommunity.fieldOfficer] : [],
+            fieldOfficers: selectedCommunity.fieldOfficers || [],
           }}
           onSave={(updatedData) => {
             handleEditCommunity(selectedCommunity._id, {
               name: updatedData.name,
               lga: updatedData.lga,
-              fieldOfficer: updatedData.fieldOfficers?.[0] || selectedCommunity.fieldOfficer
+              fieldOfficers: updatedData.fieldOfficers || []
             });
           }}
         />

@@ -58,27 +58,41 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
             </tr>
           </thead>
           <tbody>
-            {data.map((officer) => (
-              <tr
-                key={officer.id}
-                className="border-b border-[#d9d9d9] hover:bg-[#f9f9f9] transition-colors"
-              >
-                <td className="px-4 sm:px-6 py-3">
-                  <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.name}</p>
-                </td>
-                <td className="px-4 sm:px-6 py-3 text-left">
-                  <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.testCount}</p>
-                </td>
-                <td className="px-4 sm:px-6 py-3 text-left">
-                  <button
-                    className="text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins"
-                    onClick={() => onViewTests?.(officer.id, officer.name)}
-                  >
-                    View Tests
-                  </button>
+            {loading ? (
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center">
+                  <p className="text-[14px] text-gray-500 font-poppins">Loading field officers...</p>
                 </td>
               </tr>
-            ))}
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-6 py-8 text-center">
+                  <p className="text-[14px] text-gray-500 font-poppins">No field officers found</p>
+                </td>
+              </tr>
+            ) : (
+              data.map((officer) => (
+                <tr
+                  key={officer.id}
+                  className="border-b border-[#d9d9d9] hover:bg-[#f9f9f9] transition-colors"
+                >
+                  <td className="px-4 sm:px-6 py-3">
+                    <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.name}</p>
+                  </td>
+                  <td className="px-4 sm:px-6 py-3 text-left">
+                    <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.testCount}</p>
+                  </td>
+                  <td className="px-4 sm:px-6 py-3 text-left">
+                    <button
+                      className="text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins"
+                      onClick={() => onViewTests?.(officer.id, officer.name)}
+                    >
+                      View Tests
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

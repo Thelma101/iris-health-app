@@ -77,3 +77,104 @@ export function sanitizeFileName(fileName: string): string {
     .toLowerCase()
     .slice(0, 100)
 }
+
+// Date utility functions
+/**
+ * Convert DD/MM/YYYY to YYYY-MM-DD for HTML date inputs
+ */
+export function toISODateFormat(displayDate: string): string {
+  if (!displayDate) return '';
+  
+  // Already in ISO format
+  if (/^\d{4}-\d{2}-\d{2}/.test(displayDate)) {
+    return displayDate.split('T')[0];
+  }
+  
+  // DD/MM/YYYY format
+  if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(displayDate)) {
+    const [day, month, year] = displayDate.split('/');
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  
+  // Try parsing as date
+  try {
+    const date = new Date(displayDate);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  } catch {
+    // Fallback
+  }
+  
+  return displayDate;
+}
+
+/**
+ * Convert YYYY-MM-DD to DD/MM/YYYY for display
+ */
+export function toDisplayDateFormat(isoDate: string): string {
+  if (!isoDate) return '';
+  
+  // Already in display format
+  if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(isoDate)) {
+    return isoDate;
+  }
+  
+  // ISO format
+  if (/^\d{4}-\d{2}-\d{2}/.test(isoDate)) {
+    const [year, month, day] = isoDate.split('T')[0].split('-');
+    return `${day}/${month}/${year}`;
+  }
+  
+  // Try parsing as date
+  try {
+    const date = new Date(isoDate);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+  } catch {
+    // Fallback
+  }
+  
+  return isoDate;
+}
+
+/**
+ * Calculate age from date string
+ */
+export function calculateAge(dateOfBirth: string): number {
+  if (!dateOfBirth) return 0;
+  
+  const birthDate = new Date(dateOfBirth);
+  if (isNaN(birthDate.getTime())) return 0;
+  
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return Math.max(0, age);
+}
+
+/**
+ * Validate and normalize age value
+ */
+export function normalizeAge(ageInput: string | number): string {
+  if (typeof ageInput === 'number') {
+    return ageInput >= 0 ? String(ageInput) : '0';
+  }
+  
+  // Remove 'yrs', 'years', etc.
+  const numericPart = String(ageInput).replace(/[^\d]/g, '');
+  const age = parseInt(numericPart, 10);
+  
+  return isNaN(age) || age < 0 ? '0' : String(age);
+}

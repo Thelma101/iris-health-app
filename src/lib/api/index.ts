@@ -24,7 +24,16 @@ async function apiRequest<T>(
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    
+    const contentType = response.headers.get('content-type');
+    let data: any;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      throw new Error(`Server returned non-JSON response: ${response.status}`);
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `API Error: ${response.status}`);
@@ -81,10 +90,10 @@ export const api = {
   // Auth
   login: (credentials: { email: string; password: string }) =>
     apiRequest('/admin/login', { method: 'POST', body: JSON.stringify(credentials) }),
-  
+
   register: (data: object) =>
     apiRequest('/admin/signup', { method: 'POST', body: JSON.stringify(data) }),
-  
+
   forgotPassword: (email: string) =>
     apiRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
 
@@ -92,37 +101,62 @@ export const api = {
   getUsers: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
+      console.log('[getUsers] No token found');
       return { success: false, error: 'Authentication required. Please login.', data: { fieldAgents: [] } };
     }
-    
+
     try {
-      const fieldAgentsRes = await apiRequest<{ fieldAgents: FieldAgent[] }>('/fieldAgent');
-      
+      // Fetch field agents and current admin profile in parallel
+      const [fieldAgentsRes, adminProfileRes] = await Promise.all([
+        apiRequest<{ agents: FieldAgent[] }>('/fieldAgent/'),
+        apiRequest<{ admin: { _id: string; email: string; name: string; createdAt: string } }>('/admin/profile')
+      ]);
+
+      console.log('[getUsers] Field agents response:', fieldAgentsRes);
+      console.log('[getUsers] Admin profile response:', adminProfileRes);
+
       if (!fieldAgentsRes.success) {
         if (fieldAgentsRes.error?.includes('401') || fieldAgentsRes.error?.includes('authorized') || fieldAgentsRes.error?.includes('token')) {
           return { success: false, error: 'Session expired. Please login again.', data: { fieldAgents: [] } };
         }
       }
-      
+
       const fieldAgentsData = fieldAgentsRes.data as any;
-      const fieldAgents = fieldAgentsRes.success 
-        ? (fieldAgentsData?.data?.fieldAgents || fieldAgentsData?.fieldAgents || []) 
+      // Backend returns { message, total, agents: [...] }
+      const fieldAgents = fieldAgentsRes.success
+        ? (fieldAgentsData?.agents || fieldAgentsData?.data?.agents || fieldAgentsData?.fieldAgents || [])
         : [];
-      
-      let admins: any[] = [];
-      const adminsRes = await apiRequest<{ admins: any[] }>('/admin/all');
-      if (adminsRes.success) {
-        const adminsData = adminsRes.data as any;
-        admins = adminsData?.data?.admins || adminsData?.admins || [];
+
+      // Map field agents with role
+      const mappedFieldAgents = fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' }));
+
+      // Add current admin to the list if available
+      // Note: Backend only has /admin/profile, not /admin/all - so we can only show current admin
+      const allUsers = [...mappedFieldAgents];
+      if (adminProfileRes.success && adminProfileRes.data) {
+        const adminData = (adminProfileRes.data as any)?.admin || adminProfileRes.data;
+        if (adminData && adminData._id) {
+          // Split name into firstName and lastName for consistent display
+          const nameParts = (adminData.name || '').split(' ');
+          const adminUser = {
+            _id: adminData._id,
+            firstName: nameParts[0] || adminData.name || 'Admin',
+            lastName: nameParts.slice(1).join(' ') || '',
+            email: adminData.email,
+            role: 'Admin',
+            status: 'Active',
+            createdAt: adminData.createdAt,
+          };
+          // Add admin at the beginning of the list
+          allUsers.unshift(adminUser);
+        }
       }
-      
-      const allUsers = [
-        ...admins.map((a: any) => ({ ...a, firstName: a.name?.split(' ')[0] || '', lastName: a.name?.split(' ').slice(1).join(' ') || '', role: 'Admin' })),
-        ...fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' })),
-      ];
-      
+
+      console.log('[getUsers] All users:', allUsers);
+
       return { success: true, data: { fieldAgents: allUsers } };
     } catch (error) {
+      console.error('[getUsers] Error:', error);
       return { success: false, error: 'Failed to fetch users', data: { fieldAgents: [] } };
     }
   },
@@ -167,21 +201,23 @@ export const api = {
   },
 
   // Field Agents/Officers - with fallback for analytics report
-  getFieldAgents: () => apiRequest('/fieldAgent'),
+  getFieldAgents: () => apiRequest('/fieldAgent/'),
   getFieldOfficers: async (): Promise<ApiResponse<Array<{ id: string; name: string; testCount: number }>>> => {
     try {
-      const response = await apiRequest<{ fieldAgents: any[] }>('/fieldAgent');
+      // Note: endpoint must have trailing slash - /fieldAgent/ not /fieldAgent
+      const response = await apiRequest<{ agents: any[] }>('/fieldAgent/');
       if (response.success && response.data) {
-        // Handle nested response structure
+        // Handle response structure - backend returns { agents: [...] }
         const responseData = response.data as any;
-        const agents = responseData?.data?.fieldAgents || responseData?.fieldAgents || [];
+        const agents = responseData?.agents || responseData?.data?.agents || responseData?.fieldAgents || [];
+        console.log('[getFieldOfficers] Raw agents:', agents);
         if (Array.isArray(agents) && agents.length > 0) {
           return {
             success: true,
             data: agents.map((agent: any) => ({
               id: agent._id || agent.id,
               name: `${agent.firstName || ''} ${agent.lastName || ''}`.trim() || 'Unknown',
-              testCount: agent.testCount || 0,
+              testCount: agent.testCount || agent.visitations?.length || 0,
             })),
           };
         }
@@ -192,6 +228,7 @@ export const api = {
         data: [],
       };
     } catch (error) {
+      console.error('[getFieldOfficers] Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch field officers',
@@ -279,13 +316,14 @@ export const api = {
       const commData = communitiesRes.data as any;
       const agentsData = fieldAgentsRes.data as any;
       const visitData = visitationsRes.data as any;
-      
+
       const communities = commData?.data?.communities || commData?.communities || [];
-      const fieldAgents = agentsData?.data?.fieldAgents || agentsData?.fieldAgents || [];
+      // Backend returns { agents: [...] } not { fieldAgents: [...] }
+      const fieldAgents = agentsData?.agents || agentsData?.data?.agents || agentsData?.fieldAgents || [];
       const visitations = visitData?.data?.visitations || visitData?.visitations || [];
 
       const totalTests = visitations.length;
-      const lastVisitation = visitations.sort((a: any, b: any) => 
+      const lastVisitation = visitations.sort((a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0];
 
@@ -295,7 +333,7 @@ export const api = {
         tests: totalTests,
         communitiesCovered: communities.filter((c: any) => c.totalTestsConducted > 0).length || Math.min(communities.length, Math.ceil(communities.length * 0.6)),
         fieldAgentsAvailable: fieldAgents.length,
-        lastTestDate: lastVisitation?.createdAt 
+        lastTestDate: lastVisitation?.createdAt
           ? new Date(lastVisitation.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
           : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
       };
@@ -358,7 +396,7 @@ export const api = {
 
       // Count tests per community
       const communityTestCounts: Record<string, { name: string; count: number }> = {};
-      
+
       communities.forEach((c: any) => {
         communityTestCounts[c._id] = { name: c.name, count: c.totalTestsConducted || 0 };
       });

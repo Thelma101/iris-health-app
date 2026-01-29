@@ -74,9 +74,11 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
     setLoadingOfficers(true);
     try {
       const res = await api.getFieldAgents();
-      if (res.success && res.data) {
-        const agentsData = res.data as any;
-        const agents = agentsData?.data?.fieldAgents || agentsData?.fieldAgents || [];
+      console.log('Field agents response:', res);
+      // Backend returns { agents: [...] } not { fieldAgents: [...] }
+      if (res.success) {
+        const responseData = res as any;
+        const agents = responseData.agents || responseData.data?.agents || [];
         setAvailableOfficers(agents);
       }
     } catch (err) {

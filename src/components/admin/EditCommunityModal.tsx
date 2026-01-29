@@ -10,6 +10,9 @@ interface FieldOfficer {
   email: string;
 }
 
+// Field officer can be either a full object (from GET) or just an ID (for PUT/POST)
+type FieldOfficerRef = string | FieldOfficer;
+
 interface EditCommunityModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -17,7 +20,7 @@ interface EditCommunityModalProps {
     _id?: string;
     name: string;
     lga: string;
-    fieldOfficers?: string[] | FieldOfficer[];
+    fieldOfficers?: FieldOfficerRef[];
   };
   onSave?: (data: { name: string; lga: string; fieldOfficers: string[] }) => void;
 }
@@ -78,9 +81,9 @@ export default function EditCommunityModal({
     setLoadingOfficers(true);
     try {
       const res = await api.getFieldAgents();
-      if (res.success && res.data) {
-        const agentsData = res.data as any;
-        const agents = agentsData?.data?.fieldAgents || agentsData?.fieldAgents || [];
+      if (res.success) {
+        const responseData = res as any;
+        const agents = responseData.agents || responseData.data?.agents || [];
         setAvailableOfficers(agents);
 
         // Set initially selected officers
@@ -88,11 +91,9 @@ export default function EditCommunityModal({
           const initialOfficers: FieldOfficer[] = [];
           community.fieldOfficers.forEach((officer) => {
             if (typeof officer === 'string') {
-              // It's an ID, find the officer
               const found = agents.find((a: FieldOfficer) => a._id === officer);
               if (found) initialOfficers.push(found);
             } else if (officer && typeof officer === 'object' && officer._id) {
-              // It's already an officer object
               initialOfficers.push(officer);
             }
           });

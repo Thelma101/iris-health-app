@@ -81,15 +81,15 @@ export default function ProfileModal({ isOpen, onClose, onLogout }: ProfileModal
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer" 
+      <div
+        className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
-      
+
       {/* Modal - Right aligned, slides from top */}
       <div className="relative w-full max-w-[400px] bg-white rounded-bl-[20px] shadow-xl mt-0 mr-0 overflow-hidden animate-slide-down">
         {/* Header with gradient */}
-        <div 
+        <div
           className="h-[120px] relative"
           style={{
             background: 'linear-gradient(135deg, #2c7be5 0%, #00ab9f 100%)',
@@ -102,14 +102,14 @@ export default function ProfileModal({ isOpen, onClose, onLogout }: ProfileModal
           >
             <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} className="invert" />
           </button>
-          
+
           {/* Profile Image - Positioned to overlap */}
           <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
             <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-white">
-              <Image 
-                src="/icons/ellipse1.png" 
-                alt="Profile" 
-                width={96} 
+              <Image
+                src="/icons/ellipse1.png"
+                alt="Profile"
+                width={96}
                 height={96}
                 className="object-cover"
               />
@@ -163,10 +163,10 @@ export default function ProfileModal({ isOpen, onClose, onLogout }: ProfileModal
                     <div>
                       <p className="text-xs text-[#637381] font-poppins">Member Since</p>
                       <p className="text-sm text-[#212b36] font-poppins">
-                        {new Date(profile.createdAt).toLocaleDateString('en-GB', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
+                        {new Date(profile.createdAt).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
                         })}
                       </p>
                     </div>
