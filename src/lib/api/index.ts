@@ -96,7 +96,7 @@ export const api = {
     }
     
     try {
-      const fieldAgentsRes = await apiRequest<{ fieldAgents: FieldAgent[] }>('/fieldAgent/all');
+      const fieldAgentsRes = await apiRequest<{ fieldAgents: FieldAgent[] }>('/fieldAgent');
       
       if (!fieldAgentsRes.success) {
         if (fieldAgentsRes.error?.includes('401') || fieldAgentsRes.error?.includes('authorized') || fieldAgentsRes.error?.includes('token')) {
@@ -167,10 +167,10 @@ export const api = {
   },
 
   // Field Agents/Officers - with fallback for analytics report
-  getFieldAgents: () => apiRequest('/fieldAgent/all'),
+  getFieldAgents: () => apiRequest('/fieldAgent'),
   getFieldOfficers: async (): Promise<ApiResponse<Array<{ id: string; name: string; testCount: number }>>> => {
     try {
-      const response = await apiRequest<{ fieldAgents: any[] }>('/fieldAgent/all');
+      const response = await apiRequest<{ fieldAgents: any[] }>('/fieldAgent');
       if (response.success && response.data) {
         // Handle nested response structure
         const responseData = response.data as any;
@@ -208,7 +208,7 @@ export const api = {
     apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' }),
 
   // Patients
-  getPatients: () => apiRequest('/patients/all'),
+  getPatients: () => apiRequest('/patients'),
   getPatient: (id: string) => apiRequest(`/patients/${id}`),
   createPatient: (data: object) =>
     apiRequest('/patients', { method: 'POST', body: JSON.stringify(data) }),
@@ -262,7 +262,7 @@ export const api = {
     apiRequest(`/community/${id}`, { method: 'DELETE' }),
 
   // Visitation
-  getVisitations: () => apiRequest('/visitation/all'),
+  getVisitations: () => apiRequest('/visitation'),
   createVisitation: (data: object) =>
     apiRequest('/visitation', { method: 'POST', body: JSON.stringify(data) }),
 
