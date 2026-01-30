@@ -24,10 +24,10 @@ async function apiRequest<T>(
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    
+
     const contentType = response.headers.get('content-type');
     let data: any;
-    
+
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
@@ -99,7 +99,7 @@ export const api = {
 
   // Admin Management
   getAllAdmins: () => apiRequest('/admin/admins'),
-  
+
   updateAdminProfile: (data: { name: string }) =>
     apiRequest('/admin/update', { method: 'PUT', body: JSON.stringify(data) }),
 

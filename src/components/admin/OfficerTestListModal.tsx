@@ -92,9 +92,8 @@ export default function OfficerTestListModal({
                       key={patient.index}
                       onClick={() => onPatientSelect?.(patient.name)}
                       onKeyDown={(e) => e.key === 'Enter' && onPatientSelect?.(patient.name)}
-                      className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] text-left w-full bg-transparent border-none p-0 ${
-                        idx === 2 ? 'bg-[#f4f5f7] -mx-[22px] px-[22px] py-2' : ''
-                      }`}
+                      className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] text-left w-full bg-transparent border-none p-0 ${idx === 2 ? 'bg-[#f4f5f7] -mx-[22px] px-[22px] py-2' : ''
+                        }`}
                     >
                       <span className="text-[#637381] w-[16px] flex-shrink-0">{patient.index}</span>
                       <span className="text-[#637381] flex-1 hover:text-[#2c7be5]">{patient.name}</span>
