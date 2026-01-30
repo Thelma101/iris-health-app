@@ -26,15 +26,12 @@ export default function LoginPage() {
     try {
       if (role === "admin") {
         // Admin login
-        console.log("[Auth] Attempting admin login...");
         const response = await api.login({ email, password }) as any;
-        console.log("[Auth] Admin login response:", response);
         
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           const adminData = response.data?.admin || response.data?.data?.admin;
           if (token) {
-            console.log("[Auth] Admin token received, storing and redirecting to /dashboard");
             localStorage.setItem("token", token);
             localStorage.setItem("userRole", "admin");
             if (adminData) {
@@ -51,15 +48,12 @@ export default function LoginPage() {
         }
       } else {
         // Field Agent login
-        console.log("[Auth] Attempting field agent login...");
         const response = await fieldAgentApi.login({ email, password }) as any;
-        console.log("[Auth] Field agent login response:", response);
         
         if (response.success && response.data) {
           const token = response.data?.token || response.data?.data?.token;
           const fieldAgent = response.data?.fieldAgent || response.data?.data?.fieldAgent;
           if (token) {
-            console.log("[Auth] Field agent token received, storing and redirecting to /field-agent/dashboard");
             localStorage.setItem("fieldAgentToken", token);
             localStorage.setItem("userRole", "field-agent");
             if (fieldAgent) {

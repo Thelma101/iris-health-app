@@ -97,10 +97,8 @@ export default function TestRecordingPage() {
     setLoading(true);
     try {
       const res = await fieldAgentApi.getMyCommunities();
-      console.log('Communities API response:', res);
       const communitiesData =
         (res.data as any)?.data?.communities || (res.data as any)?.communities || [];
-      console.log('Parsed communities data:', communitiesData);
 
       // Extract unique LGAs
       const uniqueLgas = [...new Set(communitiesData.map((c: any) => c.lga).filter(Boolean))] as string[];
@@ -111,7 +109,6 @@ export default function TestRecordingPage() {
         label: c.name,
         lga: c.lga,
       }));
-      console.log('Mapped communities with values:', mappedCommunities);
       setCommunities(mappedCommunities);
     } catch (err) {
       console.error('Error fetching communities:', err);
@@ -237,7 +234,6 @@ export default function TestRecordingPage() {
         community: communityId,
       });
 
-      console.log('Patient creation response:', patientRes);
 
       if (!patientRes.success) {
         throw new Error(patientRes.error || 'Failed to create patient');
@@ -259,7 +255,6 @@ export default function TestRecordingPage() {
         dateConducted: testDetails.dateConducted,
       });
 
-      console.log('Visitation creation response:', visitationRes);
 
       if (!visitationRes.success) {
         throw new Error(visitationRes.error || 'Failed to create test record');

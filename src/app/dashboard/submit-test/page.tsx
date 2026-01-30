@@ -96,10 +96,8 @@ export default function SubmitTestPage() {
     setLoadingCommunities(true);
     try {
       const res = await api.getCommunities();
-      console.log('Communities API response:', res);
       // Access data from ApiResponse wrapper, then extract communities array
       const communitiesData = (res.data as any)?.communities || [];
-      console.log('Parsed communities data:', communitiesData);
 
       // Extract unique LGAs
       const uniqueLgas = [...new Set(communitiesData.map((c: any) => c.lga).filter(Boolean))] as string[];
@@ -110,7 +108,6 @@ export default function SubmitTestPage() {
         label: c.name,
         lga: c.lga,
       }));
-      console.log('Mapped communities with values:', mappedCommunities);
       setCommunities(mappedCommunities);
     } catch (err) {
       console.error('Error fetching communities:', err);
@@ -163,42 +160,26 @@ export default function SubmitTestPage() {
   };
 
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
-    console.log('=== ADD TEST TYPE ===');
-    console.log('Test type name:', testType);
-    console.log('Expected results:', expectedResults);
-    console.log('Current test types before add:', testTypes);
 
     const newTestType: TestType = {
       id: testTypes.length + 1,
       name: testType,
       results: expectedResults,
     };
-    console.log('New test type object:', newTestType);
 
     const updatedTestTypes = [...testTypes, newTestType];
-    console.log('Updated test types array:', updatedTestTypes);
     setTestTypes(updatedTestTypes);
   };
 
   const handleEditTestType = (id: number, testType: string, expectedResults: string[]) => {
-    console.log('=== EDIT TEST TYPE ===');
-    console.log('Editing ID:', id);
-    console.log('New name:', testType);
-    console.log('New results:', expectedResults);
-    console.log('Current test types:', testTypes);
 
     const updated = testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t));
-    console.log('Updated test types:', updated);
     setTestTypes(updated);
   };
 
   const handleDeleteTestType = (id: number) => {
-    console.log('=== DELETE TEST TYPE ===');
-    console.log('Deleting ID:', id);
-    console.log('Current test types:', testTypes);
 
     const filtered = testTypes.filter((t) => t.id !== id);
-    console.log('Filtered test types:', filtered);
     setTestTypes(filtered);
   };
 
@@ -262,10 +243,8 @@ export default function SubmitTestPage() {
         ],
       };
       
-      console.log('Submitting patient with payload:', JSON.stringify(payload, null, 2));
       
       const res = await api.createPatient(payload);
-      console.log('Create patient response:', res);
       
       if (res.success) {
         setSubmitSuccess(true);
@@ -306,7 +285,6 @@ export default function SubmitTestPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <button
           onClick={() => {
-            console.log('Opening Create Test Type modal');
             setIsCreateTestTypeModalOpen(true);
           }}
           className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
@@ -316,7 +294,6 @@ export default function SubmitTestPage() {
         <div className="flex-1" />
         <button
           onClick={() => {
-            console.log('Opening Test Type List modal, current test types:', testTypes);
             setIsTestTypeListModalOpen(true);
           }}
           className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
