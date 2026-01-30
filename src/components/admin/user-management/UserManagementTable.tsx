@@ -26,9 +26,9 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
   const data = users || defaultUsers;
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-[10px] overflow-x-auto">
+    <div className="bg-white border border-[#f4f5f7] rounded-[10px] overflow-hidden">
       {/* Desktop Table */}
-      <div className="hidden sm:block">
+      <div className="hidden sm:block overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
         {/* Header */}
         <div className="bg-[#f4f5f7] border-b border-[#e5e7eb] grid grid-cols-5 gap-8 h-[33px] items-center px-4 py-[6px]">
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Name</span>
@@ -57,9 +57,8 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
                 </button>
                 <button
                   onClick={() => onToggleStatus?.(user.id, user.status)}
-                  className={`text-[14px] font-poppins hover:underline transition-colors cursor-pointer font-medium ${
-                    user.status === 'Active' ? 'text-[#d64545]' : 'text-[#00c897]'
-                  }`}
+                  className={`text-[14px] font-poppins hover:underline transition-colors cursor-pointer font-medium ${user.status === 'Active' ? 'text-[#d64545]' : 'text-[#00c897]'
+                    }`}
                 >
                   {user.status === 'Active' ? 'Deactivate' : 'Activate'}
                 </button>
@@ -118,9 +117,8 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
               </button>
               <button
                 onClick={() => onToggleStatus?.(user.id, user.status)}
-                className={`text-[14px] font-poppins hover:underline transition-colors cursor-pointer font-medium ${
-                  user.status === 'Active' ? 'text-[#d64545]' : 'text-[#00c897]'
-                }`}
+                className={`text-[14px] font-poppins hover:underline transition-colors cursor-pointer font-medium ${user.status === 'Active' ? 'text-[#d64545]' : 'text-[#00c897]'
+                  }`}
               >
                 {user.status === 'Active' ? 'Deactivate' : 'Activate'}
               </button>

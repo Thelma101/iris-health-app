@@ -215,7 +215,7 @@ export default function TestRecordingPage() {
       if (!formData.gender) {
         throw new Error('Gender is required');
       }
-      
+
       // Validate test details
       if (!testDetails.testType?.trim()) {
         throw new Error('Test type is required');
@@ -312,23 +312,6 @@ export default function TestRecordingPage() {
       {/* Page Header */}
       <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
         <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <button
-          onClick={() => setIsCreateTestTypeModalOpen(true)}
-          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
-        >
-          Create New Test Type
-        </button>
-        <div className="flex-1" />
-        <button
-          onClick={() => setIsTestTypeListModalOpen(true)}
-          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
-        >
-          View All the Test Type
-        </button>
       </div>
 
       <div className="h-px bg-[#d9d9d9]" />

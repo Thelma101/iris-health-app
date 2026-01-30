@@ -73,7 +73,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
 
   const sidebarContent = (
     <nav className="w-[200px] flex flex-col gap-3.5 h-full">
-      <div className="flex flex-col gap-3.5 flex-1">
+      <div className="flex flex-col gap-3.5">
         {items.map((item) => {
           const active = pathname === item.href;
           return (
@@ -89,20 +89,24 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
             </Link>
           );
         })}
-      </div>
 
-      <button onClick={handleLogout} className="flex items-center gap-2.5 p-1.5 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <span className="font-poppins text-sm">Logout</span>
-      </button>
+        {/* Logout button styled same as menu items */}
+        <button
+          onClick={handleLogout}
+          className="w-full relative rounded-lg flex items-center p-1.5 gap-2.5 text-sm font-poppins transition-all cursor-pointer text-[#d64545] hover:bg-red-50"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="relative whitespace-pre-wrap leading-normal">Logout</span>
+        </button>
+      </div>
     </nav>
   );
 
   return (
     <>
-      <aside className="hidden lg:flex w-[267px] min-h-screen bg-[#ecf4ff] flex-col pt-[109px] pl-[35px] pr-8 pb-8">
+      <aside className="hidden lg:flex w-[267px] min-h-screen bg-[#ecf4ff] flex-col pt-[72px] pl-[35px] pr-[32px] pb-8">
         <div className="flex flex-col h-[calc(100vh-109px-32px)]">
           {sidebarContent}
         </div>
@@ -118,7 +122,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
           <div className="flex justify-end p-4 border-b border-[#e5e7eb]">
             <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded transition-colors" aria-label="Close menu">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18 6L6 18M6 6L18 18" stroke="#637381" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           </div>
@@ -155,8 +159,8 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen = true, onClose }) => {
             </div>
 
             {/* Logout Button */}
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 py-2.5 px-2 text-[#d64545] hover:bg-red-50 rounded-lg transition-colors mt-auto"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

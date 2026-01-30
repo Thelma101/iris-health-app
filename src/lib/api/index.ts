@@ -97,6 +97,12 @@ export const api = {
   forgotPassword: (email: string) =>
     apiRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
 
+  // Admin Management
+  getAllAdmins: () => apiRequest('/admin/admins'),
+  
+  updateAdminProfile: (data: { name: string }) =>
+    apiRequest('/admin/update', { method: 'PUT', body: JSON.stringify(data) }),
+
   // Users (both Admins and Field Agents)
   getUsers: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;

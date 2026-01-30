@@ -33,7 +33,7 @@ export default function OfficerTestDetailsModal({
       <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
 
       {/* Modal Drawer - Right Side */}
-      <div className="fixed right-0 top-0 h-screen w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
+      <div className="fixed right-0 top-0 h-screen w-full sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
         {/* Header */}
         <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
           <h2 className="text-xl font-medium text-[#212b36] font-poppins">{patientName}</h2>

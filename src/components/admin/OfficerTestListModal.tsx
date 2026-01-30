@@ -60,8 +60,8 @@ export default function OfficerTestListModal({
     <>
       <ModalBackdrop onClick={onClose} />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center sm:items-start sm:justify-end pointer-events-none px-4 sm:px-0">
-        <div className="bg-white w-full max-w-[411px] max-h-[90vh] sm:max-h-screen pointer-events-auto rounded-lg sm:rounded-br-lg shadow-xl mx-auto sm:mx-0">
+      <div className="fixed inset-0 z-50 flex items-center justify-center sm:items-start sm:justify-end pointer-events-none">
+        <div className="bg-white w-full max-w-[411px] h-screen pointer-events-auto sm:rounded-none shadow-xl m-0">
           {/* Header */}
           <div className="bg-white border-b border-[#d9d9d9] h-[48px] flex items-center justify-between px-[22px]">
             <h2 className="text-[20px] font-medium text-[#212b36] font-poppins">{officerName} Test List</h2>
