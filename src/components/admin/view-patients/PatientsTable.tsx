@@ -15,30 +15,30 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
         <div className="overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
           <table className="w-full min-w-[900px]">
             {/* Table Header */}
-            <thead>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-[#f4f5f7] border-b border-[#f4f5f7]">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[211px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[211px] bg-[#f4f5f7]">
                   Patient Name
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[60px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[60px] bg-[#f4f5f7]">
                   Age
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[60px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[60px] bg-[#f4f5f7]">
                   Gender
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[143px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[143px] bg-[#f4f5f7]">
                   Community
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[143px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[143px] bg-[#f4f5f7]">
                   LGA
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[92px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[92px] bg-[#f4f5f7]">
                   Tests Taken
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[117px]">
+                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[117px] bg-[#f4f5f7]">
                   Last Test Result
                 </th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[144px]">
+                <th className="px-6 py-3 text-center text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[144px] bg-[#f4f5f7]">
                   Action
                 </th>
               </tr>

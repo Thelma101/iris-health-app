@@ -42,17 +42,17 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
           Field Officer Report
         </p>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
         <table className="w-full min-w-[400px]">
-          <thead>
+          <thead className="sticky top-0 z-10">
             <tr className="bg-[#f4f5f7] border-b border-[#d9d9d9]">
-              <th className="px-4 sm:px-6 py-3 text-left w-[45%]">
+              <th className="px-4 sm:px-6 py-3 text-left w-[45%] bg-[#f4f5f7]">
                 <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">Name</p>
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left w-[35%]">
+              <th className="px-4 sm:px-6 py-3 text-left w-[35%] bg-[#f4f5f7]">
                 <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">No. Of Tests</p>
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left w-[20%]">
+              <th className="px-4 sm:px-6 py-3 text-left w-[20%] bg-[#f4f5f7]">
                 <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">Action</p>
               </th>
             </tr>
@@ -84,7 +84,7 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
                   </td>
                   <td className="px-4 sm:px-6 py-3 text-left">
                     <button
-                      className="text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins"
+                      className="text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins whitespace-nowrap"
                       onClick={() => onViewTests?.(officer.id, officer.name)}
                     >
                       View Tests

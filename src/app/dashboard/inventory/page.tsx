@@ -144,16 +144,16 @@ export default function InventoryPage() {
         ) : error ? (
           <div className="text-center py-12 text-red-500">{error}</div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden max-h-[calc(100vh-320px)] overflow-y-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
                 <tr>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381]">Item Name</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381]">Category</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381]">Quantity</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381]">Unit</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381]">Community</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381]">Status</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381] bg-gray-50">Item Name</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381] bg-gray-50">Category</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381] bg-gray-50">Quantity</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381] bg-gray-50">Unit</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381] bg-gray-50">Community</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-[#637381] bg-gray-50">Status</th>
                 </tr>
               </thead>
               <tbody>

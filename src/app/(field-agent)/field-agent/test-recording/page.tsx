@@ -92,6 +92,15 @@ export default function TestRecordingPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Validation State
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
+
+  // Phone number and name validation regex
+  const PHONE_REGEX = /^[0-9+\-\s()]{10,15}$/;
+  const NAME_REGEX = /^[a-zA-Z\s\-']+$/;
+
   // Fetch communities on mount
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -133,26 +142,227 @@ export default function TestRecordingPage() {
     ? communities.filter((c) => c.lga === formData.lga)
     : communities;
 
-  // Navigation
+  // Validation functions for each step
+  // Validation functions for each step with detailed field-level errors
+  const validateStep1 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    const errors: Record<string, string | null> = {};
+    
+    if (!formData.lga) {
+      errors.lga = 'Please select an LGA';
+    }
+    if (!formData.community) {
+      errors.community = 'Please select a community';
+    }
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'Please enter patient first name';
+    } else if (formData.firstName.trim().length < 2) {
+      errors.firstName = 'First name must be at least 2 characters';
+    } else if (!NAME_REGEX.test(formData.firstName.trim())) {
+      errors.firstName = 'First name can only contain letters';
+    }
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Please enter patient last name';
+    } else if (formData.lastName.trim().length < 2) {
+      errors.lastName = 'Last name must be at least 2 characters';
+    } else if (!NAME_REGEX.test(formData.lastName.trim())) {
+      errors.lastName = 'Last name can only contain letters';
+    }
+    if (!formData.age.trim()) {
+      errors.age = 'Please enter patient age';
+    } else {
+      const age = parseInt(formData.age, 10);
+      if (isNaN(age) || age < 0 || age > 150) {
+        errors.age = 'Please enter a valid age (0-150)';
+      }
+    }
+    if (!formData.gender) {
+      errors.gender = 'Please select patient gender';
+    }
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = 'Please enter patient phone number';
+    } else if (!PHONE_REGEX.test(formData.phoneNumber.trim())) {
+      errors.phoneNumber = 'Please enter a valid phone number (10-15 digits)';
+    }
+
+    const errorMessages = Object.values(errors).filter(Boolean) as string[];
+    return {
+      isValid: errorMessages.length === 0,
+      errors,
+      firstError: errorMessages[0] || null,
+    };
+  };
+
+  const validateStep2 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    const errors: Record<string, string | null> = {};
+    
+    if (!testDetails.testType) {
+      errors.testType = 'Please select a test type';
+    }
+    if (!testDetails.dateConducted) {
+      errors.dateConducted = 'Please select the date conducted';
+    } else {
+      const date = new Date(testDetails.dateConducted);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (date > today) {
+        errors.dateConducted = 'Date cannot be in the future';
+      }
+    }
+    if (!testDetails.testResult) {
+      errors.testResult = 'Please select a test result';
+    }
+
+    const errorMessages = Object.values(errors).filter(Boolean) as string[];
+    return {
+      isValid: errorMessages.length === 0,
+      errors,
+      firstError: errorMessages[0] || null,
+    };
+  };
+
+  const validateStep3 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    const errors: Record<string, string | null> = {};
+    
+    if (!patientPhoto) {
+      errors.patientPhoto = 'Please upload a patient photo';
+    } else {
+      if (patientPhoto.size > 10 * 1024 * 1024) {
+        errors.patientPhoto = 'Photo size must be less than 10MB';
+      }
+      if (!patientPhoto.type.startsWith('image/')) {
+        errors.patientPhoto = 'Please upload a valid image file';
+      }
+    }
+
+    const errorMessages = Object.values(errors).filter(Boolean) as string[];
+    return {
+      isValid: errorMessages.length === 0,
+      errors,
+      firstError: errorMessages[0] || null,
+    };
+  };
+
+  // Get current step validation result
+  const getCurrentStepValidation = useCallback(() => {
+    switch (currentStep) {
+      case 1:
+        return validateStep1();
+      case 2:
+        return validateStep2();
+      case 3:
+        return validateStep3();
+      default:
+        return { isValid: true, errors: {}, firstError: null };
+    }
+  }, [currentStep, formData, testDetails, patientPhoto]);
+
+  // Check if current step is valid (for button disable state)
+  const isCurrentStepValid = getCurrentStepValidation().isValid;
+
+  // Prevent form bypass via keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent Enter key from navigating if form is invalid
+      if (e.key === 'Enter' && !isCurrentStepValid && currentStep < 4) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      // Prevent Ctrl+Enter / Cmd+Enter bypass
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !isCurrentStepValid) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [isCurrentStepValid, currentStep]);
+
+  // Navigation with validation
   const nextStep = () => {
+    const validation = getCurrentStepValidation();
+    
+    // Touch all fields in current step to show errors
+    const stepFields: Record<number, string[]> = {
+      1: ['lga', 'community', 'firstName', 'lastName', 'age', 'gender', 'phoneNumber'],
+      2: ['testType', 'dateConducted', 'testResult'],
+      3: ['patientPhoto'],
+    };
+    
+    const fieldsToTouch = stepFields[currentStep] || [];
+    const newTouched: Record<string, boolean> = {};
+    fieldsToTouch.forEach((f) => { newTouched[f] = true; });
+    setTouchedFields((prev) => ({ ...prev, ...newTouched }));
+    setFieldErrors((prev) => ({ ...prev, ...validation.errors }));
+    
+    if (!validation.isValid) {
+      setValidationError(validation.firstError);
+      return;
+    }
+    
+    setValidationError(null);
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const previousStep = () => {
+    setValidationError(null);
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  // Handlers
+  // Mark field as touched (on blur)
+  const handleFieldBlur = useCallback((fieldName: string) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+    
+    // Update field error
+    const validation = getCurrentStepValidation();
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: validation.errors[fieldName] || null }));
+  }, [getCurrentStepValidation]);
+
+  // Get field error for display
+  const getFieldError = (fieldName: string): string | null => {
+    return touchedFields[fieldName] ? fieldErrors[fieldName] || null : null;
+  };
+
+  // Get CSS classes based on validation state
+  const getFieldClasses = (fieldName: string): string => {
+    const error = getFieldError(fieldName);
+    const isTouched = touchedFields[fieldName];
+    const hasValue = fieldName === 'patientPhoto' 
+      ? !!patientPhoto 
+      : !!(formData[fieldName as keyof PatientInfo] || testDetails[fieldName as keyof TestDetails]);
+    
+    if (error) {
+      return 'border-red-500 focus:border-red-500 bg-red-50/30';
+    }
+    if (isTouched && hasValue) {
+      return 'border-green-500 focus:border-green-500';
+    }
+    return 'border-[#d9d9d9] focus:border-[#2c7be5]';
+  };
+
+  // Handlers with validation error clearing
   const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
+    setValidationError(null);
     if (field === 'lga') {
       setFormData((prev) => ({ ...prev, lga: value, community: '' }));
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
+    
+    // Clear field error when user starts typing
+    if (touchedFields[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
   };
 
   const handleTestDetailsChange = (field: keyof TestDetails, value: string) => {
+    setValidationError(null);
     setTestDetails((prev) => ({ ...prev, [field]: value }));
+    
+    // Clear field error when user starts typing
+    if (touchedFields[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
   };
 
   const handleTestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,6 +378,8 @@ export default function TestRecordingPage() {
   const handlePatientPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setPatientPhoto(file);
+    setValidationError(null);
+    setFieldErrors((prev) => ({ ...prev, patientPhoto: null }));
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
@@ -335,6 +547,18 @@ export default function TestRecordingPage() {
         </div>
       )}
 
+      {/* Validation Error Message */}
+      {validationError && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{validationError}</span>
+          <button onClick={() => setValidationError(null)} className="text-amber-700 hover:text-amber-900">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Form Card */}
       <div className="flex justify-center">
         <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
@@ -354,10 +578,11 @@ export default function TestRecordingPage() {
                 {/* LGA */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">LGA</label>
-                  <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`relative h-12 rounded bg-white border ${getFieldClasses('lga')}`}>
                     <select
                       value={formData.lga}
                       onChange={(e) => handlePatientInfoChange('lga', e.target.value)}
+                      onBlur={() => handleFieldBlur('lga')}
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
                     >
                       <option value="">Select LGA</option>
@@ -371,15 +596,24 @@ export default function TestRecordingPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
+                  {getFieldError('lga') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('lga')}
+                    </p>
+                  )}
                 </div>
 
                 {/* Community */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Select Community</label>
-                  <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`relative h-12 rounded bg-white border ${getFieldClasses('community')}`}>
                     <select
                       value={formData.community}
                       onChange={(e) => handlePatientInfoChange('community', e.target.value)}
+                      onBlur={() => handleFieldBlur('community')}
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
                     >
                       <option value="">Select Community</option>
@@ -393,57 +627,95 @@ export default function TestRecordingPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
+                  {getFieldError('community') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('community')}
+                    </p>
+                  )}
                 </div>
 
                 {/* First Name */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">First Name</label>
-                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`h-12 rounded bg-white border ${getFieldClasses('firstName')}`}>
                     <input
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => handlePatientInfoChange('firstName', e.target.value)}
+                      onBlur={() => handleFieldBlur('firstName')}
                       placeholder="Tayo"
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
                     />
                   </div>
+                  {getFieldError('firstName') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('firstName')}
+                    </p>
+                  )}
                 </div>
 
                 {/* Last Name */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Last Name</label>
-                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`h-12 rounded bg-white border ${getFieldClasses('lastName')}`}>
                     <input
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => handlePatientInfoChange('lastName', e.target.value)}
+                      onBlur={() => handleFieldBlur('lastName')}
                       placeholder="Ayo"
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
                     />
                   </div>
+                  {getFieldError('lastName') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('lastName')}
+                    </p>
+                  )}
                 </div>
 
                 {/* Age */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Age</label>
-                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`h-12 rounded bg-white border ${getFieldClasses('age')}`}>
                     <input
                       type="number"
                       value={formData.age}
                       onChange={(e) => handlePatientInfoChange('age', e.target.value)}
+                      onBlur={() => handleFieldBlur('age')}
                       placeholder="67"
+                      min="0"
+                      max="150"
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
                     />
                   </div>
+                  {getFieldError('age') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('age')}
+                    </p>
+                  )}
                 </div>
 
                 {/* Gender */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Gender</label>
-                  <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`relative h-12 rounded bg-white border ${getFieldClasses('gender')}`}>
                     <select
                       value={formData.gender}
                       onChange={(e) => handlePatientInfoChange('gender', e.target.value)}
+                      onBlur={() => handleFieldBlur('gender')}
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
                     >
                       <option value="male">Male</option>
@@ -453,20 +725,37 @@ export default function TestRecordingPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
+                  {getFieldError('gender') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('gender')}
+                    </p>
+                  )}
                 </div>
 
                 {/* Phone Number */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-[#637381] font-poppins">Phone Number</label>
-                  <div className="h-12 rounded bg-white border border-[#d9d9d9]">
+                  <div className={`h-12 rounded bg-white border ${getFieldClasses('phoneNumber')}`}>
                     <input
                       type="tel"
                       value={formData.phoneNumber}
                       onChange={(e) => handlePatientInfoChange('phoneNumber', e.target.value)}
+                      onBlur={() => handleFieldBlur('phoneNumber')}
                       placeholder="080537736267"
                       className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
                     />
                   </div>
+                  {getFieldError('phoneNumber') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('phoneNumber')}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -477,6 +766,9 @@ export default function TestRecordingPage() {
                 testDetails={testDetails}
                 onChange={handleTestDetailsChange}
                 onImageChange={handleTestImageChange}
+                onBlur={handleFieldBlur}
+                errors={fieldErrors}
+                touched={touchedFields}
               />
             )}
 
@@ -507,9 +799,24 @@ export default function TestRecordingPage() {
                     <button
                       type="button"
                       onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-                      className="w-full h-[140px] rounded bg-white border-2 border-dashed border-[#d9d9d9] flex flex-col items-center justify-center gap-2 hover:border-[#2c7be5] hover:bg-blue-50/30 transition-colors cursor-pointer"
+                      className={`w-full h-[140px] rounded bg-white border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${
+                        getFieldError('patientPhoto') 
+                          ? 'border-red-500 bg-red-50/30 hover:border-red-600' 
+                          : patientPhoto 
+                            ? 'border-green-500 bg-green-50/30 hover:border-green-600'
+                            : 'border-[#d9d9d9] hover:border-[#2c7be5] hover:bg-blue-50/30'
+                      }`}
                     >
-                      <span className="text-[#637381] text-base font-normal font-poppins">Upload Patient  Image</span>
+                      {patientPhoto ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-green-600 text-base font-normal font-poppins">Photo uploaded</span>
+                        </div>
+                      ) : (
+                        <span className="text-[#637381] text-base font-normal font-poppins">Upload Patient Image</span>
+                      )}
                     </button>
 
                     {/* Upload Options Popup */}
@@ -545,8 +852,20 @@ export default function TestRecordingPage() {
                     )}
                   </div>
 
+                  {getFieldError('patientPhoto') && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {getFieldError('patientPhoto')}
+                    </p>
+                  )}
+
                   {patientPhoto && (
-                    <p className="mt-1 text-sm text-[#637381] font-poppins">
+                    <p className="mt-1 text-sm text-green-600 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       Selected: {patientPhoto.name}
                     </p>
                   )}
@@ -554,7 +873,7 @@ export default function TestRecordingPage() {
                 {patientPhotoPreview && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo Preview</label>
-                    <img src={patientPhotoPreview} alt="Patient" className="max-w-[300px] rounded border border-[#d9d9d9]" />
+                    <img src={patientPhotoPreview} alt="Patient" className="max-w-[300px] rounded border border-green-500" />
                   </div>
                 )}
               </div>
@@ -724,7 +1043,12 @@ export default function TestRecordingPage() {
             {currentStep < 4 ? (
               <button
                 onClick={nextStep}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
+                disabled={!isCurrentStepValid}
+                className={`h-12 px-6 rounded-[10px] font-medium font-inter transition-colors ${
+                  isCurrentStepValid
+                    ? 'bg-[#2c7be5] text-white hover:bg-blue-600 cursor-pointer'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 Next
               </button>

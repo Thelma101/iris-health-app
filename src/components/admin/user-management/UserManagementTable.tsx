@@ -30,7 +30,7 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
       {/* Desktop Table */}
       <div className="hidden sm:block overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
         {/* Header */}
-        <div className="bg-[#f4f5f7] border-b border-[#e5e7eb] grid grid-cols-5 gap-8 h-[33px] items-center px-4 py-[6px]">
+        <div className="bg-[#f4f5f7] border-b border-[#e5e7eb] grid grid-cols-5 gap-8 h-[33px] items-center px-4 py-[6px] sticky top-0 z-10">
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Name</span>
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Role</span>
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Last Login</span>

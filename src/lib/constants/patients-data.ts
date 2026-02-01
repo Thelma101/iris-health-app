@@ -1,5 +1,5 @@
 export interface Patient {
-  id: number;
+  id: number | string;
   name: string;
   age: string;
   gender: string;
@@ -7,6 +7,8 @@ export interface Patient {
   lga: string;
   testsTaken: number;
   lastTestResult: string;
+  phoneNumber?: string;
+  phone?: string;
 }
 
 export const PATIENTS_DATA: Patient[] = [

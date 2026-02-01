@@ -14,13 +14,43 @@ interface TestDetailsFormProps {
   testDetails: TestDetails;
   onChange: (field: keyof TestDetails, value: string) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (field: string) => void;
+  errors?: Record<string, string | null>;
+  touched?: Record<string, boolean>;
 }
 
-export default function TestDetailsForm({ testDetails, onChange, onImageChange }: TestDetailsFormProps) {
+export default function TestDetailsForm({ 
+  testDetails, 
+  onChange, 
+  onImageChange,
+  onBlur,
+  errors = {},
+  touched = {},
+}: TestDetailsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [showTestResultModal, setShowTestResultModal] = useState(false);
+
+  // Get field error (only show if touched)
+  const getFieldError = (fieldName: string): string | null => {
+    return touched[fieldName] ? errors[fieldName] || null : null;
+  };
+
+  // Get CSS classes based on validation state
+  const getFieldClasses = (fieldName: string): string => {
+    const error = getFieldError(fieldName);
+    const isTouched = touched[fieldName];
+    const hasValue = !!testDetails[fieldName as keyof TestDetails];
+    
+    if (error) {
+      return 'border-red-500 focus:border-red-500 bg-red-50/30';
+    }
+    if (isTouched && hasValue) {
+      return 'border-green-500 focus:border-green-500';
+    }
+    return 'border-[#d9d9d9] focus:border-[#2c7be5]';
+  };
 
   const handleTakePhoto = () => {
     setShowUploadOptions(false);
@@ -36,10 +66,11 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
-        <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+        <div className={`relative h-12 rounded bg-white border ${getFieldClasses('testType')}`}>
           <select
             value={testDetails.testType}
             onChange={(e) => onChange('testType', e.target.value)}
+            onBlur={() => onBlur?.('testType')}
             className="w-full h-full px-5 bg-transparent text-[#212b36] text-sm font-poppins appearance-none focus:outline-none cursor-pointer"
           >
             {TEST_TYPE_OPTIONS.map((option) => (
@@ -50,21 +81,39 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
+        {getFieldError('testType') && (
+          <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {getFieldError('testType')}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
-        <div className="relative h-12 rounded bg-white border border-[#d9d9d9]">
+        <div className={`relative h-12 rounded bg-white border ${getFieldClasses('dateConducted')}`}>
           <input
             type="date"
             value={testDetails.dateConducted}
             onChange={(e) => onChange('dateConducted', e.target.value)}
+            onBlur={() => onBlur?.('dateConducted')}
+            max={new Date().toISOString().split('T')[0]}
             className="w-full h-full px-5 bg-transparent text-[#212b36] text-sm font-poppins focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
           />
           <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
+        {getFieldError('dateConducted') && (
+          <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {getFieldError('dateConducted')}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -72,7 +121,8 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
         <button
           type="button"
           onClick={() => setShowTestResultModal(true)}
-          className="relative h-12 rounded bg-white border border-[#d9d9d9] px-5 flex items-center justify-between text-left hover:border-[#2c7be5] transition-colors"
+          onBlur={() => onBlur?.('testResult')}
+          className={`relative h-12 rounded bg-white border px-5 flex items-center justify-between text-left hover:border-[#2c7be5] transition-colors ${getFieldClasses('testResult')}`}
         >
           <span className="text-[#212b36] text-sm font-poppins">
             {testDetails.testResult || 'Select test result'}
@@ -81,6 +131,14 @@ export default function TestDetailsForm({ testDetails, onChange, onImageChange }
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
+        {getFieldError('testResult') && (
+          <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {getFieldError('testResult')}
+          </p>
+        )}
       </div>
 
       <TestResultModal

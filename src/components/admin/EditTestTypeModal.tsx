@@ -141,7 +141,7 @@ export default function EditTestTypeModal({ isOpen, onClose, testType, onSave }:
               onClick={handleSubmit}
               className="w-full h-12 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
             >
-              Save Changes
+              Update
             </button>
           </div>
         </div>

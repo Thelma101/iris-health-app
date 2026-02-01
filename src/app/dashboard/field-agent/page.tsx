@@ -135,13 +135,13 @@ export default function FieldAgentDashboard() {
               <section className="flex flex-col gap-2.5">
                 <p className="text-[#637381] text-sm font-normal font-poppins">Recent record</p>
               
-                <div className="rounded-lg border border-[#d9d9d9] overflow-hidden">
+                <div className="rounded-lg border border-[#d9d9d9] overflow-hidden max-h-[calc(100vh-450px)] overflow-y-auto">
                   {/* Table Header */}
-                  <div className="bg-[#f4f5f7] px-1 py-1.5 flex items-center overflow-x-auto">
-                    <div className="min-w-[211px] w-[211px] text-[#637381] text-sm font-semibold font-poppins px-1">Communities</div>
-                    <div className="min-w-[143px] w-[143px] text-[#637381] text-sm font-semibold font-poppins ml-[114px]">Total Test</div>
-                    <div className="min-w-[202px] w-[202px] text-[#637381] text-sm font-semibold font-poppins ml-[114px]">Top Tests +ve</div>
-                    <div className="min-w-[188px] w-[188px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] hidden sm:block">Top Tests -ve</div>
+                  <div className="bg-[#f4f5f7] px-1 py-1.5 flex items-center overflow-x-auto sticky top-0 z-10">
+                    <div className="min-w-[211px] w-[211px] text-[#637381] text-sm font-semibold font-poppins px-1 bg-[#f4f5f7]">Communities</div>
+                    <div className="min-w-[143px] w-[143px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] bg-[#f4f5f7]">Total Test</div>
+                    <div className="min-w-[202px] w-[202px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] bg-[#f4f5f7]">Top Tests +ve</div>
+                    <div className="min-w-[188px] w-[188px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] hidden sm:block bg-[#f4f5f7]">Top Tests -ve</div>
                   </div>
 
                   {/* Table Body */}

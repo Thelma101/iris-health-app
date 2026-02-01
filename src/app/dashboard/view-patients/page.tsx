@@ -38,7 +38,7 @@ export default function ViewPatientsPage() {
       lastName: patient.name.split(' ')[1] || '',
       age: patient.age,
       gender: patient.gender,
-      phoneNumber: '08065353567',
+      phoneNumber: patient.phoneNumber || patient.phone || '',
       testsTaken: patient.testsTaken,
       lastTestResult: patient.lastTestResult,
     });
@@ -163,7 +163,7 @@ export default function ViewPatientsPage() {
             lastName: selectedPatient.name.split(' ')[1] || '',
             age: selectedPatient.age,
             gender: selectedPatient.gender,
-            phoneNumber: '08065353567',
+            phoneNumber: selectedPatient.phoneNumber || selectedPatient.phone || '',
           }}
           testDetails={{
             testType: 'HIV 1/2 Rapid Test',

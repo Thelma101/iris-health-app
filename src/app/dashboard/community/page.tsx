@@ -328,7 +328,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 sm:gap-4">
+        <div className="flex gap-4 sm:gap-6">
           <button
             onClick={handleExport}
             disabled={communities.length === 0}
@@ -429,21 +429,21 @@ export default function CommunityPage() {
             <div className="overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
               <table className="w-full min-w-[900px]">
                 {/* Table Header */}
-                <thead>
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-[#f4f5f7] border-b border-[#f4f5f7]">
-                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[211px]">
+                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[211px] bg-[#f4f5f7]">
                       Communities
                     </th>
-                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[143px]">
+                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[143px] bg-[#f4f5f7]">
                       LGA
                     </th>
-                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[116px]">
+                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[116px] bg-[#f4f5f7]">
                       Date Visited
                     </th>
-                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[188px]">
+                    <th className="text-left px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-[188px] bg-[#f4f5f7]">
                       Field Officer Assigned
                     </th>
-                    <th className="text-center px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-36">
+                    <th className="text-center px-4 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm text-[#637381] font-poppins w-36 bg-[#f4f5f7]">
                       Action
                     </th>
                   </tr>

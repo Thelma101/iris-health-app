@@ -310,7 +310,7 @@ export default function ProfilePage() {
                   onClick={handleSave}
                   className="flex-1 h-[44px] sm:h-[48px] bg-[#2c7be5] text-white rounded-[4px] text-[13px] sm:text-[14px] font-medium hover:bg-[#1e5aa8] transition-colors font-poppins"
                 >
-                  Save Changes
+                  Update
                 </button>
               </div>
             ) : (

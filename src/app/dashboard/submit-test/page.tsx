@@ -7,7 +7,6 @@ import EditTestTypeModal from '@/components/admin/EditTestTypeModal';
 import FormProgress from '@/components/admin/submit-test/FormProgress';
 import PatientInfoForm from '@/components/admin/submit-test/PatientInfoForm';
 import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
-import { useFormStep } from '@/hooks/useFormStep';
 import api from '@/lib/api/index';
 
 interface PatientInfo {
@@ -41,7 +40,7 @@ interface CommunityOption {
 }
 
 export default function SubmitTestPage() {
-  const { currentStep, nextStep, previousStep } = useFormStep(1);
+  const [currentStep, setCurrentStep] = useState(1);
 
   // Communities and LGAs from API
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
@@ -91,6 +90,154 @@ export default function SubmitTestPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Validation State
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
+
+  // Phone number and name validation regex
+  const PHONE_REGEX = /^[0-9+\-\s()]{10,15}$/;
+  const NAME_REGEX = /^[a-zA-Z\s\-']+$/;
+
+  // Validation functions for each step
+  const validateStep1 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    const errors: Record<string, string | null> = {};
+    
+    if (!formData.lga) {
+      errors.lga = 'Please select an LGA';
+    }
+    if (!formData.community) {
+      errors.community = 'Please select a community';
+    }
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'Please enter patient first name';
+    } else if (formData.firstName.trim().length < 2) {
+      errors.firstName = 'First name must be at least 2 characters';
+    } else if (!NAME_REGEX.test(formData.firstName.trim())) {
+      errors.firstName = 'First name can only contain letters';
+    }
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Please enter patient last name';
+    } else if (formData.lastName.trim().length < 2) {
+      errors.lastName = 'Last name must be at least 2 characters';
+    } else if (!NAME_REGEX.test(formData.lastName.trim())) {
+      errors.lastName = 'Last name can only contain letters';
+    }
+    if (!formData.age.trim()) {
+      errors.age = 'Please enter patient age';
+    } else {
+      const age = parseInt(formData.age, 10);
+      if (isNaN(age) || age < 0 || age > 150) {
+        errors.age = 'Please enter a valid age (0-150)';
+      }
+    }
+    if (!formData.gender) {
+      errors.gender = 'Please select patient gender';
+    }
+    if (!formData.phoneNumber.trim()) {
+      errors.phoneNumber = 'Please enter patient phone number';
+    } else if (!PHONE_REGEX.test(formData.phoneNumber.trim())) {
+      errors.phoneNumber = 'Please enter a valid phone number (10-15 digits)';
+    }
+
+    const errorMessages = Object.values(errors).filter(Boolean) as string[];
+    return {
+      isValid: errorMessages.length === 0,
+      errors,
+      firstError: errorMessages[0] || null,
+    };
+  }, [formData]);
+
+  const validateStep2 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    const errors: Record<string, string | null> = {};
+    
+    if (!testDetails.testType) {
+      errors.testType = 'Please select a test type';
+    }
+    if (!testDetails.dateConducted) {
+      errors.dateConducted = 'Please select the date conducted';
+    } else {
+      const date = new Date(testDetails.dateConducted);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (date > today) {
+        errors.dateConducted = 'Date cannot be in the future';
+      }
+    }
+    if (!testDetails.testResult) {
+      errors.testResult = 'Please select a test result';
+    }
+
+    const errorMessages = Object.values(errors).filter(Boolean) as string[];
+    return {
+      isValid: errorMessages.length === 0,
+      errors,
+      firstError: errorMessages[0] || null,
+    };
+  }, [testDetails]);
+
+  const validateStep3 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    // Step 3 (photo upload) is optional
+    return { isValid: true, errors: {}, firstError: null };
+  }, []);
+
+  // Get current step validation result
+  const getCurrentStepValidation = useCallback(() => {
+    switch (currentStep) {
+      case 1:
+        return validateStep1();
+      case 2:
+        return validateStep2();
+      case 3:
+        return validateStep3();
+      default:
+        return { isValid: true, errors: {}, firstError: null };
+    }
+  }, [currentStep, validateStep1, validateStep2, validateStep3]);
+
+  // Check if current step is valid (for button disable state)
+  const isCurrentStepValid = getCurrentStepValidation().isValid;
+
+  // Navigation with validation
+  const nextStep = () => {
+    const validation = getCurrentStepValidation();
+    
+    // Touch all fields in current step to show errors
+    const stepFields: Record<number, string[]> = {
+      1: ['lga', 'community', 'firstName', 'lastName', 'age', 'gender', 'phoneNumber'],
+      2: ['testType', 'dateConducted', 'testResult'],
+      3: [],
+    };
+    
+    const fieldsToTouch = stepFields[currentStep] || [];
+    const newTouched: Record<string, boolean> = {};
+    fieldsToTouch.forEach((f) => { newTouched[f] = true; });
+    setTouchedFields((prev) => ({ ...prev, ...newTouched }));
+    setFieldErrors((prev) => ({ ...prev, ...validation.errors }));
+    
+    if (!validation.isValid) {
+      setValidationError(validation.firstError);
+      return;
+    }
+    
+    setValidationError(null);
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
+  };
+
+  const previousStep = () => {
+    setValidationError(null);
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  // Mark field as touched (on blur)
+  const handleFieldBlur = useCallback((fieldName: string) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldName]: true }));
+    
+    // Update field error based on current step validation
+    const validation = getCurrentStepValidation();
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: validation.errors[fieldName] || null }));
+  }, [getCurrentStepValidation]);
+
   // Fetch communities on mount
   const fetchCommunities = useCallback(async () => {
     setLoadingCommunities(true);
@@ -126,17 +273,29 @@ export default function SubmitTestPage() {
     fetchCommunities();
   }, [fetchCommunities]);
 
-  // Handlers
+  // Handlers with validation error clearing
   const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
+    setValidationError(null);
     if (field === 'lga') {
       setFormData((prev) => ({ ...prev, lga: value, community: '' }));
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
+    
+    // Clear field error when user starts typing
+    if (touchedFields[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
   };
 
   const handleTestDetailsChange = (field: keyof TestDetails, value: string) => {
+    setValidationError(null);
     setTestDetails((prev) => ({ ...prev, [field]: value }));
+    
+    // Clear field error when user starts typing
+    if (touchedFields[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
   };
 
   const handleTestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,12 +441,12 @@ export default function SubmitTestPage() {
       <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
         <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
       </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-row items-center justify-between gap-4">
         <button
           onClick={() => {
             setIsCreateTestTypeModalOpen(true);
           }}
-          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
+          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-sm sm:text-base"
         >
           Create New Test Type
         </button>
@@ -296,12 +455,27 @@ export default function SubmitTestPage() {
           onClick={() => {
             setIsTestTypeListModalOpen(true);
           }}
-          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer"
+          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-sm sm:text-base"
         >
           View All the Test Type
         </button>
       </div>
       <div className="h-px bg-[#d9d9d9]" />
+
+      {/* Validation Error Message */}
+      {validationError && (
+        <div className="flex justify-center">
+          <div className="w-full max-w-[768px] bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span>{validationError}</span>
+            <button onClick={() => setValidationError(null)} className="text-amber-700 hover:text-amber-900">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-center">
         <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
           <FormProgress currentStep={currentStep} />
@@ -319,10 +493,20 @@ export default function SubmitTestPage() {
                 communities={communities}
                 lgas={lgas}
                 loading={loadingCommunities}
+                onBlur={handleFieldBlur}
+                errors={fieldErrors}
+                touched={touchedFields}
               />
             )}
             {currentStep === 2 && (
-              <TestDetailsForm testDetails={testDetails} onChange={handleTestDetailsChange} onImageChange={handleTestImageChange} />
+              <TestDetailsForm 
+                testDetails={testDetails} 
+                onChange={handleTestDetailsChange} 
+                onImageChange={handleTestImageChange}
+                onBlur={handleFieldBlur}
+                errors={fieldErrors}
+                touched={touchedFields}
+              />
             )}
             {currentStep === 3 && (
               <div className="flex flex-col gap-[26px]">
@@ -537,16 +721,22 @@ export default function SubmitTestPage() {
             {currentStep < 4 ? (
               <button
                 onClick={nextStep}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
+                disabled={!isCurrentStepValid}
+                className={`h-12 px-6 rounded-[10px] font-medium font-inter transition-colors ${
+                  isCurrentStepValid
+                    ? 'bg-[#2c7be5] text-white hover:bg-blue-600 cursor-pointer'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 Next
               </button>
             ) : (
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
+                disabled={isSubmitting}
+                className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
               >
-                Submit
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             )}
           </div>

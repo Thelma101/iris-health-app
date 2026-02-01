@@ -75,14 +75,14 @@ export default function RecentRecordsTable({ records }: RecentRecordsTableProps)
   return (
     <>
       {/* Desktop Table View */}
-      <div className="hidden md:block border border-[#d9d9d9] rounded-lg overflow-hidden">
+      <div className="hidden md:block border border-[#d9d9d9] rounded-lg overflow-hidden max-h-[calc(100vh-400px)] overflow-y-auto">
         <table className="w-full">
-          <thead>
+          <thead className="sticky top-0 z-10">
             <tr className="bg-[#f4f5f7] border-b border-[#d9d9d9]">
-              <th className="px-4 py-3 text-left font-poppins font-semibold text-sm text-[#637381]">Communities</th>
-              <th className="px-4 py-3 text-center font-poppins font-semibold text-sm text-[#637381]">Total Test</th>
-              <th className="px-4 py-3 text-left font-poppins font-semibold text-sm text-[#637381]">Top Tests +ve</th>
-              <th className="px-4 py-3 text-left font-poppins font-semibold text-sm text-[#637381]">Top Tests -ve</th>
+              <th className="px-4 py-3 text-left font-poppins font-semibold text-sm text-[#637381] bg-[#f4f5f7]">Communities</th>
+              <th className="px-4 py-3 text-center font-poppins font-semibold text-sm text-[#637381] bg-[#f4f5f7]">Total Test</th>
+              <th className="px-4 py-3 text-left font-poppins font-semibold text-sm text-[#637381] bg-[#f4f5f7]">Top Tests +ve</th>
+              <th className="px-4 py-3 text-left font-poppins font-semibold text-sm text-[#637381] bg-[#f4f5f7]">Top Tests -ve</th>
             </tr>
           </thead>
           <tbody>
