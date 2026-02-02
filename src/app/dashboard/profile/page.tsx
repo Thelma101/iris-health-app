@@ -324,19 +324,15 @@ export default function ProfilePage() {
           </div>
 
           {/* Logout Button */}
-          <div className="flex items-center gap-[10px] mt-3 sm:mt-[17px]">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-[10px] mt-3 sm:mt-[17px] text-[#d64545] hover:text-[#b53a3a] transition-colors cursor-pointer"
+          >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="#D64545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 17L15 12L10 7" stroke="#D64545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M15 12H3" stroke="#D64545" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M16 17L21 12M21 12L16 7M21 12H9M9 3H7.8C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <button
-              onClick={handleLogout}
-              className="text-[13px] sm:text-[14px] font-poppins text-[#d64545] hover:text-[#b53a3a] transition-colors"
-            >
-              logout
-            </button>
-          </div>
+            <span className="text-[13px] sm:text-[14px] font-poppins">Logout</span>
+          </button>
         </div>
       </div>
 

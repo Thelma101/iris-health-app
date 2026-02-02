@@ -14,6 +14,7 @@ interface TestDetailsFormProps {
   testDetails: TestDetails;
   onChange: (field: keyof TestDetails, value: string) => void;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onOpenCameraCapture?: () => void;
   onBlur?: (field: string) => void;
   errors?: Record<string, string | null>;
   touched?: Record<string, boolean>;
@@ -23,6 +24,7 @@ export default function TestDetailsForm({
   testDetails, 
   onChange, 
   onImageChange,
+  onOpenCameraCapture,
   onBlur,
   errors = {},
   touched = {},
@@ -37,30 +39,33 @@ export default function TestDetailsForm({
     return touched[fieldName] ? errors[fieldName] || null : null;
   };
 
-  // Get CSS classes based on validation state
+  // Get CSS classes based on validation state - use focus-within for parent div
   const getFieldClasses = (fieldName: string): string => {
     const error = getFieldError(fieldName);
-    const isTouched = touched[fieldName];
-    const hasValue = !!testDetails[fieldName as keyof TestDetails];
     
     if (error) {
-      return 'border-red-500 focus:border-red-500 bg-red-50/30';
+      return 'border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-300 bg-red-50/30';
     }
-    if (isTouched && hasValue) {
-      return 'border-green-500 focus:border-green-500';
-    }
-    return 'border-[#d9d9d9] focus:border-[#2c7be5]';
+    return 'border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40';
   };
 
   const handleTakePhoto = () => {
     setShowUploadOptions(false);
-    cameraInputRef.current?.click();
+    if (onOpenCameraCapture) {
+      onOpenCameraCapture();
+    } else {
+      cameraInputRef.current?.click();
+    }
   };
 
   const handleChooseExisting = () => {
     setShowUploadOptions(false);
     fileInputRef.current?.click();
   };
+
+  const selectTextClass = testDetails.testType ? 'text-[#212b36]' : 'text-[#999]';
+  const dateTextClass = testDetails.dateConducted ? 'text-[#212b36]' : 'text-[#999]';
+  const testResultTextClass = testDetails.testResult ? 'text-[#212b36]' : 'text-[#999]';
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,8 +76,11 @@ export default function TestDetailsForm({
             value={testDetails.testType}
             onChange={(e) => onChange('testType', e.target.value)}
             onBlur={() => onBlur?.('testType')}
-            className="w-full h-full px-5 bg-transparent text-[#212b36] text-sm font-poppins appearance-none focus:outline-none cursor-pointer"
+            className={`w-full h-full px-5 bg-transparent text-sm font-poppins appearance-none focus:outline-none cursor-pointer ${selectTextClass}`}
           >
+            <option value="" disabled hidden>
+              Select test type
+            </option>
             {TEST_TYPE_OPTIONS.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
@@ -100,7 +108,7 @@ export default function TestDetailsForm({
             onChange={(e) => onChange('dateConducted', e.target.value)}
             onBlur={() => onBlur?.('dateConducted')}
             max={new Date().toISOString().split('T')[0]}
-            className="w-full h-full px-5 bg-transparent text-[#212b36] text-sm font-poppins focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            className={`w-full h-full px-5 bg-transparent text-sm font-poppins focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer ${dateTextClass}`}
           />
           <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -124,7 +132,7 @@ export default function TestDetailsForm({
           onBlur={() => onBlur?.('testResult')}
           className={`relative h-12 rounded bg-white border px-5 flex items-center justify-between text-left hover:border-[#2c7be5] transition-colors ${getFieldClasses('testResult')}`}
         >
-          <span className="text-[#212b36] text-sm font-poppins">
+          <span className={`text-sm font-poppins ${testResultTextClass}`}>
             {testDetails.testResult || 'Select test result'}
           </span>
           <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,9 +161,18 @@ export default function TestDetailsForm({
         <textarea
           value={testDetails.officerNote}
           onChange={(e) => onChange('officerNote', e.target.value)}
-          className="w-full h-24 p-3 rounded bg-white border border-[#d9d9d9] text-[#212b36] text-sm placeholder:text-[#d9d9d9] font-poppins focus:outline-none resize-none"
+          onBlur={() => onBlur?.('officerNote')}
+          className={`w-full h-24 p-3 rounded bg-white border text-sm placeholder:text-[#d9d9d9] font-poppins focus:outline-none resize-none ${getFieldClasses('officerNote')}`}
           placeholder="Enter officer note"
         />
+        {getFieldError('officerNote') && (
+          <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {getFieldError('officerNote')}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col relative">
@@ -165,7 +182,13 @@ export default function TestDetailsForm({
         <button
           type="button"
           onClick={() => setShowUploadOptions(!showUploadOptions)}
-          className="w-full h-36 rounded bg-white border-2 border-dashed border-[#d9d9d9] flex flex-col items-center justify-center gap-2 hover:bg-gray-50 transition-colors cursor-pointer"
+          className={`w-full h-36 rounded bg-white border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${
+            getFieldError('testImage')
+              ? 'border-red-500 bg-red-50/30 hover:border-red-600'
+              : testDetails.testImage
+                ? 'border-green-500 bg-green-50/30 hover:border-green-600'
+                : 'border-[#d9d9d9] hover:border-[#2c7be5] hover:bg-blue-50/30'
+          }`}
         >
           <span className="text-[#637381] text-base font-medium font-poppins">Upload Test Image</span>
         </button>
@@ -186,6 +209,15 @@ export default function TestDetailsForm({
 
         {testDetails.testImage && (
           <p className="mt-2 text-sm text-[#637381] font-poppins">Selected: {testDetails.testImage.name}</p>
+        )}
+
+        {getFieldError('testImage') && (
+          <p className="text-sm text-red-500 font-poppins flex items-center gap-1 mt-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {getFieldError('testImage')}
+          </p>
         )}
       </div>
     </div>

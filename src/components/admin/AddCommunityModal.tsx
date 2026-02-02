@@ -19,6 +19,7 @@ interface AddCommunityModalProps {
 interface FieldErrors {
   community?: string;
   lga?: string;
+  fieldOfficers?: string;
 }
 
 export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddCommunityModalProps) {
@@ -100,6 +101,9 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
     }
     if (!formData.lga.trim()) {
       errors.lga = 'LGA is required';
+    }
+    if (formData.selectedOfficers.length === 0) {
+      errors.fieldOfficers = 'Please assign at least one field officer';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -302,7 +306,7 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
                     setShowCommunityDropdown(false);
                     setShowLgaDropdown(false);
                   }}
-                  className="w-full px-4 py-3 border border-[#d9d9d9] rounded text-sm text-left font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors flex items-center justify-between"
+                  className={`w-full px-4 py-3 border rounded text-sm text-left font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors flex items-center justify-between ${fieldErrors.fieldOfficers ? 'border-red-500' : 'border-[#d9d9d9]'}`}
                 >
                   <span className={formData.selectedOfficers.length > 0 ? 'text-[#212b36] truncate pr-2' : 'text-[#999]'}>
                     {selectedOfficersText}
@@ -311,6 +315,10 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+
+                {fieldErrors.fieldOfficers && (
+                  <p className="text-red-500 text-xs mt-1 font-poppins">{fieldErrors.fieldOfficers}</p>
+                )}
 
                 {/* Selected Officers Tags - shown below dropdown trigger */}
                 {formData.selectedOfficers.length > 0 && (

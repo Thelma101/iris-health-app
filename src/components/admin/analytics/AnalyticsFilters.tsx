@@ -15,7 +15,6 @@ interface CommunityOption {
   label: string;
 }
 
-// Auto-format date input (e.g., "05152024" → "05/15/2024")
 const formatDateInput = (value: string) => {
   // Remove all non-numeric characters
   const digits = value.replace(/\D/g, '');
@@ -30,7 +29,6 @@ const formatDateInput = (value: string) => {
   }
 };
 
-// Convert display date to ISO format for date input
 const formatDateForInput = (displayDate: string) => {
   if (!displayDate) return '';
   // Handle MM/DD/YY or MM/DD/YYYY format
@@ -43,7 +41,6 @@ const formatDateForInput = (displayDate: string) => {
   return displayDate;
 };
 
-// Format ISO date to display format
 const formatDateDisplay = (isoDate: string) => {
   if (!isoDate || !isoDate.includes('-')) return isoDate;
   const [year, month, day] = isoDate.split('-');
@@ -67,7 +64,6 @@ export default function AnalyticsFilters({
   const communityRef = useRef<HTMLDivElement>(null);
   const testTypeRef = useRef<HTMLDivElement>(null);
 
-  // Fetch communities on mount
   useEffect(() => {
     api.getCommunities()
       .then((res) => {
@@ -84,7 +80,6 @@ export default function AnalyticsFilters({
       });
   }, []);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (communityRef.current && !communityRef.current.contains(event.target as Node)) {
@@ -128,23 +123,21 @@ export default function AnalyticsFilters({
 
   return (
     <div className="w-full relative z-20">
-      {/* All filters in a single horizontal row - wrap on mobile, nowrap on desktop */}
-      <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full pb-2">
-        {/* Community Dropdown */}
-        <div ref={communityRef} className="relative flex-shrink-0 z-30">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:items-stretch sm:gap-3 lg:gap-4">
+        <div ref={communityRef} className="relative">
           <button
             onClick={() => setShowCommunityDropdown(!showCommunityDropdown)}
-            className="border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center gap-[14px] bg-white hover:border-[#2c7be5] transition-colors"
+            className="w-full h-11 sm:h-auto border border-[#d9d9d9] rounded-[10px] px-3 sm:px-[10px] py-2 sm:py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
           >
-            <span className="text-[14px] sm:text-[16px] font-medium text-[#637381] font-inter whitespace-nowrap">
+            <span className="text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter truncate pr-1">
               {selectedCommunity || 'Community'}
             </span>
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           {showCommunityDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-xl z-[100] min-w-[200px] max-h-[200px] overflow-y-auto">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-xl z-[100] min-w-full sm:min-w-[200px] max-h-[220px] overflow-y-auto">
               <button
                 onClick={() => handleCommunitySelect({ value: '', label: '' })}
                 className="w-full px-4 py-2 text-left text-[14px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
@@ -164,21 +157,20 @@ export default function AnalyticsFilters({
           )}
         </div>
 
-        {/* Test Type Dropdown */}
-        <div ref={testTypeRef} className="relative flex-shrink-0 z-30">
+        <div ref={testTypeRef} className="relative">
           <button
             onClick={() => setShowTestTypeDropdown(!showTestTypeDropdown)}
-            className="border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center gap-[14px] bg-white hover:border-[#2c7be5] transition-colors"
+            className="w-full h-11 sm:h-auto border border-[#d9d9d9] rounded-[10px] px-3 sm:px-[10px] py-2 sm:py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
           >
-            <span className="text-[14px] sm:text-[16px] font-medium text-[#637381] font-inter whitespace-nowrap">
+            <span className="text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter truncate pr-1">
               {selectedTestType || 'Test Type'}
             </span>
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           {showTestTypeDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-xl z-[100] min-w-[180px]">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-xl z-[100] min-w-full sm:min-w-[180px]">
               <button
                 onClick={() => handleTestTypeSelect('')}
                 className="w-full px-4 py-2 text-left text-[14px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
@@ -198,13 +190,13 @@ export default function AnalyticsFilters({
           )}
         </div>
 
-        <div className="flex-shrink-0 border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center gap-[14px] bg-white hover:border-[#2c7be5] transition-colors">
+        <div className="h-11 sm:h-auto border border-[#d9d9d9] rounded-[10px] px-3 sm:px-[10px] py-2 sm:py-[10px] flex items-center gap-2 sm:gap-[14px] bg-white hover:border-[#2c7be5] transition-colors">
           <input
             type="text"
             value={selectedDate}
             onChange={handleDateTextChange}
             maxLength={10}
-            className="text-[14px] sm:text-[16px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[85px]"
+            className="text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[80px] sm:w-[95px]"
             placeholder="MM/DD/YY"
           />
           <input
@@ -219,7 +211,7 @@ export default function AnalyticsFilters({
             onClick={handleCalendarClick}
             className="cursor-pointer hover:opacity-70 transition-opacity"
           >
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </button>
@@ -227,7 +219,7 @@ export default function AnalyticsFilters({
 
         <button
           onClick={onExport}
-          className="flex-shrink-0 ml-auto bg-white border border-[#d9d9d9] rounded-[10px] px-[24px] h-[44px] sm:h-[48px] flex items-center justify-center text-[14px] sm:text-[16px] font-medium text-[#637381] font-inter hover:bg-[#f4f5f7] transition-colors whitespace-nowrap"
+          className="h-11 sm:h-[44px] lg:h-[48px] bg-white border border-[#d9d9d9] rounded-[10px] px-4 sm:px-[20px] flex items-center justify-center text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter hover:bg-[#f4f5f7] transition-colors whitespace-nowrap"
         >
           Export
         </button>

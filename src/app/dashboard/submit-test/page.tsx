@@ -7,6 +7,7 @@ import EditTestTypeModal from '@/components/admin/EditTestTypeModal';
 import FormProgress from '@/components/admin/submit-test/FormProgress';
 import PatientInfoForm from '@/components/admin/submit-test/PatientInfoForm';
 import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
+import CameraCapture from '@/components/admin/CameraCapture';
 import api from '@/lib/api/index';
 
 interface PatientInfo {
@@ -59,9 +60,9 @@ export default function SubmitTestPage() {
   });
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
-    testType: 'HIV 1/2 Rapid Test',
-    dateConducted: new Date().toISOString().split('T')[0], // Default to today's date
-    testResult: 'Positive',
+    testType: '',
+    dateConducted: '',
+    testResult: '',
     officerNote: '',
     testImage: null,
   });
@@ -70,6 +71,7 @@ export default function SubmitTestPage() {
   const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
   const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [showCameraCapture, setShowCameraCapture] = useState(false);
 
   // Refs for file inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -167,6 +169,19 @@ export default function SubmitTestPage() {
     if (!testDetails.testResult) {
       errors.testResult = 'Please select a test result';
     }
+    if (!testDetails.officerNote.trim()) {
+      errors.officerNote = 'Please add an officer note';
+    }
+    if (!testDetails.testImage) {
+      errors.testImage = 'Please upload a test image';
+    } else {
+      if (testDetails.testImage.size > 10 * 1024 * 1024) {
+        errors.testImage = 'Photo size must be less than 10MB';
+      }
+      if (!testDetails.testImage.type.startsWith('image/')) {
+        errors.testImage = 'Please upload a valid image file';
+      }
+    }
 
     const errorMessages = Object.values(errors).filter(Boolean) as string[];
     return {
@@ -177,9 +192,26 @@ export default function SubmitTestPage() {
   }, [testDetails]);
 
   const validateStep3 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
-    // Step 3 (photo upload) is optional
-    return { isValid: true, errors: {}, firstError: null };
-  }, []);
+    const errors: Record<string, string | null> = {};
+    
+    if (!patientPhoto) {
+      errors.patientPhoto = 'Please upload a patient photo';
+    } else {
+      if (patientPhoto.size > 10 * 1024 * 1024) {
+        errors.patientPhoto = 'Photo size must be less than 10MB';
+      }
+      if (!patientPhoto.type.startsWith('image/')) {
+        errors.patientPhoto = 'Please upload a valid image file';
+      }
+    }
+
+    const errorMessages = Object.values(errors).filter(Boolean) as string[];
+    return {
+      isValid: errorMessages.length === 0,
+      errors,
+      firstError: errorMessages[0] || null,
+    };
+  }, [patientPhoto]);
 
   // Get current step validation result
   const getCurrentStepValidation = useCallback(() => {
@@ -205,8 +237,8 @@ export default function SubmitTestPage() {
     // Touch all fields in current step to show errors
     const stepFields: Record<number, string[]> = {
       1: ['lga', 'community', 'firstName', 'lastName', 'age', 'gender', 'phoneNumber'],
-      2: ['testType', 'dateConducted', 'testResult'],
-      3: [],
+      2: ['testType', 'dateConducted', 'testResult', 'officerNote', 'testImage'],
+      3: ['patientPhoto'],
     };
     
     const fieldsToTouch = stepFields[currentStep] || [];
@@ -301,6 +333,9 @@ export default function SubmitTestPage() {
   const handleTestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setTestDetails((prev) => ({ ...prev, testImage: file }));
+    setValidationError(null);
+    setTouchedFields((prev) => ({ ...prev, testImage: true }));
+    setFieldErrors((prev) => ({ ...prev, testImage: null }));
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setTestImagePreview(reader.result as string);
@@ -316,6 +351,14 @@ export default function SubmitTestPage() {
       reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  // Handle camera capture
+  const handleCameraCapture = (file: File) => {
+    setPatientPhoto(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
@@ -408,7 +451,9 @@ export default function SubmitTestPage() {
       if (res.success) {
         setSubmitSuccess(true);
         setIsSubmitModalOpen(false);
+        
         // Reset form after successful submission
+        setCurrentStep(1);
         setFormData({
           lga: '',
           community: '',
@@ -420,11 +465,21 @@ export default function SubmitTestPage() {
         });
         setTestDetails({
           testType: 'HIV 1/2 Rapid Test',
-          dateConducted: '',
+          dateConducted: new Date().toISOString().split('T')[0],
           testResult: 'Positive',
           officerNote: '',
           testImage: null,
         });
+        setPatientPhoto(null);
+        setPatientPhotoPreview(null);
+        setTestImagePreview(null);
+        setTouchedFields({});
+        setFieldErrors({});
+        
+        // Auto-dismiss success message after 10 seconds
+        setTimeout(() => {
+          setSubmitSuccess(false);
+        }, 10000);
       } else {
         setSubmitError(res.error || 'Submission failed');
       }
@@ -441,23 +496,22 @@ export default function SubmitTestPage() {
       <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
         <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
       </div>
-      <div className="flex flex-row items-center justify-between gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <button
           onClick={() => {
             setIsCreateTestTypeModalOpen(true);
           }}
-          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-sm sm:text-base"
+          className="h-12 w-full sm:w-auto px-4 sm:px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-xs sm:text-sm md:text-base"
         >
           Create New Test Type
         </button>
-        <div className="flex-1" />
         <button
           onClick={() => {
             setIsTestTypeListModalOpen(true);
           }}
-          className="h-12 px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-sm sm:text-base"
+          className="h-12 w-full sm:w-auto px-4 sm:px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-xs sm:text-sm md:text-base"
         >
-          View All the Test Type
+          View All Test Types
         </button>
       </div>
       <div className="h-px bg-[#d9d9d9]" />
@@ -564,7 +618,7 @@ export default function SubmitTestPage() {
                             type="button"
                             onClick={() => {
                               setShowPhotoOptions(false);
-                              cameraInputRef.current?.click();
+                              setShowCameraCapture(true);
                             }}
                             className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors border-b border-[#d9d9d9]"
                           >
@@ -585,8 +639,20 @@ export default function SubmitTestPage() {
                     )}
                   </div>
 
+                  {fieldErrors.patientPhoto && touchedFields.patientPhoto && (
+                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {fieldErrors.patientPhoto}
+                    </p>
+                  )}
+
                   {patientPhoto && (
-                    <p className="mt-1 text-sm text-[#637381] font-poppins">
+                    <p className="mt-1 text-sm text-green-600 font-poppins flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       Selected: {patientPhoto.name}
                     </p>
                   )}
@@ -767,6 +833,13 @@ export default function SubmitTestPage() {
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
         onConfirm={handleSubmit}
+      />
+
+      {/* Camera Capture Modal */}
+      <CameraCapture
+        isOpen={showCameraCapture}
+        onClose={() => setShowCameraCapture(false)}
+        onCapture={handleCameraCapture}
       />
       
       {/* Error Toast */}

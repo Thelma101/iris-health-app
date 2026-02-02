@@ -22,7 +22,7 @@ interface EditCommunityModalProps {
     lga: string;
     fieldOfficers?: FieldOfficerRef[];
   };
-  onSave?: (data: { name: string; lga: string; fieldOfficers: string[] }) => void;
+  onSave?: (data: { name: string; lga: string; fieldOfficers: string[] }) => Promise<void> | void;
 }
 
 export default function EditCommunityModal({
@@ -118,13 +118,13 @@ export default function EditCommunityModal({
     setSelectedOfficers(selectedOfficers.filter((o) => o._id !== officerId));
   };
 
-  const handleUpdateCommunity = () => {
-    onSave?.({
+  const handleUpdateCommunity = async () => {
+    await onSave?.({
       name: selectedCommunity,
       lga: selectedLga,
       fieldOfficers: selectedOfficers.map(o => o._id),
     });
-    onClose();
+    // Modal will be closed by parent after API call completes
   };
 
   // Filter officers by search

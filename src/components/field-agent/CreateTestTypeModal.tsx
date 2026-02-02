@@ -80,7 +80,7 @@ const CreateTestTypeModal: React.FC<CreateTestTypeModalProps> = ({
                 value={testTypeName}
                 onChange={(e) => setTestTypeName(e.target.value)}
                 placeholder="e.g HIV"
-                className="w-full h-12 px-[21px] bg-white border border-[#d9d9d9] rounded text-sm font-poppins text-[#212b36] placeholder:text-[#d9d9d9] focus:outline-none focus:border-[#2c7be5]"
+                className="w-full min-w-0 h-12 px-[21px] bg-white border border-[#d9d9d9] rounded text-sm font-poppins text-[#212b36] placeholder:text-[#d9d9d9] focus:outline-none focus:border-[#2c7be5] focus-visible:ring-2 focus-visible:ring-[#2c7be5]/40"
               />
             </div>
 
@@ -89,14 +89,14 @@ const CreateTestTypeModal: React.FC<CreateTestTypeModalProps> = ({
               <label className="font-poppins font-medium text-sm text-[#637381]">
                 Expected Result
               </label>
-              {results.map((result, index) => (
+              {results.map((result, index) => ( 
                 <div key={index} className="flex flex-col gap-[10px]">
                   <input
                     type="text"
                     value={result}
                     onChange={(e) => handleResultChange(index, e.target.value)}
                     placeholder={index === 0 ? 'e.g positive' : 'e.g Negative'}
-                    className="w-full h-12 px-6 bg-white border border-[#d9d9d9] rounded text-sm font-poppins text-[#212b36] placeholder:text-[#d9d9d9] focus:outline-none focus:border-[#2c7be5]"
+                    className="w-full min-w-0 h-12 px-6 bg-white border border-[#d9d9d9] rounded text-sm font-poppins text-[#212b36] placeholder:text-[#d9d9d9] focus:outline-none focus:border-[#2c7be5] focus-visible:ring-2 focus-visible:ring-[#2c7be5]/40"
                   />
                 </div>
               ))}

@@ -162,7 +162,9 @@ export default function CommunityPage() {
       };
       const res = await api.createCommunity(payload);
       if (res?.success && res.data) {
-        setSuccessMessage('Community added successfully!');
+        // Use backend message or fallback
+        const backendMessage = (res.data as { message?: string })?.message || 'Community created successfully';
+        setSuccessMessage(backendMessage);
         setShowSuccessModal(true);
         setIsModalOpen(false);
         fetchCommunities(); // Refresh the list
@@ -187,7 +189,9 @@ export default function CommunityPage() {
     try {
       const res = await api.updateCommunity(id, updatedData);
       if (res?.success && res.data) {
-        setSuccessMessage('Community updated successfully!');
+        // Use backend message or fallback
+        const backendMessage = (res.data as { message?: string })?.message || 'Community updated successfully';
+        setSuccessMessage(backendMessage);
         setShowSuccessModal(true);
         setIsEditModalOpen(false);
         setSelectedCommunity(null);
@@ -213,7 +217,9 @@ export default function CommunityPage() {
     try {
       const res = await api.deleteCommunity(communityToDelete._id);
       if (res?.success) {
-        setSuccessMessage('Community deleted successfully!');
+        // Use backend message or fallback
+        const backendMessage = (res.data as { message?: string })?.message || 'Community deleted successfully';
+        setSuccessMessage(backendMessage);
         setShowSuccessModal(true);
         setCommunities((prev) => prev.filter((c) => c._id !== communityToDelete._id));
         setFilteredData((prev) => prev.filter((c) => c._id !== communityToDelete._id));
@@ -261,15 +267,6 @@ export default function CommunityPage() {
 
   return (
     <main className="space-y-4 sm:space-y-6">
-      {/* Success Message */}
-      {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          {successMessage}
-        </div>
-      )}
 
       {/* Error Message */}
       {error && (
@@ -328,7 +325,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 sm:gap-6">
+        <div className="flex gap-3 sm:gap-4 lg:gap-6">
           <button
             onClick={handleExport}
             disabled={communities.length === 0}
@@ -387,8 +384,8 @@ export default function CommunityPage() {
             lga: selectedCommunity.lga,
             fieldOfficers: selectedCommunity.fieldOfficers || [],
           }}
-          onSave={(updatedData) => {
-            handleEditCommunity(selectedCommunity._id, {
+          onSave={async (updatedData) => {
+            await handleEditCommunity(selectedCommunity._id, {
               name: updatedData.name,
               lga: updatedData.lga,
               fieldOfficers: updatedData.fieldOfficers || []

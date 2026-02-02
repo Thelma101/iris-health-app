@@ -35,7 +35,7 @@ const TestTypeListModal: React.FC<TestTypeListModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-[#f5f5f5] backdrop-blur-[10px] opacity-80"
@@ -43,7 +43,7 @@ const TestTypeListModal: React.FC<TestTypeListModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-[10px] w-[625px] max-h-[80vh] shadow-lg overflow-hidden flex flex-col">
+      <div className="relative bg-white rounded-t-[20px] sm:rounded-[10px] w-full sm:w-[625px] max-h-[90vh] sm:max-h-[80vh] shadow-lg overflow-hidden flex flex-col">
         {/* Header */}
         <div className="h-12 bg-white border-b border-[#d9d9d9] flex items-center justify-between px-[22px] flex-shrink-0">
           <p className="font-poppins font-medium text-xl text-[#212b36]">

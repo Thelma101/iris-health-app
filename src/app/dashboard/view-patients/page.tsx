@@ -119,14 +119,26 @@ export default function ViewPatientsPage() {
       {/* Header */}
       <PatientsHeader />
 
-      {/* Filter and Search Section */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} />
-        <FilterBar
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          onExport={() => handleExport(selectedDate)}
-        />
+      {/* Search and Filter Section - Desktop: Search + Search btn | Date + Export; Mobile: Export + Date */}
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {/* Desktop layout: Search on left, filters on right */}
+        <div className="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} />
+          <FilterBar
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onExport={() => handleExport(selectedDate)}
+          />
+        </div>
+        
+        {/* Mobile layout: Export + Date picker only, in a row */}
+        <div className="flex sm:hidden items-center gap-3">
+          <FilterBar
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onExport={() => handleExport(selectedDate)}
+          />
+        </div>
       </div>
 
       {/* Patients Count */}

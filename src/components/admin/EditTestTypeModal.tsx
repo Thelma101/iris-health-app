@@ -89,7 +89,7 @@ export default function EditTestTypeModal({ isOpen, onClose, testType, onSave }:
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g HIV"
-                    className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                      className="w-full min-w-0 h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c7be5]/40 focus-visible:border-[#2c7be5] cursor-text"
                   />
                 </div>
               </div>
@@ -107,7 +107,7 @@ export default function EditTestTypeModal({ isOpen, onClose, testType, onSave }:
                         value={result}
                         onChange={(e) => handleResultChange(index, e.target.value)}
                         placeholder={index === 0 ? "e.g positive" : "e.g Negative"}
-                        className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                          className="w-full min-w-0 h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c7be5]/40 focus-visible:border-[#2c7be5] cursor-text"
                       />
                     </div>
                     {expectedResults.length > 1 && (

@@ -12,19 +12,19 @@ export default function SuccessModal({ isOpen, onClose, title = 'Success!', mess
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer" 
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative w-full max-w-[400px] rounded-[10px] bg-white overflow-hidden shadow-lg mx-4 p-6">
+      {/* Modal - Centered */}
+      <div className="relative w-full max-w-[400px] rounded-[10px] bg-white overflow-hidden shadow-lg p-6">
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 rounded-full bg-[#e8f1ff] flex items-center justify-center">
-            <svg className="w-8 h-8" fill="none" stroke="#2C7BE5" viewBox="0 0 24 24">
+          <div className="w-16 h-16 rounded-full bg-[#e7f1ff] flex items-center justify-center">
+            <svg className="w-8 h-8 text-[#2c7be5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -43,7 +43,7 @@ export default function SuccessModal({ isOpen, onClose, title = 'Success!', mess
         {/* Button */}
         <button
           onClick={onClose}
-          className="w-full h-12 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-[#1e5aa8] transition-colors cursor-pointer"
+          className="w-full h-12 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-[#1f6fcc] transition-colors cursor-pointer"
         >
           OK
         </button>

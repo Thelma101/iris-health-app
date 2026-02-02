@@ -44,19 +44,14 @@ export default function PatientInfoForm({
     return touched[fieldName] ? errors[fieldName] || null : null;
   };
 
-  // Get CSS classes based on validation state
+  // Get CSS classes based on validation state - use focus-within for parent div
   const getFieldClasses = (fieldName: string): string => {
     const error = getFieldError(fieldName);
-    const isTouched = touched[fieldName];
-    const hasValue = !!formData[fieldName as keyof PatientInfo];
     
     if (error) {
-      return 'border-red-500 focus:border-red-500 bg-red-50/30';
+      return 'border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-300 bg-red-50/30';
     }
-    if (isTouched && hasValue) {
-      return 'border-green-500 focus:border-green-500';
-    }
-    return 'border-[#d9d9d9] focus:border-[#2c7be5]';
+    return 'border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40';
   };
   // Filter communities by selected LGA
   const filteredCommunities = formData.lga
@@ -65,11 +60,11 @@ export default function PatientInfoForm({
 
   const fields = [
     { key: 'lga' as const, label: 'LGA', options: lgas.map(l => l.label), type: 'select', required: true },
-    { key: 'community' as const, label: 'Select Community', options: filteredCommunities.map(c => ({ value: c.value, label: c.label })), type: 'select-with-value', required: true },
+    { key: 'community' as const, label: 'Select Community', selectPlaceholder: 'Community', options: filteredCommunities.map(c => ({ value: c.value, label: c.label })), type: 'select-with-value', required: true },
     { key: 'firstName' as const, label: 'First Name', placeholder: 'Tayo', type: 'text', required: true },
     { key: 'lastName' as const, label: 'Last Name', placeholder: 'Ayo', type: 'text', required: true },
     { key: 'age' as const, label: 'Age', placeholder: '67', type: 'number', required: true },
-    { key: 'gender' as const, label: 'Gender', options: GENDER_OPTIONS, type: 'select-with-value', required: true },
+    { key: 'gender' as const, label: 'Gender', selectPlaceholder: 'Gender', options: GENDER_OPTIONS, type: 'select-with-value', required: true },
     { key: 'phoneNumber' as const, label: 'Phone Number', placeholder: '080537736267', type: 'tel', required: true },
   ];
 
@@ -122,7 +117,7 @@ export default function PatientInfoForm({
                   onBlur={() => onBlur?.(field.key)}
                   className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
                 >
-                  <option value="">Select {field.label}</option>
+                  <option value="">Select {(field as any).selectPlaceholder || field.label}</option>
                   {(field.options as { value: string; label: string }[])!.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}

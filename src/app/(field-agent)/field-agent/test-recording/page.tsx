@@ -6,6 +6,7 @@ import TestTypeListModal from '@/components/admin/TestTypeListModal';
 import EditTestTypeModal from '@/components/admin/EditTestTypeModal';
 import FormProgress from '@/components/admin/submit-test/FormProgress';
 import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
+import CameraCapture from '@/components/admin/CameraCapture';
 import { fieldAgentApi } from '@/lib/api/field-agent';
 
 interface PatientInfo {
@@ -61,9 +62,9 @@ export default function TestRecordingPage() {
   });
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
-    testType: 'HIV 1/2 Rapid Test',
-    dateConducted: new Date().toISOString().split('T')[0], // Default to today's date
-    testResult: 'Positive',
+    testType: '',
+    dateConducted: '',
+    testResult: '',
     officerNote: '',
     testImage: null,
   });
@@ -72,6 +73,8 @@ export default function TestRecordingPage() {
   const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
   const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [showCameraCapture, setShowCameraCapture] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<'patient' | 'test' | null>(null);
 
   // Refs for file inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -211,6 +214,19 @@ export default function TestRecordingPage() {
     if (!testDetails.testResult) {
       errors.testResult = 'Please select a test result';
     }
+    if (!testDetails.officerNote.trim()) {
+      errors.officerNote = 'Please add an officer note';
+    }
+    if (!testDetails.testImage) {
+      errors.testImage = 'Please upload a test image';
+    } else {
+      if (testDetails.testImage.size > 10 * 1024 * 1024) {
+        errors.testImage = 'Test image must be less than 10MB';
+      }
+      if (!testDetails.testImage.type.startsWith('image/')) {
+        errors.testImage = 'Test image must be an image file';
+      }
+    }
 
     const errorMessages = Object.values(errors).filter(Boolean) as string[];
     return {
@@ -257,7 +273,8 @@ export default function TestRecordingPage() {
   }, [currentStep, formData, testDetails, patientPhoto]);
 
   // Check if current step is valid (for button disable state)
-  const isCurrentStepValid = getCurrentStepValidation().isValid;
+  const currentValidation = getCurrentStepValidation();
+  const isCurrentStepValid = currentValidation.isValid;
 
   // Prevent form bypass via keyboard shortcuts
   useEffect(() => {
@@ -285,7 +302,7 @@ export default function TestRecordingPage() {
     // Touch all fields in current step to show errors
     const stepFields: Record<number, string[]> = {
       1: ['lga', 'community', 'firstName', 'lastName', 'age', 'gender', 'phoneNumber'],
-      2: ['testType', 'dateConducted', 'testResult'],
+      2: ['testType', 'dateConducted', 'testResult', 'officerNote', 'testImage'],
       3: ['patientPhoto'],
     };
     
@@ -323,21 +340,14 @@ export default function TestRecordingPage() {
     return touchedFields[fieldName] ? fieldErrors[fieldName] || null : null;
   };
 
-  // Get CSS classes based on validation state
+  // Get CSS classes based on validation state - use focus-within for parent div
   const getFieldClasses = (fieldName: string): string => {
     const error = getFieldError(fieldName);
-    const isTouched = touchedFields[fieldName];
-    const hasValue = fieldName === 'patientPhoto' 
-      ? !!patientPhoto 
-      : !!(formData[fieldName as keyof PatientInfo] || testDetails[fieldName as keyof TestDetails]);
     
     if (error) {
-      return 'border-red-500 focus:border-red-500 bg-red-50/30';
+      return 'border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-300 bg-red-50/30';
     }
-    if (isTouched && hasValue) {
-      return 'border-green-500 focus:border-green-500';
-    }
-    return 'border-[#d9d9d9] focus:border-[#2c7be5]';
+    return 'border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40';
   };
 
   // Handlers with validation error clearing
@@ -368,6 +378,9 @@ export default function TestRecordingPage() {
   const handleTestImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setTestDetails((prev) => ({ ...prev, testImage: file }));
+    setValidationError(null);
+    setTouchedFields((prev) => ({ ...prev, testImage: true }));
+    setFieldErrors((prev) => ({ ...prev, testImage: null }));
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setTestImagePreview(reader.result as string);
@@ -385,6 +398,29 @@ export default function TestRecordingPage() {
       reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  // Handle camera capture
+  const handleCameraCapture = (file: File) => {
+    if (cameraTarget === 'test') {
+      setTestDetails((prev) => ({ ...prev, testImage: file }));
+      setFieldErrors((prev) => ({ ...prev, testImage: null }));
+      setTouchedFields((prev) => ({ ...prev, testImage: true }));
+      const reader = new FileReader();
+      reader.onloadend = () => setTestImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setPatientPhoto(file);
+      setFieldErrors((prev) => ({ ...prev, patientPhoto: null }));
+      setTouchedFields((prev) => ({ ...prev, patientPhoto: true }));
+      const reader = new FileReader();
+      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+
+    setValidationError(null);
+    setCameraTarget(null);
+    setShowCameraCapture(false);
   };
 
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
@@ -487,16 +523,23 @@ export default function TestRecordingPage() {
         isExistingPatient: false,
       });
       setTestDetails({
-        testType: 'HIV 1/2 Rapid Test',
-        dateConducted: new Date().toISOString().split('T')[0], // Default to today's date
-        testResult: 'Positive',
+        testType: '',
+        dateConducted: '',
+        testResult: '',
         officerNote: '',
         testImage: null,
       });
       setPatientPhoto(null);
       setTestImagePreview(null);
       setPatientPhotoPreview(null);
+      setTouchedFields({});
+      setFieldErrors({});
       setCurrentStep(1);
+
+      // Auto-dismiss success message after 10 seconds
+      setTimeout(() => {
+        setSubmitSuccess(false);
+      }, 10000);
 
     } catch (err: any) {
       console.error('Submit error:', err);
@@ -766,6 +809,10 @@ export default function TestRecordingPage() {
                 testDetails={testDetails}
                 onChange={handleTestDetailsChange}
                 onImageChange={handleTestImageChange}
+                onOpenCameraCapture={() => {
+                  setCameraTarget('test');
+                  setShowCameraCapture(true);
+                }}
                 onBlur={handleFieldBlur}
                 errors={fieldErrors}
                 touched={touchedFields}
@@ -831,7 +878,8 @@ export default function TestRecordingPage() {
                             type="button"
                             onClick={() => {
                               setShowPhotoOptions(false);
-                              cameraInputRef.current?.click();
+                              setCameraTarget('patient');
+                              setShowCameraCapture(true);
                             }}
                             className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors border-b border-[#d9d9d9]"
                           >
@@ -983,45 +1031,45 @@ export default function TestRecordingPage() {
                     </div>
                   </div>
 
-                  {/* Test Image Preview */}
-                  {testImagePreview && (
+                  {/* Attachments */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <div className="w-full max-w-[150px] h-[100px] rounded border border-[#d9d9d9] overflow-hidden relative">
-                        <img src={testImagePreview} alt="Test" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTestDetails(prev => ({ ...prev, testImage: null }));
-                            setTestImagePreview(null);
-                          }}
-                          className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-100"
-                        >
-                          <svg className="w-3 h-3 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
+                      <label className="text-sm font-medium text-[#637381] font-poppins">Test image</label>
+                      {testImagePreview ? (
+                        <div className="w-full max-w-[200px] h-[130px] rounded border border-[#d9d9d9] overflow-hidden relative">
+                          <img src={testImagePreview} alt="Test" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTestDetails(prev => ({ ...prev, testImage: null }));
+                              setTestImagePreview(null);
+                            }}
+                            className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-100"
+                          >
+                            <svg className="w-3.5 h-3.5 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                          <span className="text-[#637381] font-poppins text-sm">No image uploaded</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Patient Image Section */}
-                <div className="flex flex-col gap-4">
-                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
-                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Image</span>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
-                    {patientPhotoPreview ? (
-                      <div className="w-full max-w-[200px] h-[150px] rounded border border-[#d9d9d9] overflow-hidden">
-                        <img src={patientPhotoPreview} alt="Patient" className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                        <span className="text-[#637381] font-poppins text-sm">No photo uploaded</span>
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
+                      {patientPhotoPreview ? (
+                        <div className="w-full max-w-[200px] h-[130px] rounded border border-[#d9d9d9] overflow-hidden">
+                          <img src={patientPhotoPreview} alt="Patient" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                          <span className="text-[#637381] font-poppins text-sm">No photo uploaded</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1062,8 +1110,23 @@ export default function TestRecordingPage() {
               </button>
             )}
           </div>
+          {!isCurrentStepValid && currentStep < 4 && (
+            <p className="text-xs text-amber-600 font-poppins text-right mt-2">
+              {currentValidation.firstError || 'Complete all required fields to continue.'}
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Camera Capture Modal */}
+      <CameraCapture
+        isOpen={showCameraCapture}
+        onClose={() => {
+          setShowCameraCapture(false);
+          setCameraTarget(null);
+        }}
+        onCapture={handleCameraCapture}
+      />
 
       {/* Modals */}
       <CreateTestTypeModal

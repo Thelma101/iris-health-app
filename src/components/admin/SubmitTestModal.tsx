@@ -16,15 +16,15 @@ export default function SubmitTestModal({ isOpen, onClose, onConfirm }: SubmitTe
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/20 backdrop-blur-sm cursor-pointer" 
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative w-full max-w-[400px] rounded-[10px] bg-white overflow-hidden shadow-lg mx-4 p-6">
+      {/* Modal - Centered */}
+      <div className="relative w-full max-w-[400px] rounded-[10px] bg-white overflow-hidden shadow-lg p-6">
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
           <div className="w-16 h-16 rounded-full bg-[#e8f1ff] flex items-center justify-center">

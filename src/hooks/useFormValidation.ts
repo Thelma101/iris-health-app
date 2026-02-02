@@ -332,14 +332,10 @@ export function getFieldClasses(
   baseClasses: string = ''
 ): string {
   const errorClasses = 'border-red-500 focus:border-red-500 bg-red-50/30';
-  const validClasses = 'border-green-500 focus:border-green-500';
   const defaultClasses = 'border-[#d9d9d9] focus:border-[#2c7be5]';
 
   if (hasError) {
     return `${baseClasses} ${errorClasses}`;
-  }
-  if (isValid) {
-    return `${baseClasses} ${validClasses}`;
   }
   return `${baseClasses} ${defaultClasses}`;
 }

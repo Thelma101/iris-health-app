@@ -15,10 +15,13 @@ export default function TestResultModal({ isOpen, selectedValue, onSelect, onClo
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div
+        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
       {/* Modal */}
-      <div className="fixed right-0 top-[65px] h-[calc(100vh-65px)] w-80 bg-white rounded-lg shadow-2xl z-50 overflow-y-auto border border-[#d9d9d9]">
+      <div className="fixed inset-x-0 top-[65px] sm:left-auto sm:right-0 h-[calc(100vh-65px)] w-full sm:w-80 bg-white rounded-none sm:rounded-lg shadow-2xl z-50 overflow-y-auto border border-[#d9d9d9] sm:border-l">
         {/* Search Header */}
         <div className="sticky top-0 bg-white p-4 border-b border-[#d9d9d9]">
           <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-[#f4f5f7] border border-[#d9d9d9]">

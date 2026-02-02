@@ -36,45 +36,45 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
 
   const data = apiOfficers || officers || [];
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-lg overflow-hidden w-full">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
+    <div className="bg-white border border-[#d9d9d9] rounded-[12px] overflow-hidden w-full shadow-[0px_8px_25px_rgba(0,0,0,0.06)]">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-[#f8f9fb] border-b border-[#e4e7eb]">
         <p className="text-[18px] sm:text-[20px] font-semibold text-[#212b36] font-poppins">
           Field Officer Report
         </p>
       </div>
-      <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
-        <table className="w-full min-w-[400px]">
+      <div className="overflow-x-auto max-h-[360px] overflow-y-auto">
+        <table className="w-full min-w-[420px]">
           <thead className="sticky top-0 z-10">
-            <tr className="bg-[#f4f5f7] border-b border-[#d9d9d9]">
-              <th className="px-4 sm:px-6 py-3 text-left w-[45%] bg-[#f4f5f7]">
-                <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">Name</p>
+            <tr className="bg-[#eef2f7] border-b border-[#d9d9d9] text-left">
+              <th className="px-4 sm:px-6 py-3 w-[45%]">
+                <p className="text-[13px] sm:text-[14px] font-semibold text-[#212b36] font-poppins">Name</p>
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left w-[35%] bg-[#f4f5f7]">
-                <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">No. Of Tests</p>
+              <th className="px-4 sm:px-6 py-3 w-[35%]">
+                <p className="text-[13px] sm:text-[14px] font-semibold text-[#212b36] font-poppins">No. Of Tests</p>
               </th>
-              <th className="px-4 sm:px-6 py-3 text-left w-[20%] bg-[#f4f5f7]">
-                <p className="text-[14px] sm:text-[16px] font-semibold text-[#212b36] font-poppins">Action</p>
+              <th className="px-4 sm:px-6 py-3 w-[20%]">
+                <p className="text-[13px] sm:text-[14px] font-semibold text-[#212b36] font-poppins">Action</p>
               </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center">
-                  <p className="text-[14px] text-gray-500 font-poppins">Loading field officers...</p>
+                <td colSpan={3} className="px-6 py-10 text-center">
+                  <p className="text-[13px] sm:text-[14px] text-[#637381] font-poppins">Loading field officers...</p>
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center">
-                  <p className="text-[14px] text-gray-500 font-poppins">No field officers found</p>
+                <td colSpan={3} className="px-6 py-10 text-center">
+                  <p className="text-[13px] sm:text-[14px] text-[#637381] font-poppins">No field officers found</p>
                 </td>
               </tr>
             ) : (
               data.map((officer) => (
                 <tr
                   key={officer.id}
-                  className="border-b border-[#d9d9d9] hover:bg-[#f9f9f9] transition-colors"
+                  className="border-b border-[#e9edf1] hover:bg-[#f7f9fb] transition-colors"
                 >
                   <td className="px-4 sm:px-6 py-3">
                     <p className="text-[13px] sm:text-[14px] text-[#212b36] font-poppins">{officer.name}</p>
@@ -84,10 +84,10 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
                   </td>
                   <td className="px-4 sm:px-6 py-3 text-left">
                     <button
-                      className="text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins whitespace-nowrap"
+                      className="inline-flex items-center gap-1 text-[#2c7be5] hover:underline text-[13px] sm:text-[14px] font-poppins whitespace-nowrap"
                       onClick={() => onViewTests?.(officer.id, officer.name)}
                     >
-                      View Tests
+                      <span>View Tests</span>
                     </button>
                   </td>
                 </tr>

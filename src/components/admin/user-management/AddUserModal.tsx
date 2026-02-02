@@ -17,9 +17,8 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
     password: '',
   });
 
-  // Reset form when modal closes - MUST be before conditional return
   React.useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
       setFormData({ name: '', email: '', role: 'Admin', password: '' });
     }
   }, [isOpen]);
@@ -29,8 +28,6 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
   };
 
   const handleAdd = () => {
-    // Just call the onAdd callback - parent will handle closing the modal
-    // and resetting state after the API call completes
     onAdd?.(formData);
   };
 
@@ -38,13 +35,10 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
 
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
         <div className="bg-white rounded-[10px] w-full max-w-[625px] pointer-events-auto shadow-xl overflow-hidden">
-          {/* Header */}
           <div className="bg-white border-b border-[#d9d9d9] h-[48px] flex items-center justify-between px-[22px]">
             <h2 className="text-[20px] font-medium text-[#212b36] font-poppins">Add New User</h2>
             <button
@@ -55,9 +49,7 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
             </button>
           </div>
 
-          {/* Form Content */}
           <div className="p-12 space-y-10">
-            {/* Name Field */}
             <div className="space-y-[6px]">
               <label className="text-[14px] font-medium text-[#637381] font-poppins">Name</label>
               <input
@@ -69,7 +61,6 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
               />
             </div>
 
-            {/* Email Field */}
             <div className="space-y-[6px]">
               <label className="text-[14px] font-medium text-[#637381] font-poppins">Email</label>
               <input
@@ -81,7 +72,6 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
               />
             </div>
 
-            {/* Role Dropdown */}
             <div className="space-y-[6px]">
               <label className="text-[14px] font-medium text-[#637381] font-poppins">Role</label>
               <div className="relative">
@@ -101,7 +91,6 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="space-y-[6px]">
               <label className="text-[14px] font-medium text-[#637381] font-poppins">Password</label>
               <input
@@ -113,7 +102,6 @@ export default function AddUserModal({ isOpen, onClose, onAdd }: AddUserModalPro
               />
             </div>
 
-            {/* Add User Button */}
             <button
               onClick={handleAdd}
               className="w-full h-[48px] bg-[#2c7be5] text-white rounded-[10px] text-[16px] font-medium font-inter hover:bg-[#1e5aa8] transition-colors"
