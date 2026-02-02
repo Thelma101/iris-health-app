@@ -35,14 +35,9 @@ export default function SubmitTestModal({ isOpen, onClose, onConfirm }: SubmitTe
         </div>
 
         {/* Title */}
-        <h2 className="text-xl font-semibold text-[#212b36] text-center font-poppins mb-2">
+        <h2 className="text-xl font-semibold text-[#212b36] text-center font-poppins mb-6">
           Confirm Submission
         </h2>
-
-        {/* Description */}
-        <p className="text-sm text-[#637381] text-center font-poppins mb-6">
-          Are you sure you want to submit this test? Once submitted, it cannot be edited.
-        </p>
 
         {/* Buttons */}
         <div className="flex gap-4">

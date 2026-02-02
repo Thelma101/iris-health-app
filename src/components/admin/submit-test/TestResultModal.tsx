@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { TEST_RESULT_OPTIONS } from '@/lib/constants/test-options';
 
 interface TestResultModalProps {
@@ -10,6 +11,16 @@ interface TestResultModalProps {
 }
 
 export default function TestResultModal({ isOpen, selectedValue, onSelect, onClose }: TestResultModalProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter options based on search query
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery.trim()) return TEST_RESULT_OPTIONS;
+    return TEST_RESULT_OPTIONS.filter((option) =>
+      option.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
   if (!isOpen) return null;
 
   return (
@@ -20,8 +31,8 @@ export default function TestResultModal({ isOpen, selectedValue, onSelect, onClo
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-x-0 top-[65px] sm:left-auto sm:right-0 h-[calc(100vh-65px)] w-full sm:w-80 bg-white rounded-none sm:rounded-lg shadow-2xl z-50 overflow-y-auto border border-[#d9d9d9] sm:border-l">
+      {/* Modal - positioned at top-right with no margin */}
+      <div className="fixed inset-x-0 top-0 sm:inset-x-auto sm:right-0 sm:top-0 h-screen w-full sm:w-80 bg-white rounded-none shadow-2xl z-50 overflow-y-auto border border-[#d9d9d9] sm:border-l">
         {/* Search Header */}
         <div className="sticky top-0 bg-white p-4 border-b border-[#d9d9d9]">
           <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-[#f4f5f7] border border-[#d9d9d9]">
@@ -31,6 +42,8 @@ export default function TestResultModal({ isOpen, selectedValue, onSelect, onClo
             <input
               type="text"
               placeholder="Search here"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent text-sm font-poppins text-[#637381] placeholder:text-[#d9d9d9] focus:outline-none w-full"
             />
           </div>
@@ -38,29 +51,35 @@ export default function TestResultModal({ isOpen, selectedValue, onSelect, onClo
 
         {/* Options List */}
         <div className="divide-y divide-[#e5e7eb]">
-          {TEST_RESULT_OPTIONS.map((option) => (
-            <button
-              key={option}
-              onClick={() => {
-                onSelect(option);
-                onClose();
-              }}
-              className={`w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left ${
-                selectedValue === option ? 'bg-[#ecf4ff]' : ''
-              }`}
-            >
-              <span className={`font-poppins text-sm ${selectedValue === option ? 'text-[#2c7be5] font-medium' : 'text-[#637381]'}`}>
-                {option}
-              </span>
-              {selectedValue === option && (
-                <div className="w-5 h-5 rounded-full bg-[#2c7be5] flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
-            </button>
-          ))}
+          {filteredOptions.length === 0 ? (
+            <div className="px-6 py-4 text-center text-[#637381] text-sm font-poppins">
+              No results found
+            </div>
+          ) : (
+            filteredOptions.map((option) => (
+              <button
+                key={option}
+                onClick={() => {
+                  onSelect(option);
+                  onClose();
+                }}
+                className={`w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left ${
+                  selectedValue === option ? 'bg-[#ecf4ff]' : ''
+                }`}
+              >
+                <span className={`font-poppins text-sm ${selectedValue === option ? 'text-[#2c7be5] font-medium' : 'text-[#637381]'}`}>
+                  {option}
+                </span>
+                {selectedValue === option && (
+                  <div className="w-5 h-5 rounded-full bg-[#2c7be5] flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))
+          )}
         </div>
       </div>
     </>

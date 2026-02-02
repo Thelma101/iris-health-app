@@ -55,8 +55,8 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalMessage, setSuccessModalMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState('');
 
@@ -76,8 +76,14 @@ export default function CommunityPage() {
           fieldOfficers: c.fieldOfficers,
           fieldOfficer: c.fieldOfficers && c.fieldOfficers.length > 0
             ? c.fieldOfficers
-              .filter(fo => fo && fo.firstName && fo.lastName)
-              .map(fo => `${fo.firstName} ${fo.lastName}`)
+              .map(fo => {
+                // Handle both object format and string ID format
+                if (typeof fo === 'object' && fo && fo.firstName && fo.lastName) {
+                  return `${fo.firstName} ${fo.lastName}`;
+                }
+                return null;
+              })
+              .filter(Boolean)
               .join(', ') || '-'
             : '-',
           totalPopulation: c.totalPopulation,
@@ -99,14 +105,6 @@ export default function CommunityPage() {
   useEffect(() => {
     fetchCommunities();
   }, [fetchCommunities]);
-
-  // Auto-dismiss success message
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
 
   // Reactive search with debouncing - filter when search term changes
   useEffect(() => {
@@ -164,7 +162,7 @@ export default function CommunityPage() {
       if (res?.success && res.data) {
         // Use backend message or fallback
         const backendMessage = (res.data as { message?: string })?.message || 'Community created successfully';
-        setSuccessMessage(backendMessage);
+        setSuccessModalMessage(backendMessage);
         setShowSuccessModal(true);
         setIsModalOpen(false);
         fetchCommunities(); // Refresh the list
@@ -191,7 +189,7 @@ export default function CommunityPage() {
       if (res?.success && res.data) {
         // Use backend message or fallback
         const backendMessage = (res.data as { message?: string })?.message || 'Community updated successfully';
-        setSuccessMessage(backendMessage);
+        setSuccessModalMessage(backendMessage);
         setShowSuccessModal(true);
         setIsEditModalOpen(false);
         setSelectedCommunity(null);
@@ -219,7 +217,7 @@ export default function CommunityPage() {
       if (res?.success) {
         // Use backend message or fallback
         const backendMessage = (res.data as { message?: string })?.message || 'Community deleted successfully';
-        setSuccessMessage(backendMessage);
+        setSuccessModalMessage(backendMessage);
         setShowSuccessModal(true);
         setCommunities((prev) => prev.filter((c) => c._id !== communityToDelete._id));
         setFilteredData((prev) => prev.filter((c) => c._id !== communityToDelete._id));
@@ -314,18 +312,17 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          {/* Search Button */}
+          {/* Search Button - Hidden on mobile */}
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="bg-[#2c7be5] text-white rounded-[10px] h-10 sm:h-12 px-6 font-medium text-sm sm:text-base hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins"
+            className="hidden sm:block bg-[#2c7be5] text-white rounded-[10px] h-10 sm:h-12 px-6 font-medium text-sm sm:text-base hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins"
           >
             Search
           </button>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 sm:gap-4 lg:gap-6">
+        <div className="flex justify-between sm:justify-end gap-3 sm:gap-4 lg:gap-6 w-full sm:w-auto">
           <button
             onClick={handleExport}
             disabled={communities.length === 0}
@@ -399,7 +396,7 @@ export default function CommunityPage() {
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
         title="Success"
-        message={successMessage || ''}
+        message={successModalMessage}
       />
 
       {/* Error Modal */}

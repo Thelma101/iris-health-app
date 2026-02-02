@@ -72,6 +72,7 @@ export default function SubmitTestPage() {
   const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<'test' | 'patient'>('patient');
 
   // Refs for file inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -353,12 +354,25 @@ export default function SubmitTestPage() {
     }
   };
 
-  // Handle camera capture
+  // Handle camera capture - supports both test image and patient photo
   const handleCameraCapture = (file: File) => {
-    setPatientPhoto(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    if (cameraTarget === 'test') {
+      setTestDetails((prev) => ({ ...prev, testImage: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => setTestImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setPatientPhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Open camera for test image (step 2)
+  const handleOpenTestImageCamera = () => {
+    setCameraTarget('test');
+    setShowCameraCapture(true);
   };
 
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
@@ -557,6 +571,7 @@ export default function SubmitTestPage() {
                 testDetails={testDetails} 
                 onChange={handleTestDetailsChange} 
                 onImageChange={handleTestImageChange}
+                onOpenCameraCapture={handleOpenTestImageCamera}
                 onBlur={handleFieldBlur}
                 errors={fieldErrors}
                 touched={touchedFields}
@@ -618,6 +633,7 @@ export default function SubmitTestPage() {
                             type="button"
                             onClick={() => {
                               setShowPhotoOptions(false);
+                              setCameraTarget('patient');
                               setShowCameraCapture(true);
                             }}
                             className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors border-b border-[#d9d9d9]"
@@ -768,6 +784,43 @@ export default function SubmitTestPage() {
                     <div className="min-h-20 rounded bg-white border border-[#d9d9d9] flex items-start p-[22px]">
                       <span className="text-[#212b36] font-poppins text-sm">{testDetails.officerNote || '-'}</span>
                     </div>
+                  </div>
+
+                  {/* Test Sheet - inside Test Details section */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Sheet</label>
+                    {testImagePreview ? (
+                      <img 
+                        src={testImagePreview} 
+                        alt="Test" 
+                        className="w-full max-w-[250px] rounded border border-[#d9d9d9] object-cover"
+                      />
+                    ) : (
+                      <div className="h-32 max-w-[250px] rounded bg-gray-100 border border-[#d9d9d9] flex items-center justify-center">
+                        <span className="text-[#637381] text-sm font-poppins">No image uploaded</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Patient Image Section */}
+                <div className="flex flex-col gap-4">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Image</span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5">
+                    {patientPhotoPreview ? (
+                      <img 
+                        src={patientPhotoPreview} 
+                        alt="Patient" 
+                        className="w-full max-w-[250px] rounded border border-[#d9d9d9] object-cover"
+                      />
+                    ) : (
+                      <div className="h-32 max-w-[250px] rounded bg-gray-100 border border-[#d9d9d9] flex items-center justify-center">
+                        <span className="text-[#637381] text-sm font-poppins">No photo uploaded</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

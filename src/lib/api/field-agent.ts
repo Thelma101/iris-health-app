@@ -45,7 +45,10 @@ async function fieldAgentRequest<T>(
     return { success: true, data };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Field Agent API Error [${endpoint}]:`, message);
+    // Only log unexpected errors, not access denied (expected for admin-only endpoints)
+    if (!message.includes('Access denied')) {
+      console.error(`Field Agent API Error [${endpoint}]:`, message);
+    }
     return { success: false, error: message };
   }
 }

@@ -123,16 +123,18 @@ export default function AnalyticsFilters({
 
   return (
     <div className="w-full relative z-20">
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:items-stretch sm:gap-3 lg:gap-4">
+      {/* Desktop Layout: Community, TestType | Date, Export */}
+      <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex items-center gap-3 lg:gap-4">
         <div ref={communityRef} className="relative">
           <button
             onClick={() => setShowCommunityDropdown(!showCommunityDropdown)}
-            className="w-full h-11 sm:h-auto border border-[#d9d9d9] rounded-[10px] px-3 sm:px-[10px] py-2 sm:py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
+            className="h-[44px] lg:h-[48px] border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors min-w-[140px]"
           >
-            <span className="text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter truncate pr-1">
+            <span className="text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter truncate pr-1">
               {selectedCommunity || 'Community'}
             </span>
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 lg:w-6 lg:h-6 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -160,12 +162,12 @@ export default function AnalyticsFilters({
         <div ref={testTypeRef} className="relative">
           <button
             onClick={() => setShowTestTypeDropdown(!showTestTypeDropdown)}
-            className="w-full h-11 sm:h-auto border border-[#d9d9d9] rounded-[10px] px-3 sm:px-[10px] py-2 sm:py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
+            className="h-[44px] lg:h-[48px] border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors min-w-[120px]"
           >
-            <span className="text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter truncate pr-1">
+            <span className="text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter truncate pr-1">
               {selectedTestType || 'Test Type'}
             </span>
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 lg:w-6 lg:h-6 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -190,39 +192,100 @@ export default function AnalyticsFilters({
           )}
         </div>
 
-        <div className="h-11 sm:h-auto border border-[#d9d9d9] rounded-[10px] px-3 sm:px-[10px] py-2 sm:py-[10px] flex items-center gap-2 sm:gap-[14px] bg-white hover:border-[#2c7be5] transition-colors">
-          <input
-            type="text"
-            value={selectedDate}
-            onChange={handleDateTextChange}
-            maxLength={10}
-            className="text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[80px] sm:w-[95px]"
-            placeholder="MM/DD/YY"
-          />
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={formatDateForInput(selectedDate)}
-            onChange={handleCalendarChange}
-            className="sr-only"
-          />
+        </div>
+        <div className="flex items-center gap-3 lg:gap-4">
+          <div className="h-[44px] lg:h-[48px] border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center gap-[14px] bg-white hover:border-[#2c7be5] transition-colors">
+            <input
+              type="text"
+              value={selectedDate}
+              onChange={handleDateTextChange}
+              maxLength={10}
+              className="text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[95px]"
+              placeholder="MM/DD/YY"
+            />
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={formatDateForInput(selectedDate)}
+              onChange={handleCalendarChange}
+              className="sr-only"
+            />
+            <button
+              type="button"
+              onClick={handleCalendarClick}
+              className="cursor-pointer hover:opacity-70 transition-opacity"
+            >
+              <svg className="w-5 h-5 lg:w-6 lg:h-6 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
           <button
-            type="button"
-            onClick={handleCalendarClick}
-            className="cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={onExport}
+            className="h-[44px] lg:h-[48px] bg-white border border-[#d9d9d9] rounded-[10px] px-[20px] flex items-center justify-center text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter hover:bg-[#f4f5f7] transition-colors whitespace-nowrap"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            Export
           </button>
         </div>
+      </div>
 
-        <button
-          onClick={onExport}
-          className="h-11 sm:h-[44px] lg:h-[48px] bg-white border border-[#d9d9d9] rounded-[10px] px-4 sm:px-[20px] flex items-center justify-center text-[13px] sm:text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter hover:bg-[#f4f5f7] transition-colors whitespace-nowrap"
-        >
-          Export
-        </button>
+      {/* Mobile Layout: Row 1 = Community + Date, Row 2 = Test Type + Export */}
+      <div className="flex sm:hidden flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <div ref={communityRef} className="relative flex-1">
+            <button
+              onClick={() => setShowCommunityDropdown(!showCommunityDropdown)}
+              className="w-full h-11 border border-[#d9d9d9] rounded-[10px] px-3 py-2 flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
+            >
+              <span className="text-[13px] font-medium text-[#637381] font-inter truncate pr-1">
+                {selectedCommunity || 'Community'}
+              </span>
+              <svg className="w-4 h-4 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          <div className="h-11 border border-[#d9d9d9] rounded-[10px] px-3 py-2 flex items-center gap-2 bg-white hover:border-[#2c7be5] transition-colors">
+            <input
+              type="text"
+              value={selectedDate}
+              onChange={handleDateTextChange}
+              maxLength={10}
+              className="text-[13px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[80px]"
+              placeholder="MM/DD/YY"
+            />
+            <button
+              type="button"
+              onClick={handleCalendarClick}
+              className="cursor-pointer hover:opacity-70 transition-opacity"
+            >
+              <svg className="w-4 h-4 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div ref={testTypeRef} className="relative flex-1">
+            <button
+              onClick={() => setShowTestTypeDropdown(!showTestTypeDropdown)}
+              className="w-full h-11 border border-[#d9d9d9] rounded-[10px] px-3 py-2 flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
+            >
+              <span className="text-[13px] font-medium text-[#637381] font-inter truncate pr-1">
+                {selectedTestType || 'Test Type'}
+              </span>
+              <svg className="w-4 h-4 text-[#637381] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          <button
+            onClick={onExport}
+            className="h-11 bg-white border border-[#d9d9d9] rounded-[10px] px-4 flex items-center justify-center text-[13px] font-medium text-[#637381] font-inter hover:bg-[#f4f5f7] transition-colors whitespace-nowrap"
+          >
+            Export
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -4,9 +4,10 @@ interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSearch: () => void;
+  hideSearchButton?: boolean;
 }
 
-export default function SearchBar({ searchQuery, onSearchChange, onSearch }: SearchBarProps) {
+export default function SearchBar({ searchQuery, onSearchChange, onSearch, hideSearchButton = false }: SearchBarProps) {
   return (
     <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
       {/* Search Input - matches Figma width */}
@@ -24,12 +25,14 @@ export default function SearchBar({ searchQuery, onSearchChange, onSearch }: Sea
         />
       </div>
       {/* Search Button - matches Figma */}
-      <button
-        onClick={onSearch}
-        className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-[#1f6fcc] transition-colors flex-shrink-0"
-      >
-        Search
-      </button>
+      {!hideSearchButton && (
+        <button
+          onClick={onSearch}
+          className="h-12 px-6 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-[#1f6fcc] transition-colors flex-shrink-0"
+        >
+          Search
+        </button>
+      )}
     </div>
   );
 }

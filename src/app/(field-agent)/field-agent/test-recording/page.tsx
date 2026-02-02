@@ -122,8 +122,8 @@ export default function TestRecordingPage() {
         lga: c.lga,
       }));
       setCommunities(mappedCommunities);
-    } catch (err) {
-      console.error('Error fetching communities:', err);
+    } catch {
+      // API may return 403 for field agents (admin-only endpoint) - use fallback data
       // Set demo data with valid ObjectId format
       setLgas([{ value: 'Ikorodu', label: 'Ikorodu' }]);
       setCommunities([
@@ -150,9 +150,7 @@ export default function TestRecordingPage() {
   const validateStep1 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
     const errors: Record<string, string | null> = {};
     
-    if (!formData.lga) {
-      errors.lga = 'Please select an LGA';
-    }
+    // LGA validation removed - field agents use pre-assigned communities
     if (!formData.community) {
       errors.community = 'Please select a community';
     }

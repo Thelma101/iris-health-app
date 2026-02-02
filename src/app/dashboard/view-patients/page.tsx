@@ -119,7 +119,7 @@ export default function ViewPatientsPage() {
       {/* Header */}
       <PatientsHeader />
 
-      {/* Search and Filter Section - Desktop: Search + Search btn | Date + Export; Mobile: Export + Date */}
+      {/* Search and Filter Section - Desktop: Search + Search btn | Date + Export; Mobile: Search + Export + Date */}
       <div className="flex flex-col gap-3 sm:gap-4">
         {/* Desktop layout: Search on left, filters on right */}
         <div className="hidden sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -131,12 +131,16 @@ export default function ViewPatientsPage() {
           />
         </div>
         
-        {/* Mobile layout: Export + Date picker only, in a row */}
-        <div className="flex sm:hidden items-center gap-3">
+        {/* Mobile layout: Search bar + Export + Date picker */}
+        <div className="flex sm:hidden flex-col gap-3">
+          {/* Search bar for mobile - no search button */}
+          <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} hideSearchButton />
+          {/* Export and Date with space-between */}
           <FilterBar
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onExport={() => handleExport(selectedDate)}
+            className="justify-between"
           />
         </div>
       </div>

@@ -23,7 +23,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-start justify-center sm:justify-end px-0">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-start justify-center sm:justify-end">
       {/* Backdrop */}
       <button 
         type="button"
@@ -33,8 +33,8 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
         aria-label="Close modal"
       />
       
-      {/* Modal */}
-      <div className="relative w-full sm:max-w-[554px] max-h-[90vh] sm:max-h-screen rounded-none sm:rounded-t-none sm:rounded-bl-[10px] bg-white overflow-hidden shadow-[0px_12px_35px_rgba(0,0,0,0.18)] mt-0 mr-0 flex flex-col">
+      {/* Modal - Full height on mobile starting from top, side panel on desktop */}
+      <div className="relative w-full sm:max-w-[554px] h-screen sm:max-h-screen rounded-none sm:rounded-bl-[10px] bg-white overflow-hidden shadow-[0px_12px_35px_rgba(0,0,0,0.18)] flex flex-col">
         {/* Header */}
         <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px]">
           <div className="font-medium text-xl text-[#212b36] font-poppins">Test Type List</div>

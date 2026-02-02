@@ -69,8 +69,8 @@ export default function FieldAgentCommunityPage() {
             visitationDates: ['20/02/2025', '09/12/2024'],
           });
         }
-      } catch (err: any) {
-        console.error('Error fetching community:', err);
+      } catch {
+        // API may return 403 for field agents (admin-only endpoint) - use fallback data
         setCommunity({
           _id: '1',
           name: 'Igbogbo',
