@@ -29,8 +29,13 @@ export default function ViewPatientsPage() {
   };
 
   const handleEditPatient = (patient: Patient) => {
+    // Get latest test details from patient data
+    const latestTest = patient.testDetails && patient.testDetails.length > 0 
+      ? patient.testDetails[patient.testDetails.length - 1] 
+      : null;
+    
     setEditingPatient({
-      id: patient.id || '',
+      id: patient._id || patient.id || '', // Use MongoDB ObjectId
       name: patient.name,
       lga: patient.lga,
       community: patient.community,
@@ -41,6 +46,10 @@ export default function ViewPatientsPage() {
       phoneNumber: patient.phoneNumber || patient.phone || '',
       testsTaken: patient.testsTaken,
       lastTestResult: patient.lastTestResult,
+      testDetails: patient.testDetails || [],
+      latestTest: latestTest,
+      testSheetUrl: latestTest?.testSheetUrl || patient.testSheetUrl || '',
+      patientImageUrl: latestTest?.patientImageUrl || patient.patientImageUrl || '',
     });
     setShowEditModal(true);
   };
@@ -49,18 +58,28 @@ export default function ViewPatientsPage() {
     setActionLoading(true);
     setErrorMessage(null);
     try {
+      // Use the MongoDB _id for the API call
+      const patientId = updatedPatient.id;
+      
+      if (!patientId || patientId === '' || typeof patientId === 'number') {
+        setErrorMessage('Invalid patient ID. Cannot update patient.');
+        setTimeout(() => setErrorMessage(null), 5000);
+        setActionLoading(false);
+        return;
+      }
+
       // Prepare the update payload with proper field mapping
       const updatePayload = {
         firstName: updatedPatient.firstName,
         lastName: updatedPatient.lastName,
-        age: updatedPatient.age,
-        gender: updatedPatient.gender,
-        lga: updatedPatient.lga,
-        community: updatedPatient.community,
+        age: typeof updatedPatient.age === 'string' 
+          ? parseInt(updatedPatient.age.replace(/\D/g, '')) || 0 
+          : updatedPatient.age,
+        gender: updatedPatient.gender?.toLowerCase(),
         phone: updatedPatient.phoneNumber,
       };
 
-      const res = await api.updatePatient(updatedPatient.id, updatePayload);
+      const res = await api.updatePatient(patientId, updatePayload);
       if (res.success) {
         setSuccessMessage('Patient updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -181,12 +200,26 @@ export default function ViewPatientsPage() {
             gender: selectedPatient.gender,
             phoneNumber: selectedPatient.phoneNumber || selectedPatient.phone || '',
           }}
-          testDetails={{
-            testType: 'HIV 1/2 Rapid Test',
-            testResult: selectedPatient.lastTestResult,
-            dateConducted: '21/03/2025',
-            officerNote: 'However rare side effects observed among children can be metabolic acidosis, coma, respiratory depre',
-          }}
+          testDetails={(() => {
+            const latestTest = selectedPatient.testDetails && selectedPatient.testDetails.length > 0
+              ? selectedPatient.testDetails[selectedPatient.testDetails.length - 1]
+              : null;
+            return {
+              testType: latestTest?.testType || 'N/A',
+              testResult: latestTest?.testResult || selectedPatient.lastTestResult || 'N/A',
+              dateConducted: latestTest?.dateConducted 
+                ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                : 'N/A',
+              officerNote: latestTest?.officerNotes || '',
+              testSheetImage: latestTest?.testSheetUrl || selectedPatient.testSheetUrl || '',
+            };
+          })()}
+          patientImage={(() => {
+            const latestTest = selectedPatient.testDetails && selectedPatient.testDetails.length > 0
+              ? selectedPatient.testDetails[selectedPatient.testDetails.length - 1]
+              : null;
+            return latestTest?.patientImageUrl || selectedPatient.patientImageUrl || '';
+          })()}
           onDownload={handleDownloadPatientDetails}
         />
       )}
@@ -201,12 +234,19 @@ export default function ViewPatientsPage() {
           }}
           patient={editingPatient}
           onUpdate={handleUpdatePatient}
-          testDetails={{
-            testType: 'HIV 1/2 Rapid Test',
-            testResult: editingPatient.lastTestResult,
-            dateConducted: '21/03/2025',
-            officerNote: 'However rare side effects observed among children can be metabolic acidosis, coma, respiratory depre',
-          }}
+          testDetails={(() => {
+            const latestTest = editingPatient.latestTest;
+            return {
+              testType: latestTest?.testType || 'N/A',
+              testResult: latestTest?.testResult || editingPatient.lastTestResult || 'N/A',
+              dateConducted: latestTest?.dateConducted 
+                ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                : 'N/A',
+              officerNote: latestTest?.officerNotes || '',
+              testSheetImage: latestTest?.testSheetUrl || editingPatient.testSheetUrl || '',
+            };
+          })()}
+          patientImage={editingPatient.patientImageUrl || ''}
         />
       )}
     </main>

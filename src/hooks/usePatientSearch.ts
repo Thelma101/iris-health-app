@@ -31,15 +31,32 @@ export function usePatientSearch() {
             ? p.community.lga
             : (p.lga || 'Unknown');
 
+          // Get latest test details
+          const testDetails = p.testDetails || [];
+          const latestTest = testDetails.length > 0 ? testDetails[testDetails.length - 1] : null;
+
           return {
             id: typeof p._id === 'number' ? p._id : (typeof p.id === 'number' ? p.id : index + 1),
+            _id: p._id || p.id, // Store the actual MongoDB ObjectId
             name: p.name || `${p.firstName || ''} ${p.lastName || ''}`.trim(),
             age: typeof p.age === 'string' ? p.age : `${p.age || 0}yrs`,
             gender: p.gender || 'Unknown',
             community: communityName,
             lga: lgaName,
-            testsTaken: p.testsTaken || p.tests?.length || 0,
-            lastTestResult: p.lastTestResult || p.tests?.[0]?.result || 'N/A',
+            testsTaken: p.numberOfTests || p.testsTaken || testDetails.length || 0,
+            lastTestResult: latestTest?.testResult || p.lastTestResult || 'N/A',
+            phoneNumber: p.phone || p.phoneNumber,
+            phone: p.phone || p.phoneNumber,
+            testDetails: testDetails.map((t: any) => ({
+              testType: t.testType || '',
+              testResult: t.testResult || '',
+              dateConducted: t.dateConducted || '',
+              officerNotes: t.officerNotes || '',
+              testSheetUrl: t.testSheetUrl || '',
+              patientImageUrl: t.patientImageUrl || '',
+            })),
+            testSheetUrl: latestTest?.testSheetUrl || '',
+            patientImageUrl: latestTest?.patientImageUrl || '',
           };
         });
         setAllPatients(mappedPatients);

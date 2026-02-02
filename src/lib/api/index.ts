@@ -112,14 +112,14 @@ export const api = {
     }
 
     try {
-      // Fetch field agents and current admin profile in parallel
-      const [fieldAgentsRes, adminProfileRes] = await Promise.all([
+      // Fetch field agents and all admins in parallel
+      const [fieldAgentsRes, adminsRes] = await Promise.all([
         apiRequest<{ agents: FieldAgent[] }>('/fieldAgent/'),
-        apiRequest<{ admin: { _id: string; email: string; name: string; createdAt: string } }>('/admin/profile')
+        apiRequest<{ admins: Array<{ _id: string; email: string; name: string; createdAt: string }> }>('/admin/admins')
       ]);
 
       console.log('[getUsers] Field agents response:', fieldAgentsRes);
-      console.log('[getUsers] Admin profile response:', adminProfileRes);
+      console.log('[getUsers] Admins response:', adminsRes);
 
       if (!fieldAgentsRes.success) {
         if (fieldAgentsRes.error?.includes('401') || fieldAgentsRes.error?.includes('authorized') || fieldAgentsRes.error?.includes('token')) {
@@ -136,25 +136,27 @@ export const api = {
       // Map field agents with role
       const mappedFieldAgents = fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' }));
 
-      // Add current admin to the list if available
-      // Note: Backend only has /admin/profile, not /admin/all - so we can only show current admin
+      // Map all admins to users list
       const allUsers = [...mappedFieldAgents];
-      if (adminProfileRes.success && adminProfileRes.data) {
-        const adminData = (adminProfileRes.data as any)?.admin || adminProfileRes.data;
-        if (adminData && adminData._id) {
-          // Split name into firstName and lastName for consistent display
-          const nameParts = (adminData.name || '').split(' ');
-          const adminUser = {
-            _id: adminData._id,
-            firstName: nameParts[0] || adminData.name || 'Admin',
-            lastName: nameParts.slice(1).join(' ') || '',
-            email: adminData.email,
-            role: 'Admin',
-            status: 'Active',
-            createdAt: adminData.createdAt,
-          };
-          // Add admin at the beginning of the list
-          allUsers.unshift(adminUser);
+      if (adminsRes.success && adminsRes.data) {
+        const adminsData = (adminsRes.data as any)?.admins || adminsRes.data;
+        if (Array.isArray(adminsData)) {
+          adminsData.forEach((adminData: any) => {
+            if (adminData && adminData._id) {
+              // Split name into firstName and lastName for consistent display
+              const nameParts = (adminData.name || '').split(' ');
+              const adminUser = {
+                _id: adminData._id,
+                firstName: nameParts[0] || adminData.name || 'Admin',
+                lastName: nameParts.slice(1).join(' ') || '',
+                email: adminData.email,
+                role: 'Admin',
+                status: 'Active',
+                createdAt: adminData.createdAt,
+              };
+              allUsers.unshift(adminUser);
+            }
+          });
         }
       }
 
@@ -184,15 +186,12 @@ export const api = {
   updateUser: (id: string, data: { firstName?: string; lastName?: string; email?: string; status?: string; password?: string; role?: string }) => {
     // Route to appropriate endpoint based on role
     if (data.role === 'Admin') {
-      // Admin - convert firstName/lastName to name if present
-      const adminData: Record<string, any> = { ...data };
-      if (adminData.firstName || adminData.lastName) {
-        adminData.name = `${adminData.firstName || ''} ${adminData.lastName || ''}`.trim();
-        delete adminData.firstName;
-        delete adminData.lastName;
+      // Admin - use /admin/update endpoint which only updates name
+      const adminData: Record<string, any> = {};
+      if (data.firstName || data.lastName) {
+        adminData.name = `${data.firstName || ''} ${data.lastName || ''}`.trim();
       }
-      delete adminData.role; // Don't send role to backend
-      return apiRequest(`/admin/${id}`, { method: 'PUT', body: JSON.stringify(adminData) });
+      return apiRequest('/admin/update', { method: 'PUT', body: JSON.stringify(adminData) });
     }
     // Field Agent
     const agentData: Record<string, any> = { ...data };

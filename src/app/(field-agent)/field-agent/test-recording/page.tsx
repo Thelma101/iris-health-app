@@ -1108,11 +1108,6 @@ export default function TestRecordingPage() {
               </button>
             )}
           </div>
-          {!isCurrentStepValid && currentStep < 4 && (
-            <p className="text-xs text-amber-600 font-poppins text-right mt-2">
-              {currentValidation.firstError || 'Complete all required fields to continue.'}
-            </p>
-          )}
         </div>
       </div>
 

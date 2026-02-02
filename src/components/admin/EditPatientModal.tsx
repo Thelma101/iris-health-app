@@ -217,65 +217,50 @@ export default function EditPatientModal({
               </div>
             </div>
 
-            {/* Test Details Section */}
+            {/* Test Details Section - Read Only */}
             {testDetails && (
               <div className="flex flex-col gap-3">
                 <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
-                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details</h3>
+                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details (Read Only)</h3>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-0.5">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Type</label>
-                    <input
-                      type="text"
-                      value={testData.testType}
-                      onChange={(e) => handleTestInputChange('testType', e.target.value)}
-                      className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
-                      disabled={isSaving}
-                    />
+                    <div className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
+                      {testData.testType || 'N/A'}
+                    </div>
                   </div>
 
                   <div className="flex gap-4">
                     <div className="flex-1 flex flex-col gap-0.5">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Result</label>
-                      <input
-                        type="text"
-                        value={testData.testResult}
-                        onChange={(e) => handleTestInputChange('testResult', e.target.value)}
-                        className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
-                        disabled={isSaving}
-                      />
+                      <div className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
+                        {testData.testResult || 'N/A'}
+                      </div>
                     </div>
                     <div className="flex-1 flex flex-col gap-0.5">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Date Conducted</label>
-                      <input
-                        type="date"
-                        value={testData.dateConducted}
-                        onChange={(e) => handleTestInputChange('dateConducted', e.target.value)}
-                        className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
-                        disabled={isSaving}
-                      />
+                      <div className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
+                        {testData.dateConducted ? new Date(testData.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-0.5">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
-                    <textarea
-                      value={testData.officerNote}
-                      onChange={(e) => handleTestInputChange('officerNote', e.target.value)}
-                      className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors resize-none h-20"
-                      disabled={isSaving}
-                    />
+                    <div className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 min-h-[5rem]">
+                      {testData.officerNote || 'No notes available'}
+                    </div>
                   </div>
 
                   {/* Test Sheet - Read only */}
-                  {testDetails.testSheetImage && (
+                  {testData.testSheetImage && (
                     <div className="flex flex-col gap-0.5">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Sheet</label>
                       <div className="relative w-full max-w-[200px]">
                         <img 
-                          src={testDetails.testSheetImage} 
+                          src={testData.testSheetImage} 
                           alt="Test Sheet" 
                           className="w-full rounded border border-[#d9d9d9] object-cover"
                         />
