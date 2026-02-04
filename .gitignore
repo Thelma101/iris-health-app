@@ -4,14 +4,14 @@ node_modules/
 .pnp.js
 jspm_packages/
 
-# Build
+# Build outputs
 .next/
 out/
 build/
 dist/
 *.tsbuildinfo
 
-# Environment - CRITICAL: Never commit these
+# Environment files
 .env
 .env.*
 !.env.example
@@ -20,7 +20,7 @@ dist/
 .env.test.local
 .env.production.local
 
-# Secrets and credentials
+# Secrets
 *.pem
 *.key
 *.crt
@@ -32,6 +32,8 @@ credentials/
 .idea/
 *.swp
 *.swo
+*.sublime-*
+.history/
 
 # OS
 .DS_Store
@@ -52,7 +54,7 @@ coverage/
 *.lcov
 .nyc_output
 
-# Temporary
+# Temp files
 *.tmp
 *.temp
 tmp/
@@ -63,53 +65,36 @@ temp/
 *.sqlite
 *.sqlite3
 
-# Backup
+# Backup files
 *.bak
 *.backup
 *.old
 
 # Runtime
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
 
 # Cache
-.npm
-.cache
-.parcel-cache
+.npm/
+.cache/
+.parcel-cache/
 *.tgz
 .yarn-integrity
 .node_repl_history
 
-# Reference/Copy folders
+# Duplicate/reference folders
 Lunar Med-Track copy/
+iris-health-app/
+Lunar-Med-Track/
+LunarMedtrack-API/
 
-# QA/Testing documents (not needed in repo)
+# Documents
 *.docx
 medtr-1/
-MED TESSTING.docx
-MEDTR (1).docx
-
-# Documentation (keep README)
-*.md
-!README.md
-
-# Backend API
-LunarMedtrackAPI/
-
-# Misc
-build.log
-*.log
-
-# Editor files
-*.sublime-*
-.history/
 
 # Debug
 .debug/
 debug.log
-
-# Package locks (if using npm)
-# yarn.lock
-# pnpm-lock.yaml
+build.log

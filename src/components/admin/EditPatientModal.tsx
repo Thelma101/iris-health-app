@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { toISODateFormat, normalizeAge } from '@/lib/utils/validation';
+import ModalBackdrop from './ModalBackdrop';
+import { toISODateFormat, toDisplayDateFormat, normalizeAge } from '@/lib/utils/validation';
 
 interface PatientData {
   id: string;
@@ -48,7 +49,6 @@ export default function EditPatientModal({
     testResult: testDetails?.testResult || '',
     dateConducted: toISODateFormat(testDetails?.dateConducted || ''),
     officerNote: testDetails?.officerNote || '',
-    testSheetImage: testDetails?.testSheetImage || '',
   }));
   const [isSaving, setIsSaving] = useState(false);
 
@@ -95,105 +95,96 @@ export default function EditPatientModal({
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
+      {isOpen && <ModalBackdrop onClick={onClose} />}
 
-      {/* Modal Drawer - Right aligned like PatientDetailsModal */}
-      <div 
-        className="fixed right-0 top-0 h-screen w-full max-w-[466px] sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl transition-all duration-200"
-        style={{ width: '100vw', maxWidth: 466 }}
-      >
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto pointer-events-auto">
           {/* Header */}
-          <div className="border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
-            <h2 className="text-xl font-medium text-[#212b36] font-poppins">
+          <div className="sticky top-0 bg-white border-b border-[#d9d9d9] px-6 py-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[#212b36] font-poppins">
               Edit {formData.firstName} {formData.lastName}
             </h2>
             <button
               onClick={onClose}
               disabled={isSaving}
-              className="cursor-pointer hover:opacity-70 transition-opacity p-1 disabled:opacity-50"
-              aria-label="Close modal"
+              className="text-[#637381] hover:text-[#212b36] transition-colors disabled:opacity-50 font-poppins text-xl"
             >
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              ×
             </button>
           </div>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-[10px] py-6">
-            <div className="flex flex-col gap-6 w-full max-w-[446px] mx-auto">
+          <div className="p-6 space-y-6">
             {/* Patient Info Section */}
-            <div className="flex flex-col gap-3">
-              <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
+            <div className="space-y-3">
+              <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
                 <h3 className="text-base font-medium text-[#212b36] font-poppins">Patient Info</h3>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="space-y-3">
                 {/* Full Width Fields */}
-                <div className="flex flex-col gap-0.5">
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-[#b1b9c0] font-poppins">LGA</label>
                   <input
                     type="text"
                     value={formData.lga}
                     onChange={(e) => handleInputChange('lga', e.target.value)}
-                    className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                    className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                     disabled={isSaving}
                   />
                 </div>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Select Community</label>
                   <input
                     type="text"
                     value={formData.community}
                     onChange={(e) => handleInputChange('community', e.target.value)}
-                    className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                    className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                     disabled={isSaving}
                   />
                 </div>
 
                 {/* Two Column Fields */}
-                <div className="flex gap-4">
-                  <div className="flex-1 flex flex-col gap-0.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">First Name</label>
                     <input
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                       disabled={isSaving}
                     />
                   </div>
-                  <div className="flex-1 flex flex-col gap-0.5">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Last Name</label>
                     <input
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                       disabled={isSaving}
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <div className="flex-1 flex flex-col gap-0.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Age</label>
                     <input
                       type="text"
                       value={formData.age}
                       onChange={(e) => handleInputChange('age', e.target.value)}
-                      className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                       disabled={isSaving}
                     />
                   </div>
-                  <div className="flex-1 flex flex-col gap-0.5">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Gender</label>
                     <select
                       value={formData.gender}
                       onChange={(e) => handleInputChange('gender', e.target.value)}
-                      className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                       disabled={isSaving}
                     >
                       <option value="">Select Gender</option>
@@ -204,13 +195,13 @@ export default function EditPatientModal({
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Phone Number</label>
                   <input
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                    className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                     disabled={isSaving}
                   />
                 </div>
@@ -219,48 +210,48 @@ export default function EditPatientModal({
 
             {/* Test Details Section - Read Only */}
             {testDetails && (
-              <div className="flex flex-col gap-3">
-                <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
+              <div className="space-y-3">
+                <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
                   <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details (Read Only)</h3>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col gap-0.5">
+                <div className="space-y-3">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Type</label>
-                    <div className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
+                    <div className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
                       {testData.testType || 'N/A'}
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <div className="flex-1 flex flex-col gap-0.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Result</label>
-                      <div className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
+                      <div className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
                         {testData.testResult || 'N/A'}
                       </div>
                     </div>
-                    <div className="flex-1 flex flex-col gap-0.5">
+                    <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Date Conducted</label>
-                      <div className="w-full h-7 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
+                      <div className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
                         {testData.dateConducted ? new Date(testData.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-0.5">
+                  <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
-                    <div className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 min-h-[5rem]">
+                    <div className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 min-h-[6rem]">
                       {testData.officerNote || 'No notes available'}
                     </div>
                   </div>
 
                   {/* Test Sheet - Read only */}
-                  {testData.testSheetImage && (
-                    <div className="flex flex-col gap-0.5">
+                  {testDetails.testSheetImage && (
+                    <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Sheet</label>
                       <div className="relative w-full max-w-[200px]">
                         <img 
-                          src={testData.testSheetImage} 
+                          src={testDetails.testSheetImage} 
                           alt="Test Sheet" 
                           className="w-full rounded border border-[#d9d9d9] object-cover"
                         />
@@ -273,8 +264,8 @@ export default function EditPatientModal({
 
             {/* Patient Image Section */}
             {patientImage && (
-              <div className="flex flex-col gap-3">
-                <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
+              <div className="space-y-3">
+                <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
                   <h3 className="text-base font-medium text-[#212b36] font-poppins">Patient Image</h3>
                 </div>
                 <div className="relative w-full max-w-[200px]">
@@ -289,7 +280,7 @@ export default function EditPatientModal({
           </div>
 
           {/* Footer with Update Button */}
-          <div className="border-t border-[#d9d9d9] px-[22px] py-4 flex justify-end gap-3 flex-shrink-0">
+          <div className="sticky bottom-0 bg-white border-t border-[#d9d9d9] px-6 py-4 flex justify-end gap-3">
             <button
               onClick={onClose}
               disabled={isSaving}

@@ -113,7 +113,7 @@ export default function ViewPatientsPage() {
   };
 
   return (
-    <main className="space-y-4 sm:space-y-6">
+    <main className="bg-white border border-[#d9d9d9] border-r-0 rounded-bl-[20px] rounded-tl-[20px] w-full min-h-[calc(100vh-93px)] p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Success Message */}
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">

@@ -264,7 +264,7 @@ export default function CommunityPage() {
   };
 
   return (
-    <main className="space-y-4 sm:space-y-6">
+    <main className="min-h-[calc(100vh-93px)] bg-white rounded-tl-[20px] rounded-bl-[20px] border border-[#d9d9d9] border-r-0 p-4 sm:p-6 space-y-4 sm:space-y-6">
 
       {/* Error Message */}
       {error && (

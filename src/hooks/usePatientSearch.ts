@@ -97,10 +97,7 @@ export function usePatientSearch() {
     setFilteredPatients(filtered);
   }, [searchQuery, allPatients]);
 
-  const handleSearch = () => {
-    // Search is already reactive via useEffect above
-    // This function can be used for explicit search button clicks
-  };
+  const handleSearch = () => {};
 
   const handleExport = (selectedDate: string) => {
     const headers = ['Patient Name', 'Age', 'Gender', 'Community', 'LGA', 'Tests Taken', 'Last Test Result'];

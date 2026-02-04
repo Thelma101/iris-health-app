@@ -101,25 +101,20 @@ export const api = {
   getAllAdmins: () => apiRequest('/admin/admins'),
 
   updateAdminProfile: (data: { name: string }) =>
-    apiRequest('/admin/update', { method: 'PUT', body: JSON.stringify(data) }),
+    apiRequest('/admin/update', { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Users (both Admins and Field Agents)
   getUsers: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
-      console.log('[getUsers] No token found');
       return { success: false, error: 'Authentication required. Please login.', data: { fieldAgents: [] } };
     }
 
     try {
-      // Fetch field agents and all admins in parallel
-      const [fieldAgentsRes, adminsRes] = await Promise.all([
+      const [fieldAgentsRes, adminProfileRes] = await Promise.all([
         apiRequest<{ agents: FieldAgent[] }>('/fieldAgent/'),
-        apiRequest<{ admins: Array<{ _id: string; email: string; name: string; createdAt: string }> }>('/admin/admins')
+        apiRequest<{ admin: { _id: string; email: string; name: string; createdAt: string } }>('/admin/profile')
       ]);
-
-      console.log('[getUsers] Field agents response:', fieldAgentsRes);
-      console.log('[getUsers] Admins response:', adminsRes);
 
       if (!fieldAgentsRes.success) {
         if (fieldAgentsRes.error?.includes('401') || fieldAgentsRes.error?.includes('authorized') || fieldAgentsRes.error?.includes('token')) {
@@ -128,43 +123,32 @@ export const api = {
       }
 
       const fieldAgentsData = fieldAgentsRes.data as any;
-      // Backend returns { message, total, agents: [...] }
       const fieldAgents = fieldAgentsRes.success
         ? (fieldAgentsData?.agents || fieldAgentsData?.data?.agents || fieldAgentsData?.fieldAgents || [])
         : [];
 
-      // Map field agents with role
       const mappedFieldAgents = fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' }));
-
-      // Map all admins to users list
       const allUsers = [...mappedFieldAgents];
-      if (adminsRes.success && adminsRes.data) {
-        const adminsData = (adminsRes.data as any)?.admins || adminsRes.data;
-        if (Array.isArray(adminsData)) {
-          adminsData.forEach((adminData: any) => {
-            if (adminData && adminData._id) {
-              // Split name into firstName and lastName for consistent display
-              const nameParts = (adminData.name || '').split(' ');
-              const adminUser = {
-                _id: adminData._id,
-                firstName: nameParts[0] || adminData.name || 'Admin',
-                lastName: nameParts.slice(1).join(' ') || '',
-                email: adminData.email,
-                role: 'Admin',
-                status: 'Active',
-                createdAt: adminData.createdAt,
-              };
-              allUsers.unshift(adminUser);
-            }
-          });
+      
+      if (adminProfileRes.success && adminProfileRes.data) {
+        const adminData = (adminProfileRes.data as any)?.admin || adminProfileRes.data;
+        if (adminData && adminData._id) {
+          const nameParts = (adminData.name || '').split(' ');
+          const adminUser = {
+            _id: adminData._id,
+            firstName: nameParts[0] || adminData.name || 'Admin',
+            lastName: nameParts.slice(1).join(' ') || '',
+            email: adminData.email,
+            role: 'Admin',
+            status: 'Active',
+            createdAt: adminData.createdAt,
+          };
+          allUsers.unshift(adminUser);
         }
       }
 
-      console.log('[getUsers] All users:', allUsers);
-
       return { success: true, data: { fieldAgents: allUsers } };
     } catch (error) {
-      console.error('[getUsers] Error:', error);
       return { success: false, error: 'Failed to fetch users', data: { fieldAgents: [] } };
     }
   },
@@ -186,12 +170,15 @@ export const api = {
   updateUser: (id: string, data: { firstName?: string; lastName?: string; email?: string; status?: string; password?: string; role?: string }) => {
     // Route to appropriate endpoint based on role
     if (data.role === 'Admin') {
-      // Admin - use /admin/update endpoint which only updates name
-      const adminData: Record<string, any> = {};
-      if (data.firstName || data.lastName) {
-        adminData.name = `${data.firstName || ''} ${data.lastName || ''}`.trim();
+      // Admin - convert firstName/lastName to name if present
+      const adminData: Record<string, any> = { ...data };
+      if (adminData.firstName || adminData.lastName) {
+        adminData.name = `${adminData.firstName || ''} ${adminData.lastName || ''}`.trim();
+        delete adminData.firstName;
+        delete adminData.lastName;
       }
-      return apiRequest('/admin/update', { method: 'PUT', body: JSON.stringify(adminData) });
+      delete adminData.role; // Don't send role to backend
+      return apiRequest(`/admin/${id}`, { method: 'PUT', body: JSON.stringify(adminData) });
     }
     // Field Agent
     const agentData: Record<string, any> = { ...data };
@@ -212,10 +199,8 @@ export const api = {
       // Note: endpoint must have trailing slash - /fieldAgent/ not /fieldAgent
       const response = await apiRequest<{ agents: any[] }>('/fieldAgent/');
       if (response.success && response.data) {
-        // Handle response structure - backend returns { agents: [...] }
         const responseData = response.data as any;
         const agents = responseData?.agents || responseData?.data?.agents || responseData?.fieldAgents || [];
-        console.log('[getFieldOfficers] Raw agents:', agents);
         if (Array.isArray(agents) && agents.length > 0) {
           return {
             success: true,
@@ -227,13 +212,8 @@ export const api = {
           };
         }
       }
-      // Return empty array if no data
-      return {
-        success: true,
-        data: [],
-      };
+      return { success: true, data: [] };
     } catch (error) {
-      console.error('[getFieldOfficers] Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch field officers',

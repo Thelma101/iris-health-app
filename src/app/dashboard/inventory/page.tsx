@@ -80,19 +80,19 @@ export default function InventoryPage() {
   const lowStockCount = inventory.filter(i => i.quantityAvailable <= i.lowStockThreshold).length;
 
   return (
-    <main className="space-y-6 w-full">
+    <main className="min-h-[calc(100vh-93px)] bg-white rounded-tl-[20px] rounded-bl-[20px] border border-[#d9d9d9] border-r-0 p-4 sm:p-6 space-y-6 w-full">
       {/* Header */}
       <div
-        className="rounded-bl-[20px] rounded-tl-[20px] bg-white border-2 border-[#fff9e6] border-solid overflow-hidden h-[50px] flex items-center px-[26px] w-full"
+        className="rounded-lg bg-white border-2 border-[#fff9e6] border-solid overflow-hidden h-[50px] flex items-center px-4 sm:px-[26px] w-full"
         style={{
           backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
         }}
       >
-        <h1 className="text-[20px] font-semibold uppercase text-[#212b36] font-poppins">Inventory Management</h1>
+        <h1 className="text-base sm:text-[20px] font-semibold uppercase text-[#212b36] font-poppins">Inventory Management</h1>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <p className="text-[#637381] text-sm">Total Items</p>
           <p className="text-2xl font-semibold text-[#212b36]">{inventory.length}</p>
@@ -108,19 +108,19 @@ export default function InventoryPage() {
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between px-6">
-        <div className="flex gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex gap-3 flex-wrap w-full sm:w-auto">
           <input
             type="text"
             placeholder="Search inventory..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2c7be5] w-64"
+            className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2c7be5] w-full sm:w-64"
           />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2c7be5]"
+            className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2c7be5] w-full sm:w-auto"
           >
             {categories.map(cat => (
               <option key={cat} value={cat}>{cat === 'all' ? 'All Categories' : cat}</option>
@@ -129,14 +129,14 @@ export default function InventoryPage() {
         </div>
         <button
           onClick={handleExport}
-          className="bg-[#2c7be5] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#1e5aa8] transition-colors"
+          className="bg-[#2c7be5] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#1e5aa8] transition-colors w-full sm:w-auto"
         >
           Export CSV
         </button>
       </div>
 
       {/* Table */}
-      <div className="px-6">
+      <div>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />

@@ -46,7 +46,7 @@ export default function ReportPage() {
   };
 
   return (
-    <main className="bg-white border border-[#d9d9d9] rounded-bl-[20px] rounded-tl-[20px] w-full min-h-full">
+    <main className="bg-white border border-[#d9d9d9] border-r-0 rounded-bl-[20px] rounded-tl-[20px] w-full min-h-[calc(100vh-93px)]">
       {/* Header */}
       <div
         className="border-2 border-[#fff9e6] h-12 sm:h-[50px] mx-4 lg:mx-6 my-3 overflow-hidden rounded-lg flex items-center px-4 sm:px-5"

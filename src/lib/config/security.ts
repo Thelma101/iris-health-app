@@ -1,14 +1,11 @@
 export const securityConfig = {
-  // Rate limiting
   rateLimit: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
   },
-  
-  // Password requirements
   password: {
     minLength: 8,
     requireUppercase: true,
@@ -16,31 +13,23 @@ export const securityConfig = {
     requireNumbers: true,
     requireSpecialChars: true,
   },
-  
-  // Session configuration
   session: {
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict' as const,
   },
-  
-  // JWT configuration
   jwt: {
     expiresIn: '1h',
     refreshExpiresIn: '7d',
     issuer: 'medtrack-app',
     audience: 'medtrack-users',
   },
-  
-  // File upload limits
   upload: {
-    maxFileSize: 10 * 1024 * 1024, // 10MB
+    maxFileSize: 10 * 1024 * 1024,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'],
     maxFiles: 5,
   },
-  
-  // CORS configuration
   cors: {
     origin: process.env.NODE_ENV === 'production' 
       ? ['https://medtrack.com', 'https://www.medtrack.com']
@@ -49,17 +38,13 @@ export const securityConfig = {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   },
-  
-  // Input validation
   validation: {
     maxInputLength: 1000,
     allowedTags: [],
     sanitizeHtml: true,
   },
-  
-  // API security
   api: {
-    timeout: 30000, // 30 seconds
+    timeout: 30000,
     maxRetries: 3,
     retryDelay: 1000,
   },
