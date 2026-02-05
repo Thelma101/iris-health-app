@@ -27,15 +27,24 @@ export default function ViewPatientsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleViewPatient = (patient: Patient) => {
+    console.log('=== VIEW PATIENT ===' );
+    console.log('Patient Data:', patient);
+    console.log('Patient ID:', patient._id || patient.id);
+    console.log('Test Details:', patient.testDetails);
     setSelectedPatient(patient);
     setShowPatientModal(true);
   };
 
   const handleEditPatient = (patient: Patient) => {
+    console.log('=== EDIT PATIENT ===' );
+    console.log('Patient Data:', patient);
+    console.log('Patient ID:', patient._id || patient.id);
+    console.log('Test Details:', patient.testDetails);
     // Get latest test details from patient data
     const latestTest = patient.testDetails && patient.testDetails.length > 0 
       ? patient.testDetails[patient.testDetails.length - 1] 
       : null;
+    console.log('Latest Test:', latestTest);
     
     setEditingPatient({
       id: patient._id || patient.id || '', // Use MongoDB ObjectId
@@ -57,12 +66,16 @@ export default function ViewPatientsPage() {
     setShowEditModal(true);
   };
 
-  const handleUpdatePatient = async (updatedPatient: any) => {
+  const handleUpdatePatient = async (updatedPatient: any, updatedTestDetails?: any) => {
+    console.log('=== UPDATE PATIENT ===' );
+    console.log('Updated Patient Data:', updatedPatient);
+    console.log('Updated Test Details:', updatedTestDetails);
     setActionLoading(true);
     setErrorMessage(null);
     try {
       // Use the MongoDB _id for the API call
       const patientId = updatedPatient.id;
+      console.log('Patient ID for API:', patientId);
       
       if (!patientId || patientId === '' || typeof patientId === 'number') {
         setErrorMessage('Invalid patient ID. Cannot update patient.');
@@ -72,7 +85,7 @@ export default function ViewPatientsPage() {
       }
 
       // Prepare the update payload with proper field mapping
-      const updatePayload = {
+      const updatePayload: any = {
         firstName: updatedPatient.firstName,
         lastName: updatedPatient.lastName,
         age: typeof updatedPatient.age === 'string' 
@@ -82,7 +95,27 @@ export default function ViewPatientsPage() {
         phone: updatedPatient.phoneNumber,
       };
 
+      // Include test details if provided and there's a latest test to update
+      if (updatedTestDetails && editingPatient?.testDetails?.length > 0) {
+        // Find the index of the latest test to update
+        const latestTestIndex = editingPatient.testDetails.length - 1;
+        const existingTests = [...editingPatient.testDetails];
+        
+        // Update the latest test with new details
+        existingTests[latestTestIndex] = {
+          ...existingTests[latestTestIndex],
+          testType: updatedTestDetails.testType,
+          testResult: updatedTestDetails.testResult,
+          dateConducted: updatedTestDetails.dateConducted,
+          officerNotes: updatedTestDetails.officerNote,
+        };
+        
+        updatePayload.testDetails = existingTests;
+      }
+
+      console.log('Update Payload being sent:', updatePayload);
       const res = await api.updatePatient(patientId, updatePayload);
+      console.log('API Response:', res);
       if (res.success) {
         setSuccessMessage('Patient updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);

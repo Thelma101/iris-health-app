@@ -1,60 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FieldAgentSidebar from '@/components/field-agent/Sidebar';
 import FieldAgentHeader from '@/components/field-agent/Header';
 import CreateTestTypeModal from '@/components/field-agent/CreateTestTypeModal';
 import EditTestTypeModal from '@/components/field-agent/EditTestTypeModal';
 import TestTypeListModal from '@/components/field-agent/TestTypeListModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import api from '@/lib/api';
 
 interface TestType {
   id: string;
+  _id?: string;
   name: string;
   results: string[];
 }
 
-// Default test types with common expected results
-const DEFAULT_TEST_TYPES: TestType[] = [
-  {
-    id: '1',
-    name: 'HIV',
-    results: ['Positive', 'Negative', 'Reactive', 'Non-Reactive', 'Indeterminate'],
-  },
-  {
-    id: '2',
-    name: 'Malaria',
-    results: ['Positive', 'Negative', 'P. falciparum', 'P. vivax', 'Mixed'],
-  },
-  {
-    id: '3',
-    name: 'Hepatitis B',
-    results: ['Positive', 'Negative', 'Reactive', 'Non-Reactive', 'Immune'],
-  },
-  {
-    id: '4',
-    name: 'TB',
-    results: ['Positive', 'Negative', 'Smear Positive', 'Smear Negative', 'Culture Positive'],
-  },
-  {
-    id: '5',
-    name: 'Cholera',
-    results: ['Positive', 'Negative', 'Confirmed', 'Suspected'],
-  },
-  {
-    id: '6',
-    name: 'Blood Pressure',
-    results: ['Normal', 'High', 'Low', 'Stage 1 Hypertension', 'Stage 2 Hypertension', 'Hypertensive Crisis'],
-  },
-  {
-    id: '7',
-    name: 'Blood Sugar',
-    results: ['Normal', 'Pre-diabetic', 'Diabetic', 'Low (Hypoglycemia)', 'High (Hyperglycemia)'],
-  },
-];
-
 export default function TestTypesPage() {
-  const [testTypes, setTestTypes] = useState<TestType[]>(DEFAULT_TEST_TYPES);
+  const [testTypes, setTestTypes] = useState<TestType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isListModalOpen, setIsListModalOpen] = useState(true);
@@ -62,15 +26,46 @@ export default function TestTypesPage() {
   const [selectedTestType, setSelectedTestType] = useState<TestType | null>(null);
   const [testTypeToDelete, setTestTypeToDelete] = useState<string | null>(null);
 
-  const handleCreateTestType = (data: { name: string; results: string[] }) => {
-    const newTestType: TestType = {
-      id: Date.now().toString(),
-      name: data.name,
-      results: data.results,
-    };
-    setTestTypes([...testTypes, newTestType]);
-    setIsCreateModalOpen(false);
-    setIsListModalOpen(true);
+  // Fetch test types from API
+  useEffect(() => {
+    fetchTestTypes();
+  }, []);
+
+  const fetchTestTypes = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.getTestTypes();
+      console.log('=== TEST TYPES PAGE: Fetched Test Types ===', res);
+      const testData = res.data as any;
+      const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+      // Map the API response to match our local interface
+      const mapped = testTypesArray.map((t: any) => ({
+        id: t._id || t.id,
+        _id: t._id,
+        name: t.name,
+        results: t.results || [],
+      }));
+      setTestTypes(mapped);
+    } catch (err) {
+      console.error('Error fetching test types:', err);
+      // Fallback to empty array if API fails
+      setTestTypes([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateTestType = async (data: { name: string; results: string[] }) => {
+    try {
+      const res = await api.createTestType(data);
+      console.log('=== TEST TYPES PAGE: Created Test Type ===', res);
+      await fetchTestTypes(); // Refresh the list
+      setIsCreateModalOpen(false);
+      setIsListModalOpen(true);
+    } catch (err) {
+      console.error('Error creating test type:', err);
+      alert('Failed to create test type');
+    }
   };
 
   const handleEditTestType = (testType: TestType) => {
@@ -79,14 +74,21 @@ export default function TestTypesPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateTestType = (updatedTestType: TestType) => {
-    setTestTypes(
-      testTypes.map((tt) =>
-        tt.id === updatedTestType.id ? updatedTestType : tt
-      )
-    );
-    setIsEditModalOpen(false);
-    setIsListModalOpen(true);
+  const handleUpdateTestType = async (updatedTestType: TestType) => {
+    try {
+      const id = updatedTestType._id || updatedTestType.id;
+      await api.updateTestType(id, {
+        name: updatedTestType.name,
+        results: updatedTestType.results,
+      });
+      console.log('=== TEST TYPES PAGE: Updated Test Type ===', updatedTestType);
+      await fetchTestTypes(); // Refresh the list
+      setIsEditModalOpen(false);
+      setIsListModalOpen(true);
+    } catch (err) {
+      console.error('Error updating test type:', err);
+      alert('Failed to update test type');
+    }
   };
 
   const handleDeleteClick = (testTypeId: string) => {
@@ -94,11 +96,18 @@ export default function TestTypesPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (testTypeToDelete) {
-      setTestTypes(testTypes.filter((tt) => tt.id !== testTypeToDelete));
-      setTestTypeToDelete(null);
-      setIsDeleteModalOpen(false);
+      try {
+        await api.deleteTestType(testTypeToDelete);
+        console.log('=== TEST TYPES PAGE: Deleted Test Type ===', testTypeToDelete);
+        await fetchTestTypes(); // Refresh the list
+        setTestTypeToDelete(null);
+        setIsDeleteModalOpen(false);
+      } catch (err) {
+        console.error('Error deleting test type:', err);
+        alert('Failed to delete test type');
+      }
     }
   };
 

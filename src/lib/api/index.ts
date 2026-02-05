@@ -289,6 +289,18 @@ export const api = {
   createVisitation: (data: object) =>
     apiRequest('/visitation', { method: 'POST', body: JSON.stringify(data) }),
 
+  // Test Types
+  getTestTypes: () => apiRequest<{ testTypes: Array<{ _id: string; name: string; results: string[]; description?: string; isActive: boolean }> }>('/testTypes'),
+  getTestType: (id: string) => apiRequest(`/testTypes/${id}`),
+  createTestType: (data: { name: string; results: string[]; description?: string }) =>
+    apiRequest('/testTypes', { method: 'POST', body: JSON.stringify(data) }),
+  updateTestType: (id: string, data: { name?: string; results?: string[]; description?: string; isActive?: boolean }) =>
+    apiRequest(`/testTypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteTestType: (id: string) =>
+    apiRequest(`/testTypes/${id}`, { method: 'DELETE' }),
+  seedTestTypes: () =>
+    apiRequest('/testTypes/seed', { method: 'POST' }),
+
   // Dashboard - aggregate calls that compute stats from available data
   getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
     try {

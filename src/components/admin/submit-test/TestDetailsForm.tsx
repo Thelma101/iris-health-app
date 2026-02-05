@@ -1,6 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { TEST_TYPE_OPTIONS, TEST_RESULT_OPTIONS } from '@/lib/constants/test-options';
+import React, { useRef, useState, useEffect } from 'react';
+import { TEST_RESULT_OPTIONS } from '@/lib/constants/test-options';
 import TestResultModal from './TestResultModal';
+import api from '@/lib/api';
+
+interface TestTypeOption {
+  _id: string;
+  name: string;
+  results: string[];
+}
 
 interface TestDetails {
   testType: string;
@@ -33,6 +40,28 @@ export default function TestDetailsForm({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [showTestResultModal, setShowTestResultModal] = useState(false);
+  const [testTypeOptions, setTestTypeOptions] = useState<TestTypeOption[]>([]);
+
+  // Fetch test types from API
+  useEffect(() => {
+    api.getTestTypes()
+      .then((res) => {
+        console.log('=== TEST DETAILS FORM: Fetched Test Types ===', res);
+        const testData = res.data as any;
+        const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+        setTestTypeOptions(testTypesArray);
+      })
+      .catch((err) => {
+        console.error('Error fetching test types:', err);
+        // Fallback to default test types if API fails
+        setTestTypeOptions([
+          { _id: '1', name: 'HIV 1/2 Rapid Test', results: ['Positive', 'Negative', 'Inconclusive'] },
+          { _id: '2', name: 'Malaria RDT', results: ['Positive', 'Negative', 'Invalid'] },
+          { _id: '3', name: 'Blood Pressure', results: ['Normal', 'High', 'Low'] },
+          { _id: '4', name: 'Blood Glucose', results: ['Normal', 'High', 'Low'] },
+        ]);
+      });
+  }, []);
 
   // Get field error (only show if touched)
   const getFieldError = (fieldName: string): string | null => {
@@ -81,8 +110,8 @@ export default function TestDetailsForm({
             <option value="" disabled hidden>
               Select test type
             </option>
-            {TEST_TYPE_OPTIONS.map((option) => (
-              <option key={option} value={option}>{option}</option>
+            {testTypeOptions.map((option) => (
+              <option key={option._id} value={option.name}>{option.name}</option>
             ))}
           </select>
           <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">

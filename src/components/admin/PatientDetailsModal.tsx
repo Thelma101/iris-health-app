@@ -90,7 +90,7 @@ export default function PatientDetailsModal({
                 </div>
 
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Select Community</label>
+                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Community</label>
                   <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
                     <p className="text-sm text-[#212b36] font-poppins">{patient.community}</p>
                   </div>

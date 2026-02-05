@@ -29,7 +29,7 @@ interface TestDetails {
 interface EditPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (updatedPatient: PatientData) => Promise<void> | void;
+  onUpdate: (updatedPatient: PatientData, updatedTestDetails?: TestDetails) => Promise<void> | void;
   patient: PatientData;
   testDetails?: TestDetails;
   patientImage?: string;
@@ -83,8 +83,8 @@ export default function EditPatientModal({
   const handleUpdate = async () => {
     setIsSaving(true);
     try {
-      // Call the actual update callback with form data
-      await onUpdate(formData);
+      // Call the actual update callback with form data and test data
+      await onUpdate(formData, testData);
     } catch (error) {
       // Error handling connected to logging service
       console.error('Error updating patient:', error);
@@ -133,7 +133,7 @@ export default function EditPatientModal({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Select Community</label>
+                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Community</label>
                   <input
                     type="text"
                     value={formData.community}
@@ -217,34 +217,57 @@ export default function EditPatientModal({
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Type</label>
-                    <div className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
-                      {testData.testType || 'N/A'}
-                    </div>
+                    <input
+                      type="text"
+                      value={testData.testType}
+                      onChange={(e) => handleTestInputChange('testType', e.target.value)}
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Result</label>
-                      <div className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
-                        {testData.testResult || 'N/A'}
-                      </div>
+                      <select
+                        value={testData.testResult}
+                        onChange={(e) => handleTestInputChange('testResult', e.target.value)}
+                        className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                        disabled={isSaving}
+                      >
+                        <option value="">Select Result</option>
+                        <option value="Positive">Positive</option>
+                        <option value="Negative">Negative</option>
+                        <option value="Inconclusive">Inconclusive</option>
+                        <option value="High">High</option>
+                        <option value="Low">Low</option>
+                        <option value="Normal">Normal</option>
+                      </select>
                     </div>
                     <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Date Conducted</label>
-                      <div className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 flex items-center">
-                        {testData.dateConducted ? new Date(testData.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
-                      </div>
+                      <input
+                        type="date"
+                        value={testData.dateConducted}
+                        onChange={(e) => handleTestInputChange('dateConducted', e.target.value)}
+                        className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                        disabled={isSaving}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
-                    <div className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins bg-gray-50 min-h-[6rem]">
-                      {testData.officerNote || 'No notes available'}
-                    </div>
+                    <textarea
+                      value={testData.officerNote}
+                      onChange={(e) => handleTestInputChange('officerNote', e.target.value)}
+                      className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors min-h-[6rem] resize-none"
+                      disabled={isSaving}
+                      placeholder="Add officer notes..."
+                    />
                   </div>
 
-                  {/* Test Sheet - Read only */}
+                  {/* Test Sheet - Read only (cannot edit uploaded images) */}
                   {testDetails.testSheetImage && (
                     <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Sheet</label>

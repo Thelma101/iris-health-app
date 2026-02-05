@@ -85,6 +85,11 @@ export function sanitizeFileName(fileName: string): string {
 export function toISODateFormat(displayDate: string): string {
   if (!displayDate) return '';
   
+  // Handle invalid/placeholder values
+  if (displayDate === 'N/A' || displayDate === 'n/a' || displayDate === '-' || displayDate === 'undefined') {
+    return '';
+  }
+  
   // Already in ISO format
   if (/^\d{4}-\d{2}-\d{2}/.test(displayDate)) {
     return displayDate.split('T')[0];
@@ -104,10 +109,11 @@ export function toISODateFormat(displayDate: string): string {
       return date.toISOString().split('T')[0];
     }
   } catch {
-    // Fallback
+    // Fallback - return empty for invalid dates
   }
   
-  return displayDate;
+  // Return empty string instead of invalid date string for HTML date inputs
+  return '';
 }
 
 /**

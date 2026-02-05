@@ -47,6 +47,11 @@ const formatDateDisplay = (isoDate: string) => {
   return `${day}/${month}/${year}`;
 };
 
+interface TestTypeOption {
+  value: string;
+  label: string;
+}
+
 export default function AnalyticsFilters({
   onCommunityChange,
   onTestTypeChange,
@@ -59,14 +64,17 @@ export default function AnalyticsFilters({
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [selectedTestType, setSelectedTestType] = useState('');
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
-  const [testTypes] = useState<string[]>(['HIV 1/2 Rapid Test', 'Malaria RDT', 'Blood Pressure', 'Blood Glucose']);
+  const [testTypes, setTestTypes] = useState<TestTypeOption[]>([]);
   const [showCommunityDropdown, setShowCommunityDropdown] = useState(false);
   const [showTestTypeDropdown, setShowTestTypeDropdown] = useState(false);
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const communityRef = useRef<HTMLDivElement>(null);
-  const testTypeRef = useRef<HTMLDivElement>(null);
+  const communityDesktopRef = useRef<HTMLDivElement>(null);
+  const testTypeDesktopRef = useRef<HTMLDivElement>(null);
+  const communityMobileRef = useRef<HTMLDivElement>(null);
+  const testTypeMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Fetch communities
     api.getCommunities()
       .then((res) => {
         const commData = res.data as any;
@@ -80,14 +88,45 @@ export default function AnalyticsFilters({
       .catch((err) => {
         console.error('Error fetching communities:', err);
       });
+
+    // Fetch test types from API
+    api.getTestTypes()
+      .then((res) => {
+        console.log('=== ANALYTICS: Fetched Test Types ===', res);
+        const testData = res.data as any;
+        const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+        const mapped = testTypesArray.map((t: any) => ({
+          value: t.name,
+          label: t.name,
+        }));
+        setTestTypes(mapped);
+      })
+      .catch((err) => {
+        console.error('Error fetching test types:', err);
+        // Fallback to default test types if API fails
+        setTestTypes([
+          { value: 'HIV 1/2 Rapid Test', label: 'HIV 1/2 Rapid Test' },
+          { value: 'Malaria RDT', label: 'Malaria RDT' },
+          { value: 'Blood Pressure', label: 'Blood Pressure' },
+          { value: 'Blood Glucose', label: 'Blood Glucose' },
+        ]);
+      });
   }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (communityRef.current && !communityRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isOutsideCommunity = 
+        (!communityDesktopRef.current || !communityDesktopRef.current.contains(target)) &&
+        (!communityMobileRef.current || !communityMobileRef.current.contains(target));
+      const isOutsideTestType = 
+        (!testTypeDesktopRef.current || !testTypeDesktopRef.current.contains(target)) &&
+        (!testTypeMobileRef.current || !testTypeMobileRef.current.contains(target));
+      
+      if (isOutsideCommunity) {
         setShowCommunityDropdown(false);
       }
-      if (testTypeRef.current && !testTypeRef.current.contains(event.target as Node)) {
+      if (isOutsideTestType) {
         setShowTestTypeDropdown(false);
       }
     };
@@ -97,12 +136,18 @@ export default function AnalyticsFilters({
 
   const handleDateTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatDateInput(e.target.value);
+    console.log('=== ANALYTICS FILTER: DATE (TEXT) ===' );
+    console.log('Date Input:', e.target.value);
+    console.log('Formatted Date:', formatted);
     setSelectedDate(formatted);
     onDateChange?.(formatted);
   };
 
   const handleCalendarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatDateDisplay(e.target.value);
+    console.log('=== ANALYTICS FILTER: DATE (CALENDAR) ===' );
+    console.log('Calendar Input:', e.target.value);
+    console.log('Formatted Date:', formatted);
     setSelectedDate(formatted);
     onDateChange?.(formatted);
   };
@@ -112,12 +157,18 @@ export default function AnalyticsFilters({
   };
 
   const handleCommunitySelect = (community: CommunityOption) => {
+    console.log('=== ANALYTICS FILTER: COMMUNITY ===' );
+    console.log('Selected Community:', community);
+    console.log('Community Value:', community.value);
+    console.log('Community Label:', community.label);
     setSelectedCommunity(community.label);
     setShowCommunityDropdown(false);
     onCommunityChange?.(community.value);
   };
 
   const handleTestTypeSelect = (testType: string) => {
+    console.log('=== ANALYTICS FILTER: TEST TYPE ===' );
+    console.log('Selected Test Type:', testType);
     setSelectedTestType(testType);
     setShowTestTypeDropdown(false);
     onTestTypeChange?.(testType);
@@ -128,7 +179,7 @@ export default function AnalyticsFilters({
       {/* Desktop Layout: Community, TestType | Date, Export */}
       <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center gap-3 lg:gap-4">
-        <div ref={communityRef} className="relative">
+        <div ref={communityDesktopRef} className="relative">
           <button
             onClick={() => setShowCommunityDropdown(!showCommunityDropdown)}
             className="h-[44px] lg:h-[48px] border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors min-w-[140px]"
@@ -161,7 +212,7 @@ export default function AnalyticsFilters({
           )}
         </div>
 
-        <div ref={testTypeRef} className="relative">
+        <div ref={testTypeDesktopRef} className="relative">
           <button
             onClick={() => setShowTestTypeDropdown(!showTestTypeDropdown)}
             className="h-[44px] lg:h-[48px] border border-[#d9d9d9] rounded-[10px] px-[10px] py-[10px] flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors min-w-[120px]"
@@ -183,11 +234,11 @@ export default function AnalyticsFilters({
               </button>
               {testTypes.map((testType) => (
                 <button
-                  key={testType}
-                  onClick={() => handleTestTypeSelect(testType)}
+                  key={testType.value}
+                  onClick={() => handleTestTypeSelect(testType.value)}
                   className="w-full px-4 py-2 text-left text-[14px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
                 >
-                  {testType}
+                  {testType.label}
                 </button>
               ))}
             </div>
@@ -234,7 +285,7 @@ export default function AnalyticsFilters({
       {/* Mobile Layout: Row 1 = Community + Date, Row 2 = Test Type + Export */}
       <div className="flex sm:hidden flex-col gap-2">
         <div className="flex items-center gap-2">
-          <div ref={communityRef} className="relative flex-1">
+          <div ref={communityMobileRef} className="relative flex-1">
             <button
               onClick={() => setShowCommunityDropdown(!showCommunityDropdown)}
               className="w-full h-11 border border-[#d9d9d9] rounded-[10px] px-3 py-2 flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
@@ -287,7 +338,7 @@ export default function AnalyticsFilters({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div ref={testTypeRef} className="relative flex-1">
+          <div ref={testTypeMobileRef} className="relative flex-1">
             <button
               onClick={() => setShowTestTypeDropdown(!showTestTypeDropdown)}
               className="w-full h-11 border border-[#d9d9d9] rounded-[10px] px-3 py-2 flex items-center justify-between bg-white hover:border-[#2c7be5] transition-colors"
@@ -309,11 +360,11 @@ export default function AnalyticsFilters({
                 </button>
                 {testTypes.map((testType) => (
                   <button
-                    key={testType}
-                    onClick={() => handleTestTypeSelect(testType)}
+                    key={testType.value}
+                    onClick={() => handleTestTypeSelect(testType.value)}
                     className="w-full px-4 py-2 text-left text-[13px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
                   >
-                    {testType}
+                    {testType.label}
                   </button>
                 ))}
               </div>
