@@ -75,7 +75,7 @@ export default function FieldAgentLoginPage() {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      <div className="w-full max-w-[400px] flex flex-col items-center gap-8 bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
+      <div className="w-full max-w-[527px] flex flex-col items-center gap-8 bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
         {/* Logo and Tagline */}
         <div className="flex flex-col items-center gap-6 w-full">
           <div className="flex items-center gap-[11px]">

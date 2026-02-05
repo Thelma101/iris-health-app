@@ -90,44 +90,64 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response) =>
   const { id } = req.params;
   const updateData = req.body;
 
-  const patient = await Patient.findById(id);
-  if (!patient) {
-    return res.status(404).json({ message: "Patient not found" });
-  }
-
-  // If testDetails is provided as a full array (for updating existing tests)
-  if (updateData.testDetails && Array.isArray(updateData.testDetails)) {
-    // Check if this is an update (same length) or adding new tests
-    if (updateData.testDetails.length === patient.testDetails.length) {
-      // Update existing tests - replace the entire array
-      patient.testDetails = updateData.testDetails;
-    } else if (updateData.testDetails.length > patient.testDetails.length) {
-      // New tests are being added - only add the new ones
-      const newTests = updateData.testDetails.slice(patient.testDetails.length);
-      patient.testDetails.push(...newTests);
-      patient.numberOfTests = patient.testDetails.length;
-
-      await Community.findByIdAndUpdate(patient.community, {
-        $inc: { totalTestsConducted: newTests.length }
-      });
+  try {
+    const patient = await Patient.findById(id);
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
     }
+
+    // If testDetails is provided as a full array (for updating existing tests)
+    if (updateData.testDetails && Array.isArray(updateData.testDetails)) {
+      // Sanitize test details - only keep valid fields
+      const sanitizedTests = updateData.testDetails.map((test: any) => ({
+        testType: test.testType,
+        testResult: test.testResult,
+        dateConducted: test.dateConducted,
+        officerNotes: test.officerNotes || test.officerNote || '',
+        testSheetUrl: test.testSheetUrl || '',
+        patientImageUrl: test.patientImageUrl || ''
+      }));
+
+      // Check if this is an update (same length) or adding new tests
+      if (sanitizedTests.length === patient.testDetails.length) {
+        // Update existing tests - replace the entire array
+        patient.testDetails = sanitizedTests;
+      } else if (sanitizedTests.length > patient.testDetails.length) {
+        // New tests are being added - only add the new ones
+        const newTests = sanitizedTests.slice(patient.testDetails.length);
+        patient.testDetails.push(...newTests);
+        patient.numberOfTests = patient.testDetails.length;
+
+        if (patient.community) {
+          await Community.findByIdAndUpdate(patient.community, {
+            $inc: { totalTestsConducted: newTests.length }
+          });
+        }
+      }
+    }
+
+    // Update patient bio data
+    if (updateData.firstName) patient.firstName = updateData.firstName;
+    if (updateData.lastName) patient.lastName = updateData.lastName;
+    if (updateData.phone) patient.phone = updateData.phone;
+    if (updateData.age) patient.age = updateData.age;
+    if (updateData.gender) patient.gender = updateData.gender;
+
+    await patient.save();
+
+    const populatedPatient = await patient.populate("community", "name lga");
+
+    res.status(200).json({
+      message: "Patient updated successfully",
+      patient: populatedPatient
+    });
+  } catch (error: any) {
+    console.error('Error updating patient:', error);
+    res.status(500).json({ 
+      message: "Failed to update patient", 
+      error: error.message || 'Unknown error'
+    });
   }
-
-  // Update patient bio data
-  if (updateData.firstName) patient.firstName = updateData.firstName;
-  if (updateData.lastName) patient.lastName = updateData.lastName;
-  if (updateData.phone) patient.phone = updateData.phone;
-  if (updateData.age) patient.age = updateData.age;
-  if (updateData.gender) patient.gender = updateData.gender;
-
-  await patient.save();
-
-  const populatedPatient = await patient.populate("community", "name lga");
-
-  res.status(200).json({
-    message: "Patient updated successfully",
-    patient: populatedPatient
-  });
 });
 
 /**
@@ -142,9 +162,11 @@ export const deletePatient = asyncHandler(async (req: Request, res: Response) =>
   }
 
   // Decrease test count from community
-  await Community.findByIdAndUpdate(patient.community, {
-    $inc: { totalTestsConducted: -patient.numberOfTests }
-  });
+  if (patient.community) {
+    await Community.findByIdAndUpdate(patient.community, {
+      $inc: { totalTestsConducted: -patient.numberOfTests }
+    });
+  }
 
   await patient.deleteOne();
 

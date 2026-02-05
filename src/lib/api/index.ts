@@ -179,7 +179,7 @@ export const api = {
         delete adminData.lastName;
       }
       delete adminData.role; // Don't send role to backend
-      return apiRequest(`/admin/${id}`, { method: 'PUT', body: JSON.stringify(adminData) });
+      return apiRequest(`/admin/${id}`, { method: 'PATCH', body: JSON.stringify(adminData) });
     }
     // Field Agent
     const agentData: Record<string, any> = { ...data };

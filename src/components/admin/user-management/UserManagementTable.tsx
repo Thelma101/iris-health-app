@@ -30,7 +30,7 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
       {/* Desktop Table */}
       <div className="hidden sm:block overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
         {/* Header */}
-        <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] grid grid-cols-5 gap-8 h-[48px] items-center px-6 py-3 sticky top-0 z-10">
+        <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] grid grid-cols-5 gap-8 h-[48px] items-center px-4 py-3 sticky top-0 z-10">
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Name</span>
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Role</span>
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Last Login</span>
@@ -41,7 +41,7 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
         {/* Body */}
         <div className="divide-y divide-[#d9d9d9]">
           {data.map((user) => (
-            <div key={user.id} className="bg-white border-b border-[#d9d9d9] grid grid-cols-5 gap-8 h-[48px] items-center px-6 py-3 hover:bg-[#f9f9f9] transition-colors">
+            <div key={user.id} className="bg-white border-b border-[#d9d9d9] grid grid-cols-5 gap-8 h-[44px] items-center px-4 py-2 hover:bg-[#f9f9f9] transition-colors">
               <span className="text-[14px] text-[#637381] font-poppins truncate">{user.name}</span>
               <span className="text-[14px] text-[#637381] font-poppins truncate">{user.role}</span>
               <span className="text-[14px] text-[#637381] font-poppins truncate">{user.lastLogin}</span>
@@ -69,46 +69,46 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
       </div>
 
       {/* Mobile Card View - Matches Figma Design */}
-      <div className="sm:hidden flex flex-col gap-5 p-4">
+      <div className="sm:hidden flex flex-col gap-5 px-[15px] py-4">
         {data.map((user) => (
-          <div key={user.id} className="border border-[#d9d9d9] rounded-[8px] overflow-hidden">
+          <div key={user.id} className="border border-[#d9d9d9] rounded-[4px] overflow-hidden">
             {/* Name */}
-            <div className="bg-[#f4f5f7] px-4 py-2.5 border-b border-[#d9d9d9]">
+            <div className="bg-[#f4f5f7] px-2.5 py-2 border-b border-[#d9d9d9]">
               <p className="font-semibold text-[#637381] text-[14px] font-poppins">Name</p>
             </div>
-            <div className="px-4 py-2.5 border-b border-[#d9d9d9] bg-white">
+            <div className="px-2.5 py-1.5 border-b border-[#d9d9d9] bg-white">
               <p className="text-[#637381] text-[14px] font-poppins">{user.name}</p>
             </div>
 
             {/* Role */}
-            <div className="bg-[#f4f5f7] px-4 py-2.5 border-b border-[#d9d9d9]">
+            <div className="bg-[#f4f5f7] px-2.5 py-2 border-b border-[#d9d9d9]">
               <p className="font-semibold text-[#637381] text-[14px] font-poppins">Role</p>
             </div>
-            <div className="px-4 py-2.5 border-b border-[#d9d9d9] bg-white">
+            <div className="px-2.5 py-1.5 border-b border-[#d9d9d9] bg-white">
               <p className="text-[#637381] text-[14px] font-poppins">{user.role}</p>
             </div>
 
             {/* Last Login */}
-            <div className="bg-[#f4f5f7] px-4 py-2.5 border-b border-[#d9d9d9]">
+            <div className="bg-[#f4f5f7] px-2.5 py-2 border-b border-[#d9d9d9]">
               <p className="font-semibold text-[#637381] text-[14px] font-poppins">Last Login</p>
             </div>
-            <div className="px-4 py-2.5 border-b border-[#d9d9d9] bg-white">
+            <div className="px-2.5 py-1.5 border-b border-[#d9d9d9] bg-white">
               <p className="text-[#637381] text-[14px] font-poppins">{user.lastLogin}</p>
             </div>
 
             {/* Status */}
-            <div className="bg-[#f4f5f7] px-4 py-2.5 border-b border-[#d9d9d9]">
+            <div className="bg-[#f4f5f7] px-2.5 py-2 border-b border-[#d9d9d9]">
               <p className="font-semibold text-[#637381] text-[14px] font-poppins">Status</p>
             </div>
-            <div className="px-4 py-2.5 border-b border-[#d9d9d9] bg-white">
+            <div className="px-2.5 py-1.5 border-b border-[#d9d9d9] bg-white">
               <p className="text-[#637381] text-[14px] font-poppins">{user.status}</p>
             </div>
 
             {/* Actions */}
-            <div className="bg-[#f4f5f7] px-4 py-2.5 border-b border-[#d9d9d9]">
+            <div className="bg-[#f4f5f7] px-2.5 py-2 border-b border-[#d9d9d9]">
               <p className="font-semibold text-[#637381] text-[14px] font-poppins">Actions</p>
             </div>
-            <div className="px-4 py-2.5 bg-white flex gap-3 flex-wrap">
+            <div className="px-2.5 py-1.5 bg-white flex gap-4">
               <button
                 onClick={() => onEdit?.(user.id)}
                 className="text-[14px] text-[#f4a100] font-poppins hover:underline transition-colors cursor-pointer font-medium"

@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "Backend",
+    "BE",
     "LunarMedtrackAPI",
     "Lunar Med-Track copy",
     "Lunar-Med-Track",
