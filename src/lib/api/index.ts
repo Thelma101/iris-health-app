@@ -111,9 +111,9 @@ export const api = {
     }
 
     try {
-      const [fieldAgentsRes, adminProfileRes] = await Promise.all([
+      const [fieldAgentsRes, adminsRes] = await Promise.all([
         apiRequest<{ agents: FieldAgent[] }>('/fieldAgent/'),
-        apiRequest<{ admin: { _id: string; email: string; name: string; createdAt: string } }>('/admin/profile')
+        apiRequest<{ admins: any[] }>('/admin/admins')
       ]);
 
       if (!fieldAgentsRes.success) {
@@ -130,21 +130,22 @@ export const api = {
       const mappedFieldAgents = fieldAgents.map((f: any) => ({ ...f, role: 'Field Officer' }));
       const allUsers = [...mappedFieldAgents];
       
-      if (adminProfileRes.success && adminProfileRes.data) {
-        const adminData = (adminProfileRes.data as any)?.admin || adminProfileRes.data;
-        if (adminData && adminData._id) {
-          const nameParts = (adminData.name || '').split(' ');
+      // Add ALL admins from the admins endpoint
+      if (adminsRes.success && adminsRes.data) {
+        const adminsData = (adminsRes.data as any)?.admins || [];
+        adminsData.forEach((admin: any) => {
+          const nameParts = (admin.name || '').split(' ');
           const adminUser = {
-            _id: adminData._id,
-            firstName: nameParts[0] || adminData.name || 'Admin',
+            _id: admin._id,
+            firstName: nameParts[0] || admin.name || 'Admin',
             lastName: nameParts.slice(1).join(' ') || '',
-            email: adminData.email,
+            email: admin.email,
             role: 'Admin',
             status: 'Active',
-            createdAt: adminData.createdAt,
+            createdAt: admin.createdAt,
           };
           allUsers.unshift(adminUser);
-        }
+        });
       }
 
       return { success: true, data: { fieldAgents: allUsers } };
@@ -366,7 +367,7 @@ export const api = {
   },
 
   // Analytics - compute from patient data
-  getCasesPerCommunity: async (): Promise<ApiResponse<Array<{ label: string; value: number }>>> => {
+  getCasesPerCommunity: async (params?: Record<string, string>): Promise<ApiResponse<Array<{ label: string; value: number }>>> => {
     try {
       // Fetch communities and patients to compute cases per community
       const [communitiesRes, patientsRes] = await Promise.all([
@@ -377,24 +378,51 @@ export const api = {
       const commData = communitiesRes.data as any;
       const patData = patientsRes.data as any;
       const communities = commData?.data?.communities || commData?.communities || [];
-      const patients = patData?.data?.patients || patData?.patients || [];
+      let patients = patData?.data?.patients || patData?.patients || [];
+
+      // Apply filters
+      if (params?.communityId) {
+        patients = patients.filter((p: any) => {
+          const commId = p.community?._id || p.community;
+          return commId === params.communityId;
+        });
+      }
+      if (params?.testType) {
+        patients = patients.filter((p: any) => {
+          const tests = p.testDetails || [];
+          return tests.some((t: any) => t.testType?.toLowerCase().includes(params.testType!.toLowerCase()));
+        });
+      }
+      if (params?.date) {
+        patients = patients.filter((p: any) => {
+          const tests = p.testDetails || [];
+          return tests.some((t: any) => {
+            if (!t.dateConducted) return false;
+            const testDate = new Date(t.dateConducted).toISOString().split('T')[0];
+            return testDate <= params.date!;
+          });
+        });
+      }
 
       // Count tests per community
       const communityTestCounts: Record<string, { name: string; count: number }> = {};
 
       communities.forEach((c: any) => {
-        communityTestCounts[c._id] = { name: c.name, count: c.totalTestsConducted || 0 };
+        communityTestCounts[c._id] = { name: c.name, count: 0 };
       });
 
-      // Also count from patients
+      // Count from filtered patients
       patients.forEach((p: any) => {
         const commId = p.community?._id || p.community;
         if (commId && communityTestCounts[commId]) {
-          // Add tests from patient's testDetails
-          const testCount = p.testDetails?.length || 0;
-          if (testCount > 0 && p.numberOfTests === 0) {
-            communityTestCounts[commId].count += testCount;
+          let testCount = p.testDetails?.length || 0;
+          // Apply test type filter to count
+          if (params?.testType && p.testDetails) {
+            testCount = p.testDetails.filter((t: any) => 
+              t.testType?.toLowerCase().includes(params.testType!.toLowerCase())
+            ).length;
           }
+          communityTestCounts[commId].count += testCount;
         }
       });
 
@@ -418,17 +446,42 @@ export const api = {
   },
 
   // Test Rate - compute from patient data
-  getTestRatePerType: async (): Promise<ApiResponse<{ positivePercentage: number; negativePercentage: number }>> => {
+  getTestRatePerType: async (params?: Record<string, string>): Promise<ApiResponse<{ positivePercentage: number; negativePercentage: number }>> => {
     try {
       const patientsRes = await api.getPatients();
       const patData = patientsRes.data as any;
-      const patients = patData?.data?.patients || patData?.patients || [];
+      let patients = patData?.data?.patients || patData?.patients || [];
+
+      // Apply community filter
+      if (params?.communityId) {
+        patients = patients.filter((p: any) => {
+          const commId = p.community?._id || p.community;
+          return commId === params.communityId;
+        });
+      }
 
       let positiveCount = 0;
       let negativeCount = 0;
 
       patients.forEach((p: any) => {
-        const tests = p.testDetails || [];
+        let tests = p.testDetails || [];
+        
+        // Apply test type filter
+        if (params?.testType) {
+          tests = tests.filter((t: any) => 
+            t.testType?.toLowerCase().includes(params.testType!.toLowerCase())
+          );
+        }
+
+        // Apply date filter
+        if (params?.date) {
+          tests = tests.filter((t: any) => {
+            if (!t.dateConducted) return false;
+            const testDate = new Date(t.dateConducted).toISOString().split('T')[0];
+            return testDate <= params.date!;
+          });
+        }
+
         tests.forEach((test: any) => {
           const result = (test.testResult || '').toLowerCase();
           if (result.includes('positive') || result.includes('high') || result.includes('hypertension')) {

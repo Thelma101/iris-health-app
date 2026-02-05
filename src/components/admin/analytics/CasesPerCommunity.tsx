@@ -8,14 +8,18 @@ interface CasesPerCommunityProps {
     label: string;
     value: number;
   }>;
+  loading?: boolean;
 }
 
-export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
+export default function CasesPerCommunity({ data, loading: externalLoading }: CasesPerCommunityProps) {
   const [apiData, setApiData] = useState<Array<{ label: string; value: number }> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [internalLoading, setInternalLoading] = useState(false);
 
+  // Only fetch internally if no data prop is provided
   useEffect(() => {
-    setLoading(true);
+    if (data !== undefined) return; // Use provided data
+
+    setInternalLoading(true);
     api.getCasesPerCommunity()
       .then((res) => {
         if (res?.success && Array.isArray(res.data)) {
@@ -26,11 +30,12 @@ export default function CasesPerCommunity({ data }: CasesPerCommunityProps) {
         console.error('Error fetching cases per community:', err);
       })
       .finally(() => {
-        setLoading(false);
+        setInternalLoading(false);
       });
-  }, []);
+  }, [data]);
 
-  const chartData = apiData || data || [];
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading;
+  const chartData = data !== undefined ? data : (apiData || []);
   
   // Calculate Y position based on index (ascending line from left to right)
   // This creates a visual ascending line regardless of actual data values

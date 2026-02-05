@@ -13,7 +13,10 @@ import { Patient } from '@/lib/constants/patients-data';
 import api from '@/lib/api';
 
 export default function ViewPatientsPage() {
-  const [selectedDate, setSelectedDate] = useState('02/10/25');
+  // Initialize with today's date in DD/MM/YYYY format
+  const today = new Date();
+  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+  const [selectedDate, setSelectedDate] = useState(formattedToday);
   const { searchQuery, setSearchQuery, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
@@ -113,7 +116,7 @@ export default function ViewPatientsPage() {
   };
 
   return (
-    <main className="bg-white border border-[#d9d9d9] border-r-0 rounded-bl-[20px] rounded-tl-[20px] w-full min-h-[calc(100vh-93px)] p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <main className="bg-white border border-[#d9d9d9] border-r-0 rounded-bl-[20px] rounded-tl-[20px] w-full min-h-[calc(100vh-93px)] p-4 sm:p-6 pb-2 sm:pb-3 space-y-3 sm:space-y-4">
       {/* Success Message */}
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">

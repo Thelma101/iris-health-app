@@ -40,6 +40,9 @@
     "node_modules",
     "Backend",
     "LunarMedtrackAPI",
-    "Lunar Med-Track copy"
+    "Lunar Med-Track copy",
+    "Lunar-Med-Track",
+    "LunarMedtrack-API",
+    "iris-health-app"
   ]
 }

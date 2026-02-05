@@ -1,15 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AnalyticsFilters from '@/components/admin/analytics/AnalyticsFilters';
 import CasesPerCommunity from '@/components/admin/analytics/CasesPerCommunity';
 import RatePerType from '@/components/admin/analytics/RatePerType';
 import FieldOfficerReport from '@/components/admin/analytics/FieldOfficerReport';
 import OfficerTestListModal from '@/components/admin/OfficerTestListModal';
 import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal';
+import api from '@/lib/api/index';
 
 export default function ReportPage() {
-  const [selectedDate, setSelectedDate] = useState('02/10/25');
+  // Initialize with today's date in DD/MM/YYYY format
+  const today = new Date();
+  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+  
+  const [selectedDate, setSelectedDate] = useState(formattedToday);
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [selectedTestType, setSelectedTestType] = useState('');
   const [showOfficerTestsModal, setShowOfficerTestsModal] = useState(false);
@@ -17,6 +22,57 @@ export default function ReportPage() {
   const [showTestDetailsModal, setShowTestDetailsModal] = useState(false);
   const [selectedPatientName, setSelectedPatientName] = useState<string>('');
   const [exportLoading, setExportLoading] = useState(false);
+  
+  // Chart data states
+  const [casesData, setCasesData] = useState<Array<{ label: string; value: number }>>([]);
+  const [rateData, setRateData] = useState<Array<{ label: string; value: number; color: string }>>([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+
+  // Fetch filtered chart data
+  const fetchChartData = useCallback(async () => {
+    setChartsLoading(true);
+    try {
+      // Build query params based on filters
+      const params: Record<string, string> = {};
+      if (selectedCommunity) params.communityId = selectedCommunity;
+      if (selectedTestType) params.testType = selectedTestType;
+      if (selectedDate) {
+        // Convert DD/MM/YYYY to ISO date
+        const parts = selectedDate.split('/');
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          const fullYear = year.length === 2 ? `20${year}` : year;
+          params.date = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+      }
+
+      // Fetch cases per community
+      const casesRes = await api.getCasesPerCommunity(params);
+      if (casesRes?.success && Array.isArray(casesRes.data)) {
+        setCasesData(casesRes.data);
+      }
+
+      // Fetch rate per type
+      const rateRes = await api.getTestRatePerType(params);
+      if (rateRes?.success && rateRes.data) {
+        // Convert to array format for the component
+        const rateDataArray = [
+          { label: 'Positive', value: rateRes.data.positivePercentage, color: '#F97316' },
+          { label: 'Negative', value: rateRes.data.negativePercentage, color: '#3B82F6' },
+        ];
+        setRateData(rateDataArray);
+      }
+    } catch (err) {
+      console.error('[ReportPage] Error fetching chart data:', err);
+    } finally {
+      setChartsLoading(false);
+    }
+  }, [selectedCommunity, selectedTestType, selectedDate]);
+
+  // Re-fetch when filters change
+  useEffect(() => {
+    fetchChartData();
+  }, [fetchChartData]);
 
   const handleExport = async () => {
     setExportLoading(true);
@@ -75,8 +131,8 @@ export default function ReportPage() {
         <div className="flex flex-col gap-5 sm:gap-6 w-full relative z-10">
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 w-full">
-            <CasesPerCommunity />
-            <RatePerType />
+            <CasesPerCommunity data={casesData} loading={chartsLoading} />
+            <RatePerType data={rateData} loading={chartsLoading} />
           </div>
 
           {/* Field Officer Report */}
@@ -107,11 +163,31 @@ export default function ReportPage() {
             setSelectedPatientName('');
           }}
           patientName={selectedPatientName}
+          patientInfo={{
+            lga: 'Gwagwalada',
+            community: 'Dobi',
+            firstName: selectedPatientName.split(' ')[0] || '',
+            lastName: selectedPatientName.split(' ').slice(1).join(' ') || '',
+            age: '25',
+            gender: 'Male',
+            phoneNumber: '+234 803 456 7890',
+          }}
           testDetails={{
             testType: 'HIV 1/2 Rapid Test',
             testResult: 'Negative',
             dateConducted: '21/03/2025',
             officerNote: 'However rare side effects observed among children can be metabolic acidosis, coma, respiratory depre',
+          }}
+          onDownload={() => {
+            // Generate patient report
+            const reportData = `Patient Report\n\nName: ${selectedPatientName}\nTest Type: HIV 1/2 Rapid Test\nTest Result: Negative\nDate: 21/03/2025\n\nGenerated at: ${new Date().toLocaleString()}`;
+            const blob = new Blob([reportData], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `patient-report-${selectedPatientName.replace(/\s+/g, '-')}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
           }}
         />
       )}

@@ -71,9 +71,9 @@ export default function PatientDetailsModal({
           </div>
         )}
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-[10px] py-6">
-          <div className="flex flex-col gap-6 w-full max-w-[446px] mx-auto">
+        {/* Scrollable Content - fills remaining space */}
+        <div className="flex-1 overflow-y-auto px-[10px] py-6 bg-white">
+          <div className="flex flex-col gap-6 w-full max-w-[446px]">
             {/* Patient Info Section */}
             <div className="flex flex-col gap-3">
               <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">

@@ -97,8 +97,7 @@ export default function EditPatientModal({
     <>
       {isOpen && <ModalBackdrop onClick={onClose} />}
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto pointer-events-auto">
+      <div className="fixed right-0 top-0 h-screen w-full max-w-[500px] bg-white z-50 flex flex-col overflow-hidden shadow-xl transition-all duration-200 pointer-events-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-[#d9d9d9] px-6 py-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[#212b36] font-poppins">
@@ -113,7 +112,7 @@ export default function EditPatientModal({
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Patient Info Section */}
             <div className="space-y-3">
               <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
@@ -208,11 +207,11 @@ export default function EditPatientModal({
               </div>
             </div>
 
-            {/* Test Details Section - Read Only */}
+            {/* Test Details Section */}
             {testDetails && (
               <div className="space-y-3">
                 <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
-                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details (Read Only)</h3>
+                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details</h3>
                 </div>
 
                 <div className="space-y-3">
@@ -303,7 +302,6 @@ export default function EditPatientModal({
               )}
             </button>
           </div>
-        </div>
       </div>
     </>
   );

@@ -3,6 +3,16 @@
 import React from 'react';
 import Image from 'next/image';
 
+interface PatientInfo {
+  lga?: string;
+  community?: string;
+  firstName?: string;
+  lastName?: string;
+  age?: string;
+  gender?: string;
+  phoneNumber?: string;
+}
+
 interface PatientTestDetail {
   testType: string;
   testResult: string;
@@ -16,14 +26,18 @@ interface OfficerTestDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   patientName: string;
+  patientInfo?: PatientInfo;
   testDetails?: PatientTestDetail;
+  onDownload?: () => void;
 }
 
 export default function OfficerTestDetailsModal({
   isOpen,
   onClose,
   patientName,
+  patientInfo,
   testDetails,
+  onDownload,
 }: OfficerTestDetailsModalProps) {
   if (!isOpen) return null;
 
@@ -41,84 +55,155 @@ export default function OfficerTestDetailsModal({
             onClick={onClose}
             className="text-[#637381] hover:text-[#212b36] transition-colors"
           >
-            <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Test Details Section */}
-          {testDetails && (
-            <div className="space-y-4">
-              <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-2 px-3 mb-3">
-                <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details</h3>
-              </div>
+        {/* Download Button */}
+        {onDownload && (
+          <div className="flex justify-end px-[10px] py-3 border-b border-[#d9d9d9]">
+            <button
+              onClick={onDownload}
+              className="border border-[#d9d9d9] rounded px-2.5 py-1 text-xs font-medium text-[#212b36] hover:bg-gray-50 transition-colors"
+            >
+              Download
+            </button>
+          </div>
+        )}
 
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Type</label>
-                  <div className="bg-white h-7 flex items-center px-3 border border-[#d9d9d9] rounded">
-                    <p className="text-sm text-[#212b36] font-poppins">{testDetails.testType}</p>
-                  </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-[10px] py-6 bg-white">
+          <div className="flex flex-col gap-6 w-full max-w-[446px]">
+            {/* Patient Info Section */}
+            {patientInfo && (
+              <div className="flex flex-col gap-3">
+                <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
+                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Patient Info</h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">LGA</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.lga || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Select Community</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.community || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">First Name</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.firstName || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Last Name</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.lastName || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Age</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.age || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Gender</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.gender || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Phone Number</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{patientInfo.phoneNumber || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Test Details Section */}
+            {testDetails && (
+              <div className="flex flex-col gap-3">
+                <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
+                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Test Details</h3>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Type</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">{testDetails.testType}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Result</label>
-                    <div className="bg-white h-7 flex items-center px-3 border border-[#d9d9d9] rounded">
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
                       <p className="text-sm text-[#212b36] font-poppins">{testDetails.testResult}</p>
                     </div>
                   </div>
-                  <div className="space-y-1">
+
+                  <div className="flex flex-col gap-0.5">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Date Conducted</label>
-                    <div className="bg-white h-7 flex items-center px-3 border border-[#d9d9d9] rounded">
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
                       <p className="text-sm text-[#212b36] font-poppins">{testDetails.dateConducted}</p>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
-                  <div className="bg-white p-3 border border-[#d9d9d9] rounded min-h-20">
-                    <p className="text-sm text-[#212b36] font-poppins">{testDetails.officerNote}</p>
-                  </div>
-                </div>
-
-                {testDetails.testSheetImage && (
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Sheet</label>
-                    <div className="bg-white p-3 border border-[#d9d9d9] rounded h-48">
-                      <img
-                        src={testDetails.testSheetImage}
-                        alt="Test sheet"
-                        className="h-full w-full object-contain"
-                      />
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
+                    <div className="bg-white rounded p-2 border border-[#d9d9d9] min-h-12">
+                      <p className="text-sm text-[#212b36] font-poppins">{testDetails.officerNote}</p>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* Patient Image Section */}
-          {testDetails?.patientImage && (
-            <div className="space-y-3">
-              <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-2 px-3 mb-3">
-                <h3 className="text-base font-medium text-[#212b36] font-poppins">Patient Image</h3>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Patient Photo</label>
-                <div className="bg-white p-3 border border-[#d9d9d9] rounded h-24">
-                  <img
-                    src={testDetails.patientImage}
-                    alt="Patient"
-                    className="h-full w-full object-cover rounded"
-                  />
+                  {testDetails.testSheetImage && (
+                    <div className="flex flex-col gap-0.5">
+                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Sheet</label>
+                      <div className="bg-white rounded p-2 border border-[#d9d9d9] h-20">
+                        <img
+                          src={testDetails.testSheetImage}
+                          alt="Test sheet"
+                          className="h-full w-full object-cover rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Patient Image Section */}
+            {testDetails?.patientImage && (
+              <div className="flex flex-col gap-3">
+                <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
+                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Patient Image</h3>
+                </div>
+
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Patient Photo</label>
+                  <div className="bg-white rounded p-2 border border-[#d9d9d9] h-24">
+                    <img src={testDetails.patientImage} alt="Patient" className="h-full w-full object-cover rounded" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

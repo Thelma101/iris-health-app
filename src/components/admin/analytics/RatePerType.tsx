@@ -3,14 +3,30 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api/index';
 
-export default function RatePerType() {
+interface RatePerTypeProps {
+  data?: Array<{ label: string; value: number; color: string }>;
+  loading?: boolean;
+}
+
+export default function RatePerType({ data, loading: externalLoading }: RatePerTypeProps) {
   const [positivePercentage, setPositivePercentage] = useState<number>(0);
   const [negativePercentage, setNegativePercentage] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const [internalLoading, setInternalLoading] = useState(false);
   const [hasData, setHasData] = useState(false);
 
+  // Only fetch internally if no data prop is provided
   useEffect(() => {
-    setLoading(true);
+    if (data !== undefined) {
+      // Use provided data
+      const pos = data.find(d => d.label.toLowerCase().includes('positive'))?.value || 0;
+      const neg = data.find(d => d.label.toLowerCase().includes('negative'))?.value || 0;
+      setPositivePercentage(pos);
+      setNegativePercentage(neg);
+      setHasData(pos > 0 || neg > 0 || data.length > 0);
+      return;
+    }
+
+    setInternalLoading(true);
     api.getTestRatePerType()
       .then((res) => {
         if (
@@ -34,9 +50,11 @@ export default function RatePerType() {
         setHasData(false);
       })
       .finally(() => {
-        setLoading(false);
+        setInternalLoading(false);
       });
-  }, []);
+  }, [data]);
+
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading;
 
   // SVG pie chart calculations
   const size = 180;

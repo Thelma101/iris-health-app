@@ -7,13 +7,13 @@ interface FilterBarProps {
   className?: string;
 }
 
-// Format date string to MM/DD/YY format
+// Format date string to DD/MM/YYYY format
 const formatDateDisplay = (dateStr: string) => {
   if (!dateStr) return '';
   // Handle ISO date format (YYYY-MM-DD)
   if (dateStr.includes('-')) {
     const [year, month, day] = dateStr.split('-');
-    return `${month}/${day}/${year.slice(-2)}`;
+    return `${day}/${month}/${year}`;
   }
   return dateStr;
 };
@@ -21,9 +21,9 @@ const formatDateDisplay = (dateStr: string) => {
 // Format display date to ISO format for input
 const formatDateForInput = (displayDate: string) => {
   if (!displayDate) return '';
-  // Handle MM/DD/YY format
+  // Handle DD/MM/YYYY format
   if (displayDate.includes('/')) {
-    const [month, day, year] = displayDate.split('/');
+    const [day, month, year] = displayDate.split('/');
     const fullYear = year.length === 2 ? `20${year}` : year;
     return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }

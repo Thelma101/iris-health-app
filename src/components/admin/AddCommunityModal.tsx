@@ -100,9 +100,7 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
     if (!formData.lga.trim()) {
       errors.lga = 'LGA is required';
     }
-    if (formData.selectedOfficers.length === 0) {
-      errors.fieldOfficers = 'Please assign at least one field officer';
-    }
+    // Field officers are optional - can be assigned later
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);

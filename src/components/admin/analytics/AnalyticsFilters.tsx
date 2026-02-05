@@ -19,7 +19,7 @@ const formatDateInput = (value: string) => {
   // Remove all non-numeric characters
   const digits = value.replace(/\D/g, '');
 
-  // Apply formatting based on length
+  // Apply formatting based on length - DD/MM/YYYY format
   if (digits.length <= 2) {
     return digits;
   } else if (digits.length <= 4) {
@@ -31,10 +31,10 @@ const formatDateInput = (value: string) => {
 
 const formatDateForInput = (displayDate: string) => {
   if (!displayDate) return '';
-  // Handle MM/DD/YY or MM/DD/YYYY format
+  // Handle DD/MM/YYYY or DD/MM/YY format
   const parts = displayDate.split('/');
   if (parts.length === 3) {
-    const [month, day, year] = parts;
+    const [day, month, year] = parts;
     const fullYear = year.length === 2 ? `20${year}` : year;
     return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
@@ -44,7 +44,7 @@ const formatDateForInput = (displayDate: string) => {
 const formatDateDisplay = (isoDate: string) => {
   if (!isoDate || !isoDate.includes('-')) return isoDate;
   const [year, month, day] = isoDate.split('-');
-  return `${month}/${day}/${year.slice(-2)}`;
+  return `${day}/${month}/${year}`;
 };
 
 export default function AnalyticsFilters({
@@ -53,7 +53,9 @@ export default function AnalyticsFilters({
   onDateChange,
   onExport,
 }: AnalyticsFiltersProps) {
-  const [selectedDate, setSelectedDate] = useState('02/10/25');
+  const today = new Date();
+  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+  const [selectedDate, setSelectedDate] = useState(formattedToday);
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [selectedTestType, setSelectedTestType] = useState('');
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
@@ -201,7 +203,7 @@ export default function AnalyticsFilters({
               onChange={handleDateTextChange}
               maxLength={10}
               className="text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[95px]"
-              placeholder="MM/DD/YY"
+              placeholder="DD/MM/YYYY"
             />
             <input
               ref={dateInputRef}
@@ -244,6 +246,25 @@ export default function AnalyticsFilters({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
+            {showCommunityDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-xl z-[100] w-full max-h-[220px] overflow-y-auto">
+                <button
+                  onClick={() => handleCommunitySelect({ value: '', label: '' })}
+                  className="w-full px-4 py-2 text-left text-[13px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
+                >
+                  All Communities
+                </button>
+                {communities.map((community) => (
+                  <button
+                    key={community.value}
+                    onClick={() => handleCommunitySelect(community)}
+                    className="w-full px-4 py-2 text-left text-[13px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
+                  >
+                    {community.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="h-11 border border-[#d9d9d9] rounded-[10px] px-3 py-2 flex items-center gap-2 bg-white hover:border-[#2c7be5] transition-colors">
             <input
@@ -252,7 +273,7 @@ export default function AnalyticsFilters({
               onChange={handleDateTextChange}
               maxLength={10}
               className="text-[13px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[80px]"
-              placeholder="MM/DD/YY"
+              placeholder="DD/MM/YYYY"
             />
             <button
               type="button"
@@ -278,6 +299,25 @@ export default function AnalyticsFilters({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
+            {showTestTypeDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-xl z-[100] w-full">
+                <button
+                  onClick={() => handleTestTypeSelect('')}
+                  className="w-full px-4 py-2 text-left text-[13px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
+                >
+                  All Test Types
+                </button>
+                {testTypes.map((testType) => (
+                  <button
+                    key={testType}
+                    onClick={() => handleTestTypeSelect(testType)}
+                    className="w-full px-4 py-2 text-left text-[13px] text-[#637381] hover:bg-[#f4f5f7] font-poppins"
+                  >
+                    {testType}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button
             onClick={onExport}
