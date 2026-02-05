@@ -15,12 +15,14 @@ export const createInventoryItem = asyncHandler(async (req: Request, res: Respon
   } = req.body;
 
   if (!Types.ObjectId.isValid(communityId)) {
-    return res.status(400).json({ message: "Invalid community ID" });
+    res.status(400).json({ message: "Invalid community ID" });
+    return;
   }
 
   const communityExists = await Community.findById(communityId);
   if (!communityExists) {
-    return res.status(404).json({ message: "Community not found" });
+    res.status(404).json({ message: "Community not found" });
+    return;
   }
 
   const existingItem = await inventoryModel.findOne({
@@ -29,9 +31,10 @@ export const createInventoryItem = asyncHandler(async (req: Request, res: Respon
   });
 
   if (existingItem) {
-    return res.status(409).json({
+    res.status(409).json({
       message: "Inventory item already exists for this community"
     });
+    return;
   }
 
   const inventory = await inventoryModel.create({
@@ -55,7 +58,8 @@ export const getAllInventoryItems = asyncHandler(async (req: Request, res: Respo
 
   if (communityId) {
     if (!Types.ObjectId.isValid(String(communityId))) {
-      return res.status(400).json({ message: "Invalid community ID" });
+      res.status(400).json({ message: "Invalid community ID" });
+      return;
     }
     filter.communityId = communityId;
   }
@@ -74,14 +78,16 @@ export const getInventoryItemById = asyncHandler(async (req: Request, res: Respo
   const { id } = req.params;
 
   if (!Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid inventory ID" });
+    res.status(400).json({ message: "Invalid inventory ID" });
+    return;
   }
 
   const inventory = await inventoryModel.findById(id)
     .populate("communityId", "name lga");
 
   if (!inventory) {
-    return res.status(404).json({ message: "Inventory item not found" });
+    res.status(404).json({ message: "Inventory item not found" });
+    return;
   }
 
   res.status(200).json({
@@ -94,13 +100,15 @@ export const updateInventoryItem = asyncHandler(async (req: Request, res: Respon
   const { id } = req.params;
 
   if (!Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid inventory ID" });
+    res.status(400).json({ message: "Invalid inventory ID" });
+    return;
   }
 
   const inventory = await inventoryModel.findById(id);
 
   if (!inventory) {
-    return res.status(404).json({ message: "Inventory item not found" });
+    res.status(404).json({ message: "Inventory item not found" });
+    return;
   }
 
   Object.assign(inventory, req.body);
@@ -116,13 +124,15 @@ export const deleteInventoryItem = asyncHandler(async (req: Request, res: Respon
   const { id } = req.params;
 
   if (!Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid inventory ID" });
+    res.status(400).json({ message: "Invalid inventory ID" });
+    return;
   }
 
   const inventory = await inventoryModel.findById(id);
 
   if (!inventory) {
-    return res.status(404).json({ message: "Inventory item not found" });
+    res.status(404).json({ message: "Inventory item not found" });
+    return;
   }
 
   await inventory.deleteOne();

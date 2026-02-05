@@ -22,16 +22,18 @@ export const createVisitation = asyncHandler(async (req: Request, res: Response)
 
   // Must belong to at least patient or community
   if (!patientId && !communityId) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Visitation must be linked to a patient or a community"
     });
+    return;
   }
 
   // Validate patient if provided
   if (patientId) {
     const patientExists = await Patient.findById(patientId);
     if (!patientExists) {
-      return res.status(404).json({ message: "Patient not found" });
+      res.status(404).json({ message: "Patient not found" });
+      return;
     }
   }
 
@@ -39,7 +41,8 @@ export const createVisitation = asyncHandler(async (req: Request, res: Response)
   if (communityId) {
     const communityExists = await Community.findById(communityId);
     if (!communityExists) {
-      return res.status(404).json({ message: "Community not found" });
+      res.status(404).json({ message: "Community not found" });
+      return;
     }
   }
 
@@ -86,13 +89,15 @@ export const getAllVisitations = asyncHandler(async (_req: Request, res: Respons
 export const getVisitationsByPatient = asyncHandler(async (req: Request, res: Response) => {
   const { patientId } = req.params;
  if (!Types.ObjectId.isValid(patientId)) {
-    return res.status(400).json({ message: "Invalid patient ID format" });
+    res.status(400).json({ message: "Invalid patient ID format" });
+    return;
   }
 
   // 2️⃣ Confirm patient exists
   const patientExists = await Patient.findById(patientId);
   if (!patientExists) {
-    return res.status(404).json({ message: "Patient not found" });
+    res.status(404).json({ message: "Patient not found" });
+    return;
   }
   const visitations = await Visitation.find({ patientId })
     .populate("communityId", "name lga")
@@ -110,13 +115,15 @@ export const getVisitationsByPatient = asyncHandler(async (req: Request, res: Re
 export const getVisitationsByCommunity = asyncHandler(async (req: Request, res: Response) => {
   const { communityId } = req.params;
  if (!Types.ObjectId.isValid(communityId)) {
-    return res.status(400).json({ message: "Invalid community ID format" });
+    res.status(400).json({ message: "Invalid community ID format" });
+    return;
   }
 
   // 2️⃣ Confirm community exists
   const communityExists = await Community.findById(communityId);
   if (!communityExists) {
-    return res.status(404).json({ message: "Community not found" });
+    res.status(404).json({ message: "Community not found" });
+    return;
   }
   const visitations = await Visitation.find({ communityId })
     // .populate("patientId", "firstName lastName phone")
@@ -136,7 +143,8 @@ export const deleteVisitation = asyncHandler(async (req: Request, res: Response)
 
   const visitation = await Visitation.findById(id);
   if (!visitation) {
-    return res.status(404).json({ message: "Visitation not found" });
+    res.status(404).json({ message: "Visitation not found" });
+    return;
   }
 
   await visitation.deleteOne();

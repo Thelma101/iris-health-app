@@ -22,7 +22,8 @@ export const createPatient = asyncHandler(async (req: Request, res: Response) =>
   // Validate community
   const communityExists = await Community.findById(community);
   if (!communityExists) {
-    return res.status(404).json({ message: "Community not found" });
+    res.status(404).json({ message: "Community not found" });
+    return;
   }
 
   // Create patient
@@ -74,7 +75,8 @@ export const getPatientById = asyncHandler(async (req: Request, res: Response) =
     .populate("community", "name lga");
 
   if (!patient) {
-    return res.status(404).json({ message: "Patient not found" });
+    res.status(404).json({ message: "Patient not found" });
+    return;
   }
 
   res.status(200).json({
@@ -93,7 +95,8 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response) =>
   try {
     const patient = await Patient.findById(id);
     if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
+      res.status(404).json({ message: "Patient not found" });
+      return;
     }
 
     // If testDetails is provided as a full array (for updating existing tests)
@@ -158,7 +161,8 @@ export const deletePatient = asyncHandler(async (req: Request, res: Response) =>
 
   const patient = await Patient.findById(id);
   if (!patient) {
-    return res.status(404).json({ message: "Patient not found" });
+    res.status(404).json({ message: "Patient not found" });
+    return;
   }
 
   // Decrease test count from community

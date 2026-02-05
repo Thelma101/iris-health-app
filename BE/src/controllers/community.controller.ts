@@ -11,7 +11,8 @@ export const createCommunity = asyncHandler(async (req: Request, res: Response) 
     }
     const existing = await communityModel.findOne({ name, lga });
     if (existing) {
-        return res.status(400).json({ message: "Community with this name and LGA already exists." });
+        res.status(400).json({ message: "Community with this name and LGA already exists." });
+        return;
     }
     // Ensure fieldOfficers are valid ObjectIds
     const officers = fieldOfficers?.map((id: string) => new Types.ObjectId(id)) || [];
@@ -45,7 +46,8 @@ export const getCommunityById = asyncHandler(async (req: Request, res: Response)
     .populate("fieldOfficers", "firstName lastName email"); // Populate names
 
   if (!community) {
-    return res.status(404).json({ message: "Community not found" });
+    res.status(404).json({ message: "Community not found" });
+    return;
   }
 
   res.status(200).json({ message: "Community fetched successfully", community });
@@ -58,7 +60,8 @@ export const updateCommunity = asyncHandler(async (req: Request, res: Response) 
 
   const community = await communityModel.findById(id);
   if (!community) {
-    return res.status(404).json({ message: "Community not found" });
+    res.status(404).json({ message: "Community not found" });
+    return;
   }
 
   if (name) community.name = name;
@@ -80,7 +83,8 @@ export const deleteCommunity = asyncHandler(async (req: Request, res: Response) 
 
   const community = await communityModel.findById(id);
   if (!community) {
-    return res.status(404).json({ message: "Community not found" });
+    res.status(404).json({ message: "Community not found" });
+    return;
   }
 
   // Optional: detach field officers (if you want to update their references elsewhere)
