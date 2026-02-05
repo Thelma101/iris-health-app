@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import SideMenu from '@/components/admin/SideMenu';
 import Header from '@/components/admin/Header';
+import MobileDashboard from '@/components/admin/MobileDashboard';
 
 export default function FieldAgentLayout({
   children,
@@ -11,6 +12,7 @@ export default function FieldAgentLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileDashboardOpen, setMobileDashboardOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -36,7 +38,7 @@ export default function FieldAgentLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#ECF4FF]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2c7be5]"></div>
       </div>
     );
@@ -47,14 +49,15 @@ export default function FieldAgentLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#ECF4FF] overflow-x-hidden">
       <Header onMenuClick={() => setSidebarOpen(true)} />
-      <div className="mx-auto w-full max-w-[1444px] overflow-hidden">
-        <div className="mx-auto w-full flex flex-col lg:flex-row">
+      <div className="w-full">
+        <div className="w-full flex flex-col lg:flex-row">
           <SideMenu isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-x-auto">{children}</main>
+          <main className="flex-1 min-w-0 overflow-x-hidden bg-[#ECF4FF] pt-[14px] pb-[14px] pl-[14px] pr-0">{children}</main>
         </div>
       </div>
+      <MobileDashboard isOpen={mobileDashboardOpen} onClose={() => setMobileDashboardOpen(false)} />
     </div>
   );
 }
