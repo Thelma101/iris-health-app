@@ -561,24 +561,6 @@ export default function TestRecordingPage() {
       <div className="h-12 sm:h-[50px] rounded-lg bg-gradient-to-r from-[#fff9e6] to-[#e8f1ff] border-2 border-[#fff9e6] flex items-center px-4 sm:px-5">
         <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">TEST RECORDING</span>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <button
-          onClick={() => {
-            setIsCreateTestTypeModalOpen(true);
-          }}
-          className="h-12 w-full sm:w-auto px-4 sm:px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-xs sm:text-sm md:text-base"
-        >
-          Create New Test Type
-        </button>
-        <button
-          onClick={() => {
-            setIsTestTypeListModalOpen(true);
-          }}
-          className="h-12 w-full sm:w-auto px-4 sm:px-6 rounded-[10px] bg-white border border-[#2c7be5] text-[#2c7be5] font-medium font-inter hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap text-xs sm:text-sm md:text-base"
-        >
-          View All Test Types
-        </button>
-      </div>
       <div className="h-px bg-[#d9d9d9]" />
 
       {/* Success Message */}

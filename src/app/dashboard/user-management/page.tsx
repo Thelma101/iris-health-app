@@ -238,7 +238,7 @@ export default function UserManagementPage() {
       </div>
 
       {/* Content Area */}
-      <div className="px-6 space-y-6">
+      <div className="px-1 space-y-6">
         {/* Add New User Button */}
         <div className="flex justify-end">
           <button
