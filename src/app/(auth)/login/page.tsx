@@ -91,7 +91,7 @@ export default function LoginPage() {
       
       {/* Login Form Container */}
       <div className="relative flex min-h-screen items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-[400px] sm:max-w-[450px] rounded-[10px] bg-white shadow-xl p-6 sm:p-8 md:p-10">
+        <div className="w-full max-w-[500px] sm:max-w-[450px] rounded-[10px] bg-white shadow-xl p-6 sm:p-8 md:p-10">
           {/* Logo Section */}
           <div className="flex flex-col items-center gap-4 sm:gap-6">
             {/* MedTrack Logo */}
