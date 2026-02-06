@@ -470,40 +470,24 @@ export default function TestRecordingPage() {
         throw new Error('Date conducted is required');
       }
 
-      // Create patient first
-      const patientRes = await fieldAgentApi.createPatient({
+      // Create patient with test details in one request
+      const result = await fieldAgentApi.createPatientWithTest({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         age: parseInt(formData.age) || 0,
         gender: formData.gender, // 'male' or 'female' (lowercase)
         phone: formData.phoneNumber?.trim() || '',
         community: communityId,
+        testDetails: [{
+          testType: testDetails.testType,
+          testResult: testDetails.testResult,
+          dateConducted: testDetails.dateConducted,
+          officerNotes: testDetails.officerNote || '',
+        }],
       });
 
-
-      if (!patientRes.success) {
-        throw new Error(patientRes.error || 'Failed to create patient');
-      }
-
-      const patientId = (patientRes.data as any)?.data?.patient?._id ||
-        (patientRes.data as any)?.patient?._id;
-
-      if (!patientId) {
-        throw new Error('Failed to get patient ID');
-      }
-
-      // Create visitation (test record)
-      const visitationRes = await fieldAgentApi.createVisitation({
-        patient: patientId,
-        testType: testDetails.testType,
-        testResult: testDetails.testResult,
-        note: testDetails.officerNote,
-        dateConducted: testDetails.dateConducted,
-      });
-
-
-      if (!visitationRes.success) {
-        throw new Error(visitationRes.error || 'Failed to create test record');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create patient and test record');
       }
 
       setSubmitSuccess(true);

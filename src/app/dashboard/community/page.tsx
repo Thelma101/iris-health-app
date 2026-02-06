@@ -156,7 +156,7 @@ export default function CommunityPage() {
       const payload = {
         name: data.community,
         lga: data.lga,
-        fieldOfficers: data.fieldOfficers, // Now contains ObjectIds from the modal
+        fieldOfficers: data.fieldOfficers,
       };
       const res = await api.createCommunity(payload);
       if (res?.success && res.data) {

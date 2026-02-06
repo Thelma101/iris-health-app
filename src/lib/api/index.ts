@@ -235,6 +235,9 @@ export const api = {
   getPatient: (id: string) => apiRequest(`/patients/${id}`),
   createPatient: (data: object) =>
     apiRequest('/patients', { method: 'POST', body: JSON.stringify(data) }),
+  // Create patient with test details (combined endpoint)
+  createPatientWithTest: (data: object) =>
+    apiRequest('/fieldAgent/create', { method: 'POST', body: JSON.stringify(data) }),
   updatePatient: (id: string, data: object) =>
     apiRequest(`/patients/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePatient: (id: string) =>
@@ -290,16 +293,14 @@ export const api = {
     apiRequest('/visitation', { method: 'POST', body: JSON.stringify(data) }),
 
   // Test Types
-  getTestTypes: () => apiRequest<{ testTypes: Array<{ _id: string; name: string; results: string[]; description?: string; isActive: boolean }> }>('/testTypes'),
-  getTestType: (id: string) => apiRequest(`/testTypes/${id}`),
-  createTestType: (data: { name: string; results: string[]; description?: string }) =>
-    apiRequest('/testTypes', { method: 'POST', body: JSON.stringify(data) }),
-  updateTestType: (id: string, data: { name?: string; results?: string[]; description?: string; isActive?: boolean }) =>
-    apiRequest(`/testTypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  getTestTypes: () => apiRequest<{ testTypes: Array<{ _id: string; name: string; allowedResults: string[]; description?: string; isActive: boolean }> }>('/admin/testtypes'),
+  getTestTypeAllowedResults: (id: string) => apiRequest<{ allowedResults: string[] }>(`/admin/testtypes/allowed/${id}`),
+  createTestType: (data: { name: string; allowedResults: string[] }) =>
+    apiRequest('/admin/testtypes', { method: 'POST', body: JSON.stringify(data) }),
+  updateTestType: (id: string, data: { name?: string; allowedResults?: string[]; description?: string; isActive?: boolean }) =>
+    apiRequest(`/admin/testtypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTestType: (id: string) =>
-    apiRequest(`/testTypes/${id}`, { method: 'DELETE' }),
-  seedTestTypes: () =>
-    apiRequest('/testTypes/seed', { method: 'POST' }),
+    apiRequest(`/admin/testtypes/${id}`, { method: 'DELETE' }),
 
   // Dashboard - aggregate calls that compute stats from available data
   getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
@@ -392,27 +393,11 @@ export const api = {
       const communities = commData?.data?.communities || commData?.communities || [];
       let patients = patData?.data?.patients || patData?.patients || [];
 
-      // Apply filters
+      // Apply community filter only - testType and date filters are applied during counting
       if (params?.communityId) {
         patients = patients.filter((p: any) => {
           const commId = p.community?._id || p.community;
           return commId === params.communityId;
-        });
-      }
-      if (params?.testType) {
-        patients = patients.filter((p: any) => {
-          const tests = p.testDetails || [];
-          return tests.some((t: any) => t.testType?.toLowerCase().includes(params.testType!.toLowerCase()));
-        });
-      }
-      if (params?.date) {
-        patients = patients.filter((p: any) => {
-          const tests = p.testDetails || [];
-          return tests.some((t: any) => {
-            if (!t.dateConducted) return false;
-            const testDate = new Date(t.dateConducted).toISOString().split('T')[0];
-            return testDate <= params.date!;
-          });
         });
       }
 
@@ -423,18 +408,31 @@ export const api = {
         communityTestCounts[c._id] = { name: c.name, count: 0 };
       });
 
-      // Count from filtered patients
+      // Count from filtered patients - apply ALL filters to test counting
       patients.forEach((p: any) => {
         const commId = p.community?._id || p.community;
         if (commId && communityTestCounts[commId]) {
-          let testCount = p.testDetails?.length || 0;
+          let tests = p.testDetails || [];
+          
           // Apply test type filter to count
-          if (params?.testType && p.testDetails) {
-            testCount = p.testDetails.filter((t: any) => 
-              t.testType?.toLowerCase().includes(params.testType!.toLowerCase())
-            ).length;
+          if (params?.testType) {
+            tests = tests.filter((t: any) => {
+              // Handle testType as object (populated) or string
+              const testTypeName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
+              return testTypeName?.toLowerCase().includes(params.testType!.toLowerCase());
+            });
           }
-          communityTestCounts[commId].count += testCount;
+          
+          // Apply date filter to count - count tests on or before selected date
+          if (params?.date) {
+            tests = tests.filter((t: any) => {
+              if (!t.dateConducted) return false;
+              const testDate = new Date(t.dateConducted).toISOString().split('T')[0];
+              return testDate <= params.date!;
+            });
+          }
+          
+          communityTestCounts[commId].count += tests.length;
         }
       });
 
@@ -478,14 +476,15 @@ export const api = {
       patients.forEach((p: any) => {
         let tests = p.testDetails || [];
         
-        // Apply test type filter
+        // Apply test type filter - handle testType as object (populated) or string
         if (params?.testType) {
-          tests = tests.filter((t: any) => 
-            t.testType?.toLowerCase().includes(params.testType!.toLowerCase())
-          );
+          tests = tests.filter((t: any) => {
+            const testTypeName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
+            return testTypeName?.toLowerCase().includes(params.testType!.toLowerCase());
+          });
         }
 
-        // Apply date filter
+        // Apply date filter - count tests on or before selected date
         if (params?.date) {
           tests = tests.filter((t: any) => {
             if (!t.dateConducted) return false;

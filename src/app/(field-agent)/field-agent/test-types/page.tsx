@@ -43,7 +43,7 @@ export default function TestTypesPage() {
         id: t._id || t.id,
         _id: t._id,
         name: t.name,
-        results: t.results || [],
+        results: t.allowedResults || t.results || [],
       }));
       setTestTypes(mapped);
     } catch (err) {
@@ -57,7 +57,7 @@ export default function TestTypesPage() {
 
   const handleCreateTestType = async (data: { name: string; results: string[] }) => {
     try {
-      const res = await api.createTestType(data);
+      const res = await api.createTestType({ name: data.name, allowedResults: data.results });
       console.log('=== TEST TYPES PAGE: Created Test Type ===', res);
       await fetchTestTypes(); // Refresh the list
       setIsCreateModalOpen(false);
@@ -79,7 +79,7 @@ export default function TestTypesPage() {
       const id = updatedTestType._id || updatedTestType.id;
       await api.updateTestType(id, {
         name: updatedTestType.name,
-        results: updatedTestType.results,
+        allowedResults: updatedTestType.results,
       });
       console.log('=== TEST TYPES PAGE: Updated Test Type ===', updatedTestType);
       await fetchTestTypes(); // Refresh the list

@@ -142,7 +142,7 @@ export default function FieldAgentProfilePage() {
   }
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-[20px] lg:rounded-tl-[20px] lg:rounded-bl-[20px] lg:rounded-tr-none lg:rounded-br-none overflow-hidden min-h-[calc(100vh-120px)]">
+    <div className="bg-white border border-[#d9d9d9] border-r-0 rounded-tl-[20px] rounded-bl-[20px] rounded-tr-none rounded-br-none overflow-hidden min-h-[calc(100vh-93px)]">
       <div className="p-4 sm:p-6">
         {/* Page Title */}
         <div 
@@ -198,37 +198,9 @@ export default function FieldAgentProfilePage() {
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Name
               </label>
-              {editing ? (
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5] bg-white"
-                />
-              ) : (
-                <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
-                  <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.name}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Address Field */}
-            <div className="flex flex-col gap-[6px]">
-              <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
-                Address
-              </label>
-              {editing ? (
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5] bg-white"
-                />
-              ) : (
-                <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
-                  <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.address || '-'}</span>
-                </div>
-              )}
+              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+                <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.name}</span>
+              </div>
             </div>
 
             {/* Role Field */}
@@ -236,7 +208,7 @@ export default function FieldAgentProfilePage() {
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Role
               </label>
-              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-[#f9fafb]">
+              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
                 <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.role}</span>
               </div>
             </div>
@@ -246,18 +218,9 @@ export default function FieldAgentProfilePage() {
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Email
               </label>
-              {editing ? (
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] text-[13px] sm:text-[14px] font-poppins text-[#212b36] focus:outline-none focus:border-[#2c7be5] bg-white"
-                />
-              ) : (
-                <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
-                  <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.email}</span>
-                </div>
-              )}
+              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
+                <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">{profile?.email}</span>
+              </div>
             </div>
 
             {/* Password Field */}
@@ -265,19 +228,13 @@ export default function FieldAgentProfilePage() {
               <label className="text-[13px] sm:text-[14px] text-[#637381] font-medium font-poppins">
                 Password
               </label>
-              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center justify-between bg-white">
+              <div className="w-full h-[44px] sm:h-[48px] px-4 sm:px-[21px] border border-[#d9d9d9] rounded-[4px] flex items-center bg-white">
                 <span className="text-[13px] sm:text-[14px] font-poppins text-[#212b36]">**********************</span>
-                <button
-                  onClick={() => setShowChangePassword(true)}
-                  className="text-[12px] sm:text-[14px] font-poppins text-[#2c7be5] hover:text-[#1e5aa8] transition-colors whitespace-nowrap uppercase cursor-pointer"
-                >
-                  CHANGE PASSWORD
-                </button>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 sm:pt-[17px]">
+            {/* <div className="pt-3 sm:pt-[17px]">
               {editing ? (
                 <div className="flex gap-3 sm:gap-4">
                   <button
@@ -301,7 +258,7 @@ export default function FieldAgentProfilePage() {
                   Edit Profile
                 </button>
               )}
-            </div>
+            </div> */}
 
             {/* Logout Button */}
             <button
@@ -318,7 +275,7 @@ export default function FieldAgentProfilePage() {
       </div>
 
       {/* Change Password Modal */}
-      {showChangePassword && (
+      {/* {showChangePassword && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
             className="absolute inset-0 bg-black/20 backdrop-blur-sm" 
@@ -379,7 +336,7 @@ export default function FieldAgentProfilePage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

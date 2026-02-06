@@ -20,9 +20,10 @@ interface EditCommunityModalProps {
     _id?: string;
     name: string;
     lga: string;
+    dateVisited?: string;
     fieldOfficers?: FieldOfficerRef[];
   };
-  onSave?: (data: { name: string; lga: string; fieldOfficers: string[] }) => Promise<void> | void;
+  onSave?: (data: { name: string; lga: string; fieldOfficers: string[]; dateVisited?: string }) => Promise<void> | void;
 }
 
 export default function EditCommunityModal({
@@ -33,6 +34,7 @@ export default function EditCommunityModal({
 }: EditCommunityModalProps) {
   const [selectedCommunity, setSelectedCommunity] = useState(community?.name || '');
   const [selectedLga, setSelectedLga] = useState(community?.lga || '');
+  const [selectedDateVisited, setSelectedDateVisited] = useState(community?.dateVisited || '');
   const [selectedOfficers, setSelectedOfficers] = useState<FieldOfficer[]>([]);
   const [availableOfficers, setAvailableOfficers] = useState<FieldOfficer[]>([]);
   const [loadingOfficers, setLoadingOfficers] = useState(false);

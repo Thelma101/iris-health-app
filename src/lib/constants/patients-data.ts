@@ -1,4 +1,5 @@
 export interface TestDetail {
+  _id?: string; // MongoDB ObjectId - required for updates
   testType: string;
   testResult: string;
   dateConducted: string;

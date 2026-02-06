@@ -2,8 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api/index';
 import { Patient } from '@/lib/constants/patients-data';
 
+// Get today's date in DD/MM/YYYY format
+const getTodayFormatted = () => {
+  const today = new Date();
+  return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+};
+
 export function usePatientSearch() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(''); // Empty = show all patients
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,7 +55,8 @@ export function usePatientSearch() {
             phoneNumber: p.phone || p.phoneNumber,
             phone: p.phone || p.phoneNumber,
             testDetails: testDetails.map((t: any) => ({
-              testType: t.testType || '',
+              _id: t._id || '', // Required for updates
+              testType: typeof t.testType === 'object' ? t.testType?.name || '' : t.testType || '',
               testResult: t.testResult || '',
               dateConducted: t.dateConducted || '',
               officerNotes: t.officerNotes || '',
@@ -76,26 +84,51 @@ export function usePatientSearch() {
     }
   }, []);
 
+  // Fetch patients on mount
   useEffect(() => {
     fetchPatients();
   }, [fetchPatients]);
 
-  // Filter patients when search query changes
+  // Filter patients when search query or date changes
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredPatients(allPatients);
-      return;
+    let filtered = allPatients;
+
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (patient) =>
+          patient.name.toLowerCase().includes(query) ||
+          patient.community.toLowerCase().includes(query) ||
+          patient.lga.toLowerCase().includes(query)
+      );
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = allPatients.filter(
-      (patient) =>
-        patient.name.toLowerCase().includes(query) ||
-        patient.community.toLowerCase().includes(query) ||
-        patient.lga.toLowerCase().includes(query)
-    );
+    // Apply date filter - show patients with tests ON the selected date
+    if (selectedDate) {
+      // Convert DD/MM/YYYY to ISO date for comparison
+      const parts = selectedDate.split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        const filterDateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        
+        filtered = filtered.filter((patient) => {
+          // Check if any test was conducted ON the selected date
+          if (!patient.testDetails || patient.testDetails.length === 0) {
+            return false; // Exclude patients without tests when filtering by date
+          }
+          return patient.testDetails.some((test) => {
+            if (!test.dateConducted) return false;
+            const testDate = new Date(test.dateConducted).toISOString().split('T')[0];
+            return testDate === filterDateStr;
+          });
+        });
+      }
+    }
+
     setFilteredPatients(filtered);
-  }, [searchQuery, allPatients]);
+  }, [searchQuery, selectedDate, allPatients]);
 
   const handleSearch = () => {};
 
@@ -119,6 +152,8 @@ export function usePatientSearch() {
   return {
     searchQuery,
     setSearchQuery,
+    selectedDate,
+    setSelectedDate,
     filteredPatients,
     handleSearch,
     handleExport,

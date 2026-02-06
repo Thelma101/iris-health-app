@@ -72,6 +72,9 @@ export const fieldAgentApi = {
   getPatient: (id: string) => fieldAgentRequest(`/patients/${id}`),
   createPatient: (data: object) =>
     fieldAgentRequest('/patients', { method: 'POST', body: JSON.stringify(data) }),
+  // Create patient with test details (combined endpoint for field agents)
+  createPatientWithTest: (data: object) =>
+    fieldAgentRequest('/fieldAgent/create', { method: 'POST', body: JSON.stringify(data) }),
   updatePatient: (id: string, data: object) =>
     fieldAgentRequest(`/patients/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   searchPatients: (query: string) =>

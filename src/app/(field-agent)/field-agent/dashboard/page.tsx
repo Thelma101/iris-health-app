@@ -124,7 +124,7 @@ export default function FieldAgentDashboardPage() {
   }
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-[20px] lg:rounded-tl-[20px] lg:rounded-bl-[20px] lg:rounded-tr-none lg:rounded-br-none overflow-hidden min-h-[calc(100vh-120px)]">
+    <div className="bg-white border border-[#d9d9d9] border-r-0 rounded-tl-[20px] rounded-bl-[20px] rounded-tr-none rounded-br-none overflow-hidden min-h-[calc(100vh-93px)]">
       <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
         {/* Page Title */}
         <div

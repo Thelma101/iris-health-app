@@ -13,11 +13,7 @@ import { Patient } from '@/lib/constants/patients-data';
 import api from '@/lib/api';
 
 export default function ViewPatientsPage() {
-  // Initialize with today's date in DD/MM/YYYY format
-  const today = new Date();
-  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-  const [selectedDate, setSelectedDate] = useState(formattedToday);
-  const { searchQuery, setSearchQuery, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
+  const { searchQuery, setSearchQuery, selectedDate, setSelectedDate, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -100,14 +96,17 @@ export default function ViewPatientsPage() {
         // Find the index of the latest test to update
         const latestTestIndex = editingPatient.testDetails.length - 1;
         const existingTests = [...editingPatient.testDetails];
+        const existingTest = existingTests[latestTestIndex];
         
-        // Update the latest test with new details
+        // Update the latest test with new details, explicitly preserving _id
         existingTests[latestTestIndex] = {
-          ...existingTests[latestTestIndex],
+          _id: existingTest._id, // Required for update
           testType: updatedTestDetails.testType,
           testResult: updatedTestDetails.testResult,
           dateConducted: updatedTestDetails.dateConducted,
           officerNotes: updatedTestDetails.officerNote,
+          testSheetUrl: existingTest.testSheetUrl || '',
+          patientImageUrl: existingTest.patientImageUrl || '',
         };
         
         updatePayload.testDetails = existingTests;
