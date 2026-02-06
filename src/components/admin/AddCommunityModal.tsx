@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api/index';
-import { LGA_OPTIONS, COMMUNITY_OPTIONS } from '@/lib/constants/location-options';
 
 interface FieldOfficer {
   _id: string;
@@ -34,26 +33,16 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
   const [loadingOfficers, setLoadingOfficers] = useState(false);
 
   // Dropdown states
-  const [showCommunityDropdown, setShowCommunityDropdown] = useState(false);
-  const [showLgaDropdown, setShowLgaDropdown] = useState(false);
   const [showOfficerDropdown, setShowOfficerDropdown] = useState(false);
   const [officerSearch, setOfficerSearch] = useState('');
 
   // Refs for click outside handling
-  const communityRef = useRef<HTMLDivElement>(null);
-  const lgaRef = useRef<HTMLDivElement>(null);
   const officerRef = useRef<HTMLDivElement>(null);
   const officerDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (communityRef.current && !communityRef.current.contains(event.target as Node)) {
-        setShowCommunityDropdown(false);
-      }
-      if (lgaRef.current && !lgaRef.current.contains(event.target as Node)) {
-        setShowLgaDropdown(false);
-      }
       if (officerRef.current && !officerRef.current.contains(event.target as Node) &&
           officerDropdownRef.current && !officerDropdownRef.current.contains(event.target as Node)) {
         setShowOfficerDropdown(false);
@@ -135,8 +124,6 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
     setFormData({ community: '', lga: '', selectedOfficers: [] });
     setFieldErrors({});
     setValidationError(null);
-    setShowCommunityDropdown(false);
-    setShowLgaDropdown(false);
     setShowOfficerDropdown(false);
     setOfficerSearch('');
   };
@@ -198,93 +185,41 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
             )}
 
             <div className="space-y-6">
-              {/* Community Dropdown */}
-              <div className="space-y-2" ref={communityRef}>
+              {/* Community Input */}
+              <div className="space-y-2">
                 <label className="block text-sm font-medium text-[#637381] font-poppins">
                   Community
                 </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCommunityDropdown(!showCommunityDropdown);
-                      setShowLgaDropdown(false);
-                      setShowOfficerDropdown(false);
-                    }}
-                    className={`w-full px-4 py-3 border rounded text-sm text-left font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors flex items-center justify-between ${fieldErrors.community ? 'border-red-500' : 'border-[#d9d9d9]'}`}
-                  >
-                    <span className={formData.community ? 'text-[#212b36]' : 'text-[#999]'}>
-                      {formData.community || 'Select community'}
-                    </span>
-                    <svg className="w-5 h-5 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {showCommunityDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                      {COMMUNITY_OPTIONS.map((community) => (
-                        <button
-                          key={community}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ ...formData, community });
-                            setShowCommunityDropdown(false);
-                            if (fieldErrors.community) setFieldErrors((prev) => ({ ...prev, community: undefined }));
-                          }}
-                          className="w-full px-4 py-3 text-left text-sm text-[#212b36] font-poppins hover:bg-[#f4f5f7] transition-colors"
-                        >
-                          {community}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  value={formData.community}
+                  onChange={(e) => {
+                    setFormData({ ...formData, community: e.target.value });
+                    if (fieldErrors.community) setFieldErrors((prev) => ({ ...prev, community: undefined }));
+                  }}
+                  placeholder="Enter community name"
+                  className={`w-full px-4 py-3 border rounded text-sm font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors text-[#212b36] placeholder:text-[#999] ${fieldErrors.community ? 'border-red-500' : 'border-[#d9d9d9]'}`}
+                />
                 {fieldErrors.community && (
                   <p className="text-red-500 text-xs mt-1 font-poppins">{fieldErrors.community}</p>
                 )}
               </div>
 
-              {/* LGA Dropdown */}
-              <div className="space-y-2" ref={lgaRef}>
+              {/* LGA Input */}
+              <div className="space-y-2">
                 <label className="block text-sm font-medium text-[#637381] font-poppins">
                   LGA
                 </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowLgaDropdown(!showLgaDropdown);
-                      setShowCommunityDropdown(false);
-                      setShowOfficerDropdown(false);
-                    }}
-                    className={`w-full px-4 py-3 border rounded text-sm text-left font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors flex items-center justify-between ${fieldErrors.lga ? 'border-red-500' : 'border-[#d9d9d9]'}`}
-                  >
-                    <span className={formData.lga ? 'text-[#212b36]' : 'text-[#999]'}>
-                      {formData.lga || 'Select LGA'}
-                    </span>
-                    <svg className="w-5 h-5 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {showLgaDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                      {LGA_OPTIONS.map((lga) => (
-                        <button
-                          key={lga}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ ...formData, lga });
-                            setShowLgaDropdown(false);
-                            if (fieldErrors.lga) setFieldErrors((prev) => ({ ...prev, lga: undefined }));
-                          }}
-                          className="w-full px-4 py-3 text-left text-sm text-[#212b36] font-poppins hover:bg-[#f4f5f7] transition-colors"
-                        >
-                          {lga}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  value={formData.lga}
+                  onChange={(e) => {
+                    setFormData({ ...formData, lga: e.target.value });
+                    if (fieldErrors.lga) setFieldErrors((prev) => ({ ...prev, lga: undefined }));
+                  }}
+                  placeholder="Enter LGA"
+                  className={`w-full px-4 py-3 border rounded text-sm font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors text-[#212b36] placeholder:text-[#999] ${fieldErrors.lga ? 'border-red-500' : 'border-[#d9d9d9]'}`}
+                />
                 {fieldErrors.lga && (
                   <p className="text-red-500 text-xs mt-1 font-poppins">{fieldErrors.lga}</p>
                 )}
@@ -299,8 +234,6 @@ export default function AddCommunityModal({ isOpen, onClose, onSubmit }: AddComm
                   type="button"
                   onClick={() => {
                     setShowOfficerDropdown(!showOfficerDropdown);
-                    setShowCommunityDropdown(false);
-                    setShowLgaDropdown(false);
                   }}
                   className={`w-full px-4 py-3 border rounded text-sm text-left font-poppins bg-white hover:border-[#2c7be5] focus:outline-none focus:border-[#2c7be5] transition-colors flex items-center justify-between ${fieldErrors.fieldOfficers ? 'border-red-500' : 'border-[#d9d9d9]'}`}
                 >
