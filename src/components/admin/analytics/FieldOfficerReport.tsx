@@ -46,13 +46,13 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
         <table className="w-full min-w-[320px]">
           <thead className="sticky top-0 z-10">
             <tr className="bg-[#eef2f7] border-b border-[#d9d9d9] text-left">
-              <th className="px-3 sm:px-6 py-2.5 sm:py-3 w-[40%] sm:w-[45%]">
+              <th className="px-3 sm:px-6 py-2.5 sm:py-3 w-[40%] sm:w-[45%] bg-[#eef2f7]">
                 <p className="text-[12px] sm:text-[14px] font-semibold text-[#212b36] font-poppins">Name</p>
               </th>
-              <th className="px-2 sm:px-6 py-2.5 sm:py-3 w-[30%] sm:w-[35%]">
+              <th className="px-2 sm:px-6 py-2.5 sm:py-3 w-[30%] sm:w-[35%] bg-[#eef2f7]">
                 <p className="text-[12px] sm:text-[14px] font-semibold text-[#212b36] font-poppins">No. Of Tests</p>
               </th>
-              <th className="px-2 sm:px-6 py-2.5 sm:py-3 w-[30%] sm:w-[20%]">
+              <th className="px-2 sm:px-6 py-2.5 sm:py-3 w-[30%] sm:w-[20%] bg-[#eef2f7]">
                 <p className="text-[12px] sm:text-[14px] font-semibold text-[#212b36] font-poppins">Action</p>
               </th>
             </tr>

@@ -6,6 +6,7 @@ import TestsStatCard from '@/components/field-agent/TestsStatCard';
 import RecentRecordsTable from '@/components/field-agent/RecentRecordsTable';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { logger } from '@/lib/utils/logger';
+import { classifyResult } from '@/lib/utils/resultClassifier';
 
 interface DashboardStats {
   totalTests: number;
@@ -113,9 +114,10 @@ export default function FieldAgentDashboardPage() {
             result = (d.result || d.testResult || '').toLowerCase();
           }
 
-          if (result.includes('positive') || result === 'reactive') {
+          const resultClass = classifyResult(result);
+          if (resultClass === 'positive') {
             entry.positiveTests[testName] = (entry.positiveTests[testName] || 0) + 1;
-          } else if (result.includes('negative') || result === 'non-reactive') {
+          } else if (resultClass === 'negative') {
             entry.negativeTests[testName] = (entry.negativeTests[testName] || 0) + 1;
           }
         });

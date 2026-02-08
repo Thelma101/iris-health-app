@@ -848,6 +848,7 @@ export default function TestRecordingPage() {
                 onBlur={handleFieldBlur}
                 errors={fieldErrors}
                 touched={touchedFields}
+                testTypes={testTypes}
               />
             )}
 

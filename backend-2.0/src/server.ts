@@ -12,7 +12,7 @@ const app: Express = express();
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
   : process.env.NODE_ENV === 'production'
-    ? ['https://medtrack.com', 'https://www.medtrack.com']
+    ? ['https://medtracker-green.vercel.app', 'https://medtrack.com', 'https://www.medtrack.com']
     : ['http://localhost:3000', 'http://localhost:3001'];
 app.use(cors({
   origin: allowedOrigins,

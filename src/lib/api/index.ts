@@ -1,3 +1,5 @@
+import { classifyResult } from '@/lib/utils/resultClassifier';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface ApiResponse<T> {
@@ -500,13 +502,16 @@ export const api = {
               testTypeName = 'Unknown Test';
             }
             
-            const result = (t.testResult || '').toLowerCase();
+            const result = (t.testResult || '').toLowerCase().trim();
             
             communityStats[commId].totalTests++;
             
-            if (result.includes('positive') || result === 'reactive') {
+            // Classify result using shared classifier that handles all result types
+            const resultClass = classifyResult(result);
+            
+            if (resultClass === 'positive') {
               communityStats[commId].positiveTests[testTypeName] = (communityStats[commId].positiveTests[testTypeName] || 0) + 1;
-            } else if (result.includes('negative') || result === 'non-reactive') {
+            } else if (resultClass === 'negative') {
               communityStats[commId].negativeTests[testTypeName] = (communityStats[commId].negativeTests[testTypeName] || 0) + 1;
             }
           });
