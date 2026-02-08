@@ -3,7 +3,7 @@ services:
   - type: web
     name: medtrack-backend
     runtime: node
-    rootDir: medtrack-FE-BE-duplicate
+    rootDir: backend-2.0
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
