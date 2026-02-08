@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '@/lib/api';
 
 interface Community {
   _id: string;
@@ -13,6 +14,12 @@ interface Patient {
   lastName: string;
 }
 
+interface TestTypeOption {
+  _id: string;
+  name: string;
+  allowedResults?: string[];
+}
+
 interface TestRecordingFormProps {
   communities: Community[];
   patients: Patient[];
@@ -20,18 +27,8 @@ interface TestRecordingFormProps {
   loading: boolean;
 }
 
-const testTypes = [
-  'HIV/AIDS',
-  'Hepatitis B',
-  'Hepatitis C',
-  'Malaria',
-  'Typhoid',
-  'Diabetes',
-  'Hypertension',
-  'COVID-19',
-  'TB',
-  'Other',
-];
+// No hardcoded testTypes - fetch from API
+// No hardcoded testResults - use allowedResults from selected test type
 
 export default function TestRecordingForm({
   communities,
@@ -39,11 +36,14 @@ export default function TestRecordingForm({
   onSubmit,
   loading,
 }: TestRecordingFormProps) {
+  const [testTypes, setTestTypes] = useState<TestTypeOption[]>([]);
+  const [loadingTestTypes, setLoadingTestTypes] = useState(true);
+  const [availableResults, setAvailableResults] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     communityId: '',
     patientId: '',
     testType: '',
-    testResult: 'negative',
+    testResult: '',
     notes: '',
     patientFirstName: '',
     patientLastName: '',
@@ -52,6 +52,39 @@ export default function TestRecordingForm({
   });
 
   const [isNewPatient, setIsNewPatient] = useState(false);
+
+  // Fetch test types from API
+  useEffect(() => {
+    setLoadingTestTypes(true);
+    api.getTestTypes()
+      .then((res) => {
+        if (res.success) {
+          const testData = res.data as any;
+          const testTypesArray = testData?.testTypes || testData?.data?.testTypes || [];
+          setTestTypes(testTypesArray);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch test types:', err);
+      })
+      .finally(() => setLoadingTestTypes(false));
+  }, []);
+
+  // Update available results when test type changes
+  useEffect(() => {
+    if (formData.testType) {
+      const selectedTestType = testTypes.find(t => t.name === formData.testType);
+      const results = selectedTestType?.allowedResults || [];
+      setAvailableResults(results);
+      // Reset test result if not in available results
+      if (!results.includes(formData.testResult)) {
+        setFormData(prev => ({ ...prev, testResult: '' }));
+      }
+    } else {
+      setAvailableResults([]);
+      setFormData(prev => ({ ...prev, testResult: '' }));
+    }
+  }, [formData.testType, testTypes]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -224,52 +257,48 @@ export default function TestRecordingForm({
           className="h-12 px-4 bg-white border border-[#d9d9d9] rounded font-poppins text-sm text-[#212b36] focus:outline-none focus:border-[#2c7be5]"
         >
           <option value="">Select test type</option>
-          {testTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
+          {loadingTestTypes ? (
+            <option disabled>Loading...</option>
+          ) : (
+            testTypes.map(type => (
+              <option key={type._id} value={type.name}>{type.name}</option>
+            ))
+          )}
         </select>
       </div>
 
-      {/* Test Result */}
+      {/* Test Result - Dynamic based on selected test type */}
       <div className="flex flex-col gap-1.5">
         <label className="font-poppins font-medium text-sm text-[#637381]">
           Test Result *
         </label>
-        <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="testResult"
-              value="positive"
-              checked={formData.testResult === 'positive'}
-              onChange={handleChange}
-              className="w-4 h-4 text-[#d64545]"
-            />
-            <span className="font-poppins text-sm text-[#d64545]">Positive</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="testResult"
-              value="negative"
-              checked={formData.testResult === 'negative'}
-              onChange={handleChange}
-              className="w-4 h-4 text-green-600"
-            />
-            <span className="font-poppins text-sm text-green-600">Negative</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="testResult"
-              value="inconclusive"
-              checked={formData.testResult === 'inconclusive'}
-              onChange={handleChange}
-              className="w-4 h-4 text-yellow-600"
-            />
-            <span className="font-poppins text-sm text-yellow-600">Inconclusive</span>
-          </label>
-        </div>
+        {availableResults.length === 0 ? (
+          <p className="text-sm text-[#999] font-poppins">
+            {formData.testType ? 'No results available for this test type' : 'Select a test type first'}
+          </p>
+        ) : (
+          <div className="flex items-center gap-6 flex-wrap">
+            {availableResults.map((result) => {
+              const isPositive = result.toLowerCase().includes('positive') || result.toLowerCase().includes('reactive');
+              const isNegative = result.toLowerCase().includes('negative') || result.toLowerCase().includes('non-reactive');
+              const colorClass = isPositive ? 'text-[#d64545]' : isNegative ? 'text-green-600' : 'text-yellow-600';
+              
+              return (
+                <label key={result} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="testResult"
+                    value={result}
+                    checked={formData.testResult === result}
+                    onChange={handleChange}
+                    className={`w-4 h-4 ${colorClass}`}
+                  />
+                  <span className={`font-poppins text-sm ${colorClass}`}>{result}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Notes */}

@@ -5,7 +5,7 @@ import AnalyticsFilters from '@/components/admin/analytics/AnalyticsFilters';
 import CasesPerCommunity from '@/components/admin/analytics/CasesPerCommunity';
 import RatePerType from '@/components/admin/analytics/RatePerType';
 import FieldOfficerReport from '@/components/admin/analytics/FieldOfficerReport';
-import OfficerTestListModal from '@/components/admin/OfficerTestListModal';
+import OfficerTestListModal, { PatientTestRecord } from '@/components/admin/OfficerTestListModal';
 import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal';
 import api from '@/lib/api/index';
 
@@ -20,7 +20,7 @@ export default function ReportPage() {
   const [showOfficerTestsModal, setShowOfficerTestsModal] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState<{ id: string; name: string } | null>(null);
   const [showTestDetailsModal, setShowTestDetailsModal] = useState(false);
-  const [selectedPatientName, setSelectedPatientName] = useState<string>('');
+  const [selectedPatient, setSelectedPatient] = useState<PatientTestRecord | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
   
   // Chart data states
@@ -96,8 +96,8 @@ export default function ReportPage() {
     setShowOfficerTestsModal(true);
   };
 
-  const handlePatientSelect = (patientName: string) => {
-    setSelectedPatientName(patientName);
+  const handlePatientSelect = (patient: PatientTestRecord) => {
+    setSelectedPatient(patient);
     setShowTestDetailsModal(true);
   };
 
@@ -148,44 +148,47 @@ export default function ReportPage() {
             setShowOfficerTestsModal(false);
             setSelectedOfficer(null);
           }}
+          officerId={selectedOfficer.id}
           officerName={selectedOfficer.name}
-          testType="HIV 1/2 Rapid Test"
           onPatientSelect={handlePatientSelect}
         />
       )}
 
       {/* Officer Test Details Modal */}
-      {selectedPatientName && (
+      {selectedPatient && (
         <OfficerTestDetailsModal
           isOpen={showTestDetailsModal}
           onClose={() => {
             setShowTestDetailsModal(false);
-            setSelectedPatientName('');
+            setSelectedPatient(null);
           }}
-          patientName={selectedPatientName}
+          patientName={selectedPatient.name}
           patientInfo={{
-            lga: 'Gwagwalada',
-            community: 'Dobi',
-            firstName: selectedPatientName.split(' ')[0] || '',
-            lastName: selectedPatientName.split(' ').slice(1).join(' ') || '',
-            age: '25',
-            gender: 'Male',
-            phoneNumber: '+234 803 456 7890',
+            lga: selectedPatient.lga,
+            community: selectedPatient.community,
+            firstName: selectedPatient.firstName,
+            lastName: selectedPatient.lastName,
+            age: selectedPatient.age,
+            gender: selectedPatient.gender,
+            phoneNumber: selectedPatient.phoneNumber,
           }}
-          testDetails={{
-            testType: 'HIV 1/2 Rapid Test',
-            testResult: 'Negative',
-            dateConducted: '21/03/2025',
-            officerNote: 'However rare side effects observed among children can be metabolic acidosis, coma, respiratory depre',
-          }}
+          testDetails={selectedPatient.testDetails?.[0] ? {
+            testType: selectedPatient.testDetails[0].testType,
+            testResult: selectedPatient.testDetails[0].testResult,
+            dateConducted: selectedPatient.testDetails[0].dateConducted,
+            officerNote: selectedPatient.testDetails[0].officerNote,
+            testSheetImage: selectedPatient.testDetails[0].testSheetUrl,
+            patientImage: selectedPatient.testDetails[0].patientImage,
+          } : undefined}
           onDownload={() => {
-            // Generate patient report
-            const reportData = `Patient Report\n\nName: ${selectedPatientName}\nTest Type: HIV 1/2 Rapid Test\nTest Result: Negative\nDate: 21/03/2025\n\nGenerated at: ${new Date().toLocaleString()}`;
+            // Generate patient report from actual data
+            const test = selectedPatient.testDetails?.[0];
+            const reportData = `Patient Report\n\nName: ${selectedPatient.name}\nCommunity: ${selectedPatient.community}\nLGA: ${selectedPatient.lga}\nAge: ${selectedPatient.age}\nGender: ${selectedPatient.gender}\nPhone: ${selectedPatient.phoneNumber}\n\nTest Type: ${test?.testType || 'N/A'}\nTest Result: ${test?.testResult || 'N/A'}\nDate: ${test?.dateConducted || 'N/A'}\nNotes: ${test?.officerNote || 'N/A'}\n\nGenerated at: ${new Date().toLocaleString()}`;
             const blob = new Blob([reportData], { type: 'text/plain' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `patient-report-${selectedPatientName.replace(/\s+/g, '-')}.txt`;
+            a.download = `patient-report-${selectedPatient.name.replace(/\s+/g, '-')}.txt`;
             a.click();
             window.URL.revokeObjectURL(url);
           }}

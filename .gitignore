@@ -38,6 +38,8 @@ credentials/
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+ehthumbs.db
 
 # Logs
 *.log
@@ -84,17 +86,50 @@ pids/
 .yarn-integrity
 .node_repl_history
 
-# Duplicate/reference folders
+# Duplicate/reference folders (not part of active codebase)
 Lunar Med-Track copy/
 iris-health-app/
 Lunar-Med-Track/
 LunarMedtrack-API/
-
-# Documents
-*.docx
+Lunar-Med-Track-Backend/
+refactor-FE-BE/
+BE/
+__MACOSX/
 medtr-1/
+
+# Documentation (exclude from deployment)
+*.docx
+*.doc
+*.pdf
+*.xlsx
+*.xls
+docs/
+documentation/
+*.md
+!README.md
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.gz
+*.rar
+*.7z
+*.bz2
+
+# Postman/API collections
+*.postman_collection.json
+*.postman_environment.json
+LunarMedTrack2.postman_collection.json
+
+# Test scripts
+test-*.sh
+test-*.ps1
 
 # Debug
 .debug/
 debug.log
 build.log
+
+# JSON config artifacts (keep package.json, tsconfig.json)
+*.har

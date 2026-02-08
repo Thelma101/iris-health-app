@@ -32,7 +32,7 @@ export const securityConfig = {
   },
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? ['https://medtrack.com', 'https://www.medtrack.com']
+      ? (process.env.CORS_ORIGINS || 'https://medtrack.com,https://www.medtrack.com').split(',')
       : ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

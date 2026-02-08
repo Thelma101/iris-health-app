@@ -1,47 +1,15 @@
-export const TEST_TYPE_OPTIONS = [
-  'HIV 1/2 Rapid Test',
-  'Malaria RDT',
-  'Hepatitis B',
-  'Hepatitis C',
-  'Typhoid',
-  'Tuberculosis',
-  'Blood Pressure',
-  'Blood Sugar',
-];
+// REMOVED: TEST_TYPE_OPTIONS - Test types must come from API (/admin/testtypes)
+// REMOVED: TEST_RESULT_OPTIONS - Test results must come from API (allowedResults per test type)
+// REMOVED: DEFAULT_TEST_TYPES - Test types must come from API (/admin/testtypes)
 
-export const TEST_RESULT_OPTIONS = [
-  'High Risk',
-  'Elevated',
-  'Hypertension',
-  'Prehypertension',
-  'Low',
-  'Invalid',
-  'Negative',
-  'Positive',
-  'Inconclusive',
-  'Non-Reactive',
-  'Reactive',
-  'Normal',
-  'High',
-  'Underweight',
-  'Overweight',
-  'Obese',
-  'Mild Anemia',
-  'Severe Anemia',
-  'Present',
-  'Absent',
-  'Adequate',
-  'Inadequate',
-  'Safe',
-  'Contaminated',
-];
+// Type definition for test type from API
+export interface TestType {
+  _id: string;
+  id?: number;
+  name: string;
+  allowedResults: string[];
+  results?: string[];
+  description?: string;
+  isActive?: boolean;
+}
 
-export const DEFAULT_TEST_TYPES = [
-  { id: 1, name: 'Tee George Health Panel', results: ['Complete', 'Pending', 'Review Required'] },
-  { id: 2, name: 'Green Lunar Wellness Check', results: ['Normal', 'Abnormal', 'Borderline'] },
-  { id: 3, name: 'Malaria Rapid Diagnostic Test (RDT)', results: ['Positive', 'Negative', 'Invalid'] },
-  { id: 4, name: 'HIV Screening (Determine/Unigold)', results: ['Positive', 'Negative', 'Inconclusive'] },
-  { id: 5, name: 'Hepatitis B Surface Antigen (HBsAg)', results: ['Reactive', 'Non-Reactive', 'Invalid'] },
-  { id: 6, name: 'Tuberculosis (TB) Sputum Smear / GeneXpert', results: ['Positive', 'Negative', 'Not Detected'] },
-  { id: 7, name: 'Cholera Rapid Test', results: ['Positive', 'Negative'] },
-];

@@ -1,8 +1,7 @@
-export const LGA_OPTIONS = ['Ikorodu', 'Kosofe', 'Alimosho', 'Ikeja', 'Surulere', 'Agege'];
+// REMOVED: LGA_OPTIONS - LGAs must come from API (/community/all)
+// REMOVED: COMMUNITY_OPTIONS - Communities must come from API (/community/all)
 
-export const COMMUNITY_OPTIONS = ['Bayeku', 'Ketu', 'Igbogbo', 'Ikeja GRA', 'Lekki Phase 1', 'Badagry'];
-
-// Value/label pairs for gender - backend expects lowercase values, display shows capitalized
+// Value/label pairs for gender - static UI constant (backend expects lowercase values)
 export const GENDER_OPTIONS = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },

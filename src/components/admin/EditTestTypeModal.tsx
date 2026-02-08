@@ -6,11 +6,11 @@ interface EditTestTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
   testType: {
-    id: number;
+    _id: string;
     name: string;
     results: string[];
   } | null;
-  onSave?: (id: number, testType: string, expectedResults: string[]) => void;
+  onSave?: (_id: string, testType: string, expectedResults: string[]) => void;
 }
 
 export default function EditTestTypeModal({ isOpen, onClose, testType, onSave }: EditTestTypeModalProps) {
@@ -44,7 +44,7 @@ export default function EditTestTypeModal({ isOpen, onClose, testType, onSave }:
 
   const handleSubmit = () => {
     if (name && expectedResults.some(r => r.trim()) && testType) {
-      onSave?.(testType.id, name, expectedResults.filter(r => r.trim()));
+      onSave?.(testType._id, name, expectedResults.filter(r => r.trim()));
       setSuccessMessage(`Test type "${name}" has been updated successfully!`);
       setShowSuccessModal(true);
       onClose();

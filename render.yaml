@@ -1,9 +1,10 @@
 services:
+  # Backend API
   - type: web
-    name: lunarmedtrack-api
+    name: medtrack-backend
     runtime: node
-    rootDir: Backend/LunarMedtrack
-    buildCommand: npm install --include=dev && npm run build
+    rootDir: medtrack-FE-BE-duplicate
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: PORT
@@ -11,6 +12,22 @@ services:
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
+        sync: false
+      - key: BREVO_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: NODE_ENV
+        value: production
+
+  # Frontend (Next.js)
+  - type: web
+    name: medtrack-frontend
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
         sync: false
       - key: NODE_ENV
         value: production

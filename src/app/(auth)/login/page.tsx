@@ -2,15 +2,18 @@
 
 import Eye from "@/components/icons/Eye";
 import EyeOff from "@/components/icons/EyeOff";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api/index";
 import { fieldAgentApi } from "@/lib/api/field-agent";
 import Image from "next/image";
 import Link from "next/link";
+import { usePageLogger, useInteractionLogger } from "@/lib/utils/logging-hooks";
 
 export default function LoginPage() {
   const router = useRouter();
+  const logger = usePageLogger('LoginPage');
+  const { logClick, logFormSubmit } = useInteractionLogger('LoginPage');
   const [role, setRole] = useState<"agent" | "admin">("agent");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -20,12 +23,14 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    logFormSubmit('loginForm', { role, email: email.replace(/@.*/, '@***') });
     setLoading(true);
     setError(null);
 
     try {
       if (role === "admin") {
         // Admin login
+        logger.info('Attempting admin login', { email: email.replace(/@.*/, '@***') });
         const response = await api.login({ email, password }) as any;
         
         if (response.success && response.data) {
@@ -37,17 +42,20 @@ export default function LoginPage() {
             if (adminData) {
               localStorage.setItem("adminData", JSON.stringify(adminData));
             }
+            logger.info('Admin login successful', { adminId: adminData?._id });
+            logger.navigate('/dashboard');
             router.push("/dashboard");
           } else {
-            console.error("[Auth] No token in admin response");
+            logger.error("No token in admin response", { response: 'token missing' });
             setError("Admin credentials not found. Please check your email and password, or switch to Field Agent login.");
           }
         } else {
-          console.error("[Auth] Admin login failed:", response.error);
+          logger.error("Admin login failed", { error: response.error });
           setError(response.error || "Admin credentials not found. Please check your email and password, or switch to Field Agent login.");
         }
       } else {
         // Field Agent login
+        logger.info('Attempting field agent login', { email: email.replace(/@.*/, '@***') });
         const response = await fieldAgentApi.login({ email, password }) as any;
         
         if (response.success && response.data) {
@@ -59,18 +67,20 @@ export default function LoginPage() {
             if (fieldAgent) {
               localStorage.setItem("fieldAgentData", JSON.stringify(fieldAgent));
             }
+            logger.info('Field agent login successful', { agentId: fieldAgent?._id });
+            logger.navigate('/field-agent/dashboard');
             router.push("/field-agent/dashboard");
           } else {
-            console.error("[Auth] No token in field agent response");
+            logger.error("No token in field agent response", { response: 'token missing' });
             setError("Field Agent credentials not found. Please check your email and password, or switch to Admin login.");
           }
         } else {
-          console.error("[Auth] Field agent login failed:", response.error);
+          logger.error("Field agent login failed", { error: response.error });
           setError(response.error || "Field Agent credentials not found. Please check your email and password, or switch to Admin login.");
         }
       }
     } catch (err: unknown) {
-      console.error("Login error:", err);
+      logger.error("Login exception", { error: err instanceof Error ? err.message : err });
       const errorMessage = err instanceof Error ? err.message : "Login failed. Please try again.";
       setError(errorMessage);
     } finally {

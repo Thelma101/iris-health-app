@@ -1,25 +1,25 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { TEST_RESULT_OPTIONS } from '@/lib/constants/test-options';
 
 interface TestResultModalProps {
   isOpen: boolean;
   selectedValue: string;
   onSelect: (value: string) => void;
   onClose: () => void;
+  options?: string[]; // Pass allowed results from the selected test type
 }
 
-export default function TestResultModal({ isOpen, selectedValue, onSelect, onClose }: TestResultModalProps) {
+export default function TestResultModal({ isOpen, selectedValue, onSelect, onClose, options = [] }: TestResultModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter options based on search query
   const filteredOptions = useMemo(() => {
-    if (!searchQuery.trim()) return TEST_RESULT_OPTIONS;
-    return TEST_RESULT_OPTIONS.filter((option) =>
+    if (!searchQuery.trim()) return options;
+    return options.filter((option) =>
       option.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, options]);
 
   if (!isOpen) return null;
 

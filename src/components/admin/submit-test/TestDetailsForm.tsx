@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { TEST_RESULT_OPTIONS } from '@/lib/constants/test-options';
 import TestResultModal from './TestResultModal';
 import api from '@/lib/api';
 
@@ -41,27 +40,67 @@ export default function TestDetailsForm({
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [showTestResultModal, setShowTestResultModal] = useState(false);
   const [testTypeOptions, setTestTypeOptions] = useState<TestTypeOption[]>([]);
+  const [availableResults, setAvailableResults] = useState<string[]>([]);
+  const [testTypesError, setTestTypesError] = useState<string | null>(null);
 
   // Fetch test types from API
   useEffect(() => {
     api.getTestTypes()
       .then((res) => {
-        console.log('=== TEST DETAILS FORM: Fetched Test Types ===', res);
+        if (!res.success) {
+          setTestTypesError(res.error || 'Failed to load test types');
+          setTestTypeOptions([]);
+          return;
+        }
         const testData = res.data as any;
         const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
-        setTestTypeOptions(testTypesArray);
+        // Map API allowedResults to results for local interface compatibility
+        const mappedTestTypes = testTypesArray.map((t: any) => ({
+          _id: t._id,
+          name: t.name,
+          results: t.allowedResults || t.results || [],
+        }));
+        setTestTypeOptions(mappedTestTypes);
+        setTestTypesError(null);
       })
       .catch((err) => {
         console.error('Error fetching test types:', err);
-        // Fallback to default test types if API fails
-        setTestTypeOptions([
-          { _id: '1', name: 'HIV 1/2 Rapid Test', results: ['Positive', 'Negative', 'Inconclusive'] },
-          { _id: '2', name: 'Malaria RDT', results: ['Positive', 'Negative', 'Invalid'] },
-          { _id: '3', name: 'Blood Pressure', results: ['Normal', 'High', 'Low'] },
-          { _id: '4', name: 'Blood Glucose', results: ['Normal', 'High', 'Low'] },
-        ]);
+        setTestTypesError('Failed to load test types');
+        setTestTypeOptions([]);
       });
   }, []);
+
+  // Track if selected test type has no configured results
+  const [noResultsConfigured, setNoResultsConfigured] = useState(false);
+
+  // Update available results when test type changes  
+  useEffect(() => {
+    if (testDetails.testType) {
+      // testDetails.testType now stores the _id, so find by _id
+      const selectedTestType = testTypeOptions.find(t => t._id === testDetails.testType);
+      if (selectedTestType) {
+        // Only use results if they exist and are not empty
+        const results = selectedTestType.results && selectedTestType.results.length > 0 
+          ? selectedTestType.results 
+          : [];
+        setAvailableResults(results);
+        setNoResultsConfigured(results.length === 0);
+      } else {
+        setAvailableResults([]);
+        setNoResultsConfigured(false);
+      }
+    } else {
+      setAvailableResults([]);
+      setNoResultsConfigured(false);
+    }
+  }, [testDetails.testType, testTypeOptions]);
+
+  // Get display name for currently selected test type
+  const getSelectedTestTypeName = () => {
+    if (!testDetails.testType) return '';
+    const selectedTestType = testTypeOptions.find(t => t._id === testDetails.testType);
+    return selectedTestType?.name || '';
+  };
 
   // Get field error (only show if touched)
   const getFieldError = (fieldName: string): string | null => {
@@ -92,12 +131,22 @@ export default function TestDetailsForm({
     fileInputRef.current?.click();
   };
 
-  const selectTextClass = testDetails.testType ? 'text-[#212b36]' : 'text-[#999]';
+  const selectTextClass = testDetails.testType && getSelectedTestTypeName() ? 'text-[#212b36]' : 'text-[#999]';
   const dateTextClass = testDetails.dateConducted ? 'text-[#212b36]' : 'text-[#999]';
   const testResultTextClass = testDetails.testResult ? 'text-[#212b36]' : 'text-[#999]';
 
   return (
     <div className="flex flex-col gap-6">
+      {testTypesError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600 font-poppins flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {testTypesError}. Please try refreshing the page or logging in again.
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
         <div className={`relative h-12 rounded bg-white border ${getFieldClasses('testType')}`}>
@@ -108,10 +157,10 @@ export default function TestDetailsForm({
             className={`w-full h-full px-5 bg-transparent text-sm font-poppins appearance-none focus:outline-none cursor-pointer ${selectTextClass}`}
           >
             <option value="" disabled hidden>
-              Select test type
+              {testTypeOptions.length === 0 && !testTypesError ? 'Loading test types...' : 'Select test type'}
             </option>
             {testTypeOptions.map((option) => (
-              <option key={option._id} value={option.name}>{option.name}</option>
+              <option key={option._id} value={option._id}>{option.name}</option>
             ))}
           </select>
           <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,17 +206,39 @@ export default function TestDetailsForm({
         <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
         <button
           type="button"
-          onClick={() => setShowTestResultModal(true)}
+          onClick={() => testDetails.testType && !noResultsConfigured ? setShowTestResultModal(true) : null}
           onBlur={() => onBlur?.('testResult')}
-          className={`relative h-12 rounded bg-white border px-5 flex items-center justify-between text-left hover:border-[#2c7be5] transition-colors ${getFieldClasses('testResult')}`}
+          disabled={!testDetails.testType || noResultsConfigured}
+          className={`relative h-12 rounded bg-white border px-5 flex items-center justify-between text-left transition-colors ${
+            !testDetails.testType || noResultsConfigured
+              ? 'opacity-60 cursor-not-allowed border-[#d9d9d9]' 
+              : `hover:border-[#2c7be5] cursor-pointer ${getFieldClasses('testResult')}`
+          }`}
         >
           <span className={`text-sm font-poppins ${testResultTextClass}`}>
-            {testDetails.testResult || 'Select test result'}
+            {!testDetails.testType 
+              ? 'Select a test type first' 
+              : noResultsConfigured
+              ? 'No results configured for this test type'
+              : testDetails.testResult || 'Select test result'}
           </span>
           <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
+        {!testDetails.testType && (
+          <p className="text-sm text-[#637381] font-poppins">
+            Please select a test type to see available results
+          </p>
+        )}
+        {noResultsConfigured && testDetails.testType && (
+          <p className="text-sm text-amber-600 font-poppins flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            This test type has no configured results. Please configure results via Admin settings.
+          </p>
+        )}
         {getFieldError('testResult') && (
           <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,6 +254,7 @@ export default function TestDetailsForm({
         selectedValue={testDetails.testResult}
         onSelect={(value) => onChange('testResult', value)}
         onClose={() => setShowTestResultModal(false)}
+        options={availableResults}
       />
 
       <div className="flex flex-col gap-1.5">

@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import StatCard from '@/components/admin/StatCard';
 import api, { DashboardStats, RecentRecord } from '@/lib/api';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { logger } from '@/lib/utils/logger';
 
 export default function DashboardPage() {
+  const hasFetched = useRef(false);
   const [stats, setStats] = useState<DashboardStats>({
     communities: 0,
     fieldAgents: 0,
@@ -18,23 +20,36 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    
     async function fetchDashboardData() {
       setLoading(true);
       setError(null);
+      logger.info('AdminDashboard', 'Fetching dashboard data');
+      const startTime = performance.now();
       try {
         // Fetch stats and recent records from API
         const [statsRes, recentRes] = await Promise.all([
           api.getDashboardStats(),
           api.getRecentCommunityRecords(),
         ]);
+        const duration = Math.round(performance.now() - startTime);
         if (statsRes.data) {
           setStats(statsRes.data);
+          logger.info('AdminDashboard', `Dashboard stats loaded (${duration}ms)`, {
+            communities: statsRes.data.communities,
+            fieldAgents: statsRes.data.fieldAgents,
+            tests: statsRes.data.tests,
+          });
         }
         if (recentRes.data) {
           setRecentRecords(recentRes.data);
+          logger.info('AdminDashboard', 'Recent records loaded', { count: recentRes.data.length });
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+        logger.error('AdminDashboard', 'Failed to load dashboard data', { error: errorMessage });
         setError(errorMessage);
       } finally {
         setLoading(false);

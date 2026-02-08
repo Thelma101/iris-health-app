@@ -87,6 +87,9 @@ export const fieldAgentApi = {
   getVisitationsByCommunity: (communityId: string) =>
     fieldAgentRequest(`/visitation/com/${communityId}`),
 
+  // Test Types
+  getTestTypes: () => fieldAgentRequest('/admin/testtypes/allowed'),
+
   // Dashboard stats
   getDashboardStats: async (): Promise<ApiResponse<{
     totalTests: number;

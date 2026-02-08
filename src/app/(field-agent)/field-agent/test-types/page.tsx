@@ -10,8 +10,8 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import api from '@/lib/api';
 
 interface TestType {
-  id: string;
-  _id?: string;
+  _id: string;
+  id?: string;
   name: string;
   results: string[];
 }
@@ -35,15 +35,14 @@ export default function TestTypesPage() {
     setIsLoading(true);
     try {
       const res = await api.getTestTypes();
-      console.log('=== TEST TYPES PAGE: Fetched Test Types ===', res);
       const testData = res.data as any;
       const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
       // Map the API response to match our local interface
       const mapped = testTypesArray.map((t: any) => ({
+        _id: t._id || t.id,
         id: t._id || t.id,
-        _id: t._id,
         name: t.name,
-        results: t.results || [],
+        results: t.allowedResults || t.results || [],
       }));
       setTestTypes(mapped);
     } catch (err) {
@@ -57,8 +56,7 @@ export default function TestTypesPage() {
 
   const handleCreateTestType = async (data: { name: string; results: string[] }) => {
     try {
-      const res = await api.createTestType(data);
-      console.log('=== TEST TYPES PAGE: Created Test Type ===', res);
+      const res = await api.createTestType({ name: data.name, allowedResults: data.results });
       await fetchTestTypes(); // Refresh the list
       setIsCreateModalOpen(false);
       setIsListModalOpen(true);
@@ -76,13 +74,11 @@ export default function TestTypesPage() {
 
   const handleUpdateTestType = async (updatedTestType: TestType) => {
     try {
-      const id = updatedTestType._id || updatedTestType.id;
-      await api.updateTestType(id, {
+      await api.updateTestType(updatedTestType._id, {
         name: updatedTestType.name,
-        results: updatedTestType.results,
+        allowedResults: updatedTestType.results,
       });
-      console.log('=== TEST TYPES PAGE: Updated Test Type ===', updatedTestType);
-      await fetchTestTypes(); // Refresh the list
+      await fetchTestTypes(); 
       setIsEditModalOpen(false);
       setIsListModalOpen(true);
     } catch (err) {
@@ -100,8 +96,7 @@ export default function TestTypesPage() {
     if (testTypeToDelete) {
       try {
         await api.deleteTestType(testTypeToDelete);
-        console.log('=== TEST TYPES PAGE: Deleted Test Type ===', testTypeToDelete);
-        await fetchTestTypes(); // Refresh the list
+        await fetchTestTypes(); 
         setTestTypeToDelete(null);
         setIsDeleteModalOpen(false);
       } catch (err) {
@@ -150,7 +145,7 @@ export default function TestTypesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {testTypes.map((testType) => (
               <div
-                key={testType.id}
+                key={testType._id}
                 className="bg-white rounded-[10px] border border-[#d9d9d9] overflow-hidden shadow-sm"
               >
                 {/* Header */}
@@ -169,7 +164,7 @@ export default function TestTypesPage() {
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDeleteClick(testType.id)}
+                      onClick={() => handleDeleteClick(testType._id)}
                       className="p-1 hover:bg-white/20 rounded"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

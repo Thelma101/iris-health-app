@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 
 interface TestType {
-  id: string;
+  _id: string;
+  id?: string;
   name: string;
   results: string[];
 }
@@ -52,7 +53,7 @@ const EditTestTypeModal: React.FC<EditTestTypeModalProps> = ({
   const handleSubmit = () => {
     const filteredResults = results.filter((r) => r.trim() !== '');
     if (testTypeName.trim() && filteredResults.length > 0) {
-      onSubmit({ id: testType.id, name: testTypeName, results: filteredResults });
+      onSubmit({ _id: testType._id, name: testTypeName, results: filteredResults });
       onClose();
     }
   };

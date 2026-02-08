@@ -45,41 +45,28 @@ export default function FieldAgentCommunityPage() {
             if (typeof fo === 'string') return fo;
             if (fo.firstName || fo.lastName) return `${fo.firstName || ''} ${fo.lastName || ''}`.trim();
             if (fo.name) return fo.name;
-            return 'Unknown Officer';
-          }).filter((name: string) => name && name !== 'Unknown Officer');
+            return '';
+          }).filter((name: string) => name);
           
           setCommunity({
             _id: c._id || c.id,
-            name: c.name || 'Igbogbo',
-            lga: c.lga || 'Ikorodu',
-            population: c.totalPopulation || c.population || 23000,
-            fieldOfficers: parsedOfficers.length > 0 ? parsedOfficers : ['Tobi Opeyemi', 'Cardoso Mark', 'Steph Oluyemi'],
-            totalTests: c.totalTestsConducted || 2000,
-            visitationDates: c.visitationDates || ['20/02/2025', '09/12/2024'],
+            name: c.name || 'Unknown',
+            lga: c.lga || 'N/A',
+            population: c.totalPopulation || c.population || 0,
+            fieldOfficers: parsedOfficers,
+            totalTests: c.totalTestsConducted || 0,
+            visitationDates: c.visitationDates || [],
             visitationSummary: c.visitationSummary,
           });
         } else {
-          setCommunity({
-            _id: '1',
-            name: 'Igbogbo',
-            lga: 'Ikorodu',
-            population: 23000,
-            fieldOfficers: ['Tobi Opeyemi', 'Cardoso Mark', 'Steph Oluyemi'],
-            totalTests: 2000,
-            visitationDates: ['20/02/2025', '09/12/2024'],
-          });
+          // No communities found - show empty state
+          setCommunity(null);
+          setError('No community assigned to this field agent');
         }
       } catch {
-        // API may return 403 for field agents (admin-only endpoint) - use fallback data
-        setCommunity({
-          _id: '1',
-          name: 'Igbogbo',
-          lga: 'Ikorodu',
-          population: 23000,
-          fieldOfficers: ['Tobi Opeyemi', 'Cardoso Mark', 'Steph Oluyemi'],
-          totalTests: 2000,
-          visitationDates: ['20/02/2025', '09/12/2024'],
-        });
+        // API error - show error state
+        setCommunity(null);
+        setError('Failed to load community data');
       } finally {
         setLoading(false);
       }
@@ -95,8 +82,30 @@ export default function FieldAgentCommunityPage() {
     );
   }
 
+  if (error || !community) {
+    return (
+      <div className="bg-white border border-[#d9d9d9] border-r-0 rounded-tl-[20px] rounded-bl-[20px] rounded-tr-none rounded-br-none overflow-hidden min-h-[calc(100vh-93px)]">
+        <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
+          <div 
+            className="h-12 sm:h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4"
+            style={{ 
+              backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)' 
+            }}
+          >
+            <h1 className="font-poppins font-semibold text-base sm:text-xl text-[#212b36] uppercase">
+              Community
+            </h1>
+          </div>
+          <div className="p-4 bg-red-50 border border-red-200 rounded text-red-700">
+            {error || 'No community data available'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-tl-[20px] rounded-bl-[20px] overflow-hidden min-h-screen">
+    <div className="bg-white border border-[#d9d9d9] border-r-0 rounded-tl-[20px] rounded-bl-[20px] rounded-tr-none rounded-br-none overflow-hidden min-h-[calc(100vh-93px)]">
       <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
         {/* Page Title */}
         <div 

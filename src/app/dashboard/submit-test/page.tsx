@@ -29,7 +29,7 @@ interface TestDetails {
 }
 
 interface TestType {
-  id: number;
+  _id: string;
   name: string;
   results: string[];
 }
@@ -289,14 +289,10 @@ export default function SubmitTestPage() {
         lga: c.lga,
       }));
       setCommunities(mappedCommunities);
-    } catch (err) {
-      console.error('Error fetching communities:', err);
-      // Set fallback data with valid ObjectId format
-      setLgas([{ value: 'Ikorodu', label: 'Ikorodu' }]);
-      setCommunities([
-        { value: '000000000000000000000001', label: 'Bayeku', lga: 'Ikorodu' },
-        { value: '000000000000000000000002', label: 'Igbogbo', lga: 'Ikorodu' },
-      ]);
+    } catch {
+      // API error - show empty state
+      setLgas([]);
+      setCommunities([]);
     } finally {
       setLoadingCommunities(false);
     }
@@ -305,6 +301,34 @@ export default function SubmitTestPage() {
   useEffect(() => {
     fetchCommunities();
   }, [fetchCommunities]);
+
+  // Fetch test types from API
+  useEffect(() => {
+    const fetchTestTypes = async () => {
+      try {
+        const res = await api.getTestTypes();
+        if (res.success) {
+          const testData = res.data as any;
+          const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+          const mapped = testTypesArray.map((t: any) => ({
+            _id: t._id,
+            name: t.name,
+            results: t.allowedResults || t.results || [],
+          }));
+          setTestTypes(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching test types:', err);
+      }
+    };
+    fetchTestTypes();
+  }, []);
+
+  // Helper to get test type name from ID
+  const getTestTypeName = useCallback((testTypeId: string): string => {
+    const testType = testTypes.find(t => t._id === testTypeId);
+    return testType?.name || testTypeId;
+  }, [testTypes]);
 
   // Handlers with validation error clearing
   const handlePatientInfoChange = (field: keyof PatientInfo, value: string) => {
@@ -378,7 +402,7 @@ export default function SubmitTestPage() {
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
 
     const newTestType: TestType = {
-      id: testTypes.length + 1,
+      _id: `temp_${Date.now()}`,
       name: testType,
       results: expectedResults,
     };
@@ -387,15 +411,15 @@ export default function SubmitTestPage() {
     setTestTypes(updatedTestTypes);
   };
 
-  const handleEditTestType = (id: number, testType: string, expectedResults: string[]) => {
+  const handleEditTestType = (_id: string, testType: string, expectedResults: string[]) => {
 
-    const updated = testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t));
+    const updated = testTypes.map((t) => (t._id === _id ? { ...t, name: testType, results: expectedResults } : t));
     setTestTypes(updated);
   };
 
-  const handleDeleteTestType = (id: number) => {
+  const handleDeleteTestType = (_id: string) => {
 
-    const filtered = testTypes.filter((t) => t.id !== id);
+    const filtered = testTypes.filter((t) => t._id !== _id);
     setTestTypes(filtered);
   };
 
@@ -478,9 +502,9 @@ export default function SubmitTestPage() {
           phoneNumber: '',
         });
         setTestDetails({
-          testType: 'HIV 1/2 Rapid Test',
+          testType: '',
           dateConducted: new Date().toISOString().split('T')[0],
-          testResult: 'Positive',
+          testResult: '',
           officerNote: '',
           testImage: null,
         });
@@ -758,7 +782,7 @@ export default function SubmitTestPage() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
                     <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType || '-'}</span>
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType ? getTestTypeName(testDetails.testType) : '-'}</span>
                     </div>
                   </div>
 

@@ -30,7 +30,7 @@ interface TestDetails {
 }
 
 interface TestType {
-  id: number;
+  _id: string;
   name: string;
   results: string[];
 }
@@ -123,14 +123,9 @@ export default function TestRecordingPage() {
       }));
       setCommunities(mappedCommunities);
     } catch {
-      // API may return 403 for field agents (admin-only endpoint) - use fallback data
-      // Set demo data with valid ObjectId format
-      setLgas([{ value: 'Ikorodu', label: 'Ikorodu' }]);
-      setCommunities([
-        { value: '000000000000000000000001', label: 'Bayeku', lga: 'Ikorodu' },
-        { value: '000000000000000000000002', label: 'Igbogbo', lga: 'Ikorodu' },
-        { value: '000000000000000000000003', label: 'Baiyeku Ikorodu', lga: 'Ikorodu' },
-      ]);
+      // API error - show empty state
+      setLgas([]);
+      setCommunities([]);
     } finally {
       setLoading(false);
     }
@@ -139,6 +134,34 @@ export default function TestRecordingPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Fetch test types from API
+  useEffect(() => {
+    const fetchTestTypes = async () => {
+      try {
+        const res = await fieldAgentApi.getTestTypes();
+        if (res.success) {
+          const testData = res.data as any;
+          const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+          const mapped = testTypesArray.map((t: any) => ({
+            _id: t._id,
+            name: t.name,
+            results: t.allowedResults || t.results || [],
+          }));
+          setTestTypes(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching test types:', err);
+      }
+    };
+    fetchTestTypes();
+  }, []);
+
+  // Helper to get test type name from ID
+  const getTestTypeName = useCallback((testTypeId: string): string => {
+    const testType = testTypes.find(t => t._id === testTypeId);
+    return testType?.name || testTypeId;
+  }, [testTypes]);
 
   // Filter communities by selected LGA
   const filteredCommunities = formData.lga
@@ -423,19 +446,19 @@ export default function TestRecordingPage() {
 
   const handleAddTestType = (testType: string, expectedResults: string[]) => {
     const newTestType: TestType = {
-      id: testTypes.length + 1,
+      _id: `temp_${Date.now()}`,
       name: testType,
       results: expectedResults,
     };
     setTestTypes([...testTypes, newTestType]);
   };
 
-  const handleEditTestType = (id: number, testType: string, expectedResults: string[]) => {
-    setTestTypes(testTypes.map((t) => (t.id === id ? { ...t, name: testType, results: expectedResults } : t)));
+  const handleEditTestType = (_id: string, testType: string, expectedResults: string[]) => {
+    setTestTypes(testTypes.map((t) => (t._id === _id ? { ...t, name: testType, results: expectedResults } : t)));
   };
 
-  const handleDeleteTestType = (id: number) => {
-    setTestTypes(testTypes.filter((t) => t.id !== id));
+  const handleDeleteTestType = (_id: string) => {
+    setTestTypes(testTypes.filter((t) => t._id !== _id));
   };
 
   const handleSubmit = async () => {
@@ -1000,7 +1023,7 @@ export default function TestRecordingPage() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
                     <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType || '-'}</span>
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType ? getTestTypeName(testDetails.testType) : '-'}</span>
                     </div>
                   </div>
 

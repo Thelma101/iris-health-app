@@ -36,7 +36,7 @@ export default function ProfileModal({ isOpen, onClose, onLogout }: ProfileModal
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/admin/profile`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/admin/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -65,7 +65,9 @@ export default function ProfileModal({ isOpen, onClose, onLogout }: ProfileModal
   };
 
   const handleSave = async () => {
-    // TODO: Implement profile update API
+    // Note: Profile update API endpoint not yet available from backend
+    // This will be enabled once the backend implements PUT /admin/profile
+    alert('Profile update not yet implemented. Contact backend team.');
     setEditing(false);
   };
 

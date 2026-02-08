@@ -92,7 +92,6 @@ export default function AnalyticsFilters({
     // Fetch test types from API
     api.getTestTypes()
       .then((res) => {
-        console.log('=== ANALYTICS: Fetched Test Types ===', res);
         const testData = res.data as any;
         const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
         const mapped = testTypesArray.map((t: any) => ({
@@ -103,13 +102,8 @@ export default function AnalyticsFilters({
       })
       .catch((err) => {
         console.error('Error fetching test types:', err);
-        // Fallback to default test types if API fails
-        setTestTypes([
-          { value: 'HIV 1/2 Rapid Test', label: 'HIV 1/2 Rapid Test' },
-          { value: 'Malaria RDT', label: 'Malaria RDT' },
-          { value: 'Blood Pressure', label: 'Blood Pressure' },
-          { value: 'Blood Glucose', label: 'Blood Glucose' },
-        ]);
+        // No fallback - show empty list
+        setTestTypes([]);
       });
   }, []);
 
@@ -136,18 +130,12 @@ export default function AnalyticsFilters({
 
   const handleDateTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatDateInput(e.target.value);
-    console.log('=== ANALYTICS FILTER: DATE (TEXT) ===' );
-    console.log('Date Input:', e.target.value);
-    console.log('Formatted Date:', formatted);
     setSelectedDate(formatted);
     onDateChange?.(formatted);
   };
 
   const handleCalendarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatDateDisplay(e.target.value);
-    console.log('=== ANALYTICS FILTER: DATE (CALENDAR) ===' );
-    console.log('Calendar Input:', e.target.value);
-    console.log('Formatted Date:', formatted);
     setSelectedDate(formatted);
     onDateChange?.(formatted);
   };
@@ -157,18 +145,12 @@ export default function AnalyticsFilters({
   };
 
   const handleCommunitySelect = (community: CommunityOption) => {
-    console.log('=== ANALYTICS FILTER: COMMUNITY ===' );
-    console.log('Selected Community:', community);
-    console.log('Community Value:', community.value);
-    console.log('Community Label:', community.label);
     setSelectedCommunity(community.label);
     setShowCommunityDropdown(false);
     onCommunityChange?.(community.value);
   };
 
   const handleTestTypeSelect = (testType: string) => {
-    console.log('=== ANALYTICS FILTER: TEST TYPE ===' );
-    console.log('Selected Test Type:', testType);
     setSelectedTestType(testType);
     setShowTestTypeDropdown(false);
     onTestTypeChange?.(testType);

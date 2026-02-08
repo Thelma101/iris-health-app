@@ -3,7 +3,7 @@ import { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 
 interface TestType {
-  id: number;
+  _id: string;
   name: string;
   results: string[];
 }
@@ -13,7 +13,7 @@ interface TestTypeListModalProps {
   onClose: () => void;
   testTypes: TestType[];
   onEdit?: (testType: TestType) => void;
-  onDelete?: (id: number) => void;
+  onDelete?: (_id: string) => void;
 }
 
 export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, onDelete }: Readonly<TestTypeListModalProps>) {
@@ -55,7 +55,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
             <div className="flex flex-col gap-4">
               {testTypes.map((testType) => (
                 <div
-                  key={testType.id}
+                  key={testType._id}
                   className="rounded-[10px] border border-[#d9d9d9] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.06)]"
                 >
                   {/* Row header with actions inline per Figma */}
@@ -115,7 +115,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
         }}
         onConfirm={() => {
           if (testTypeToDelete) {
-            onDelete?.(testTypeToDelete.id);
+            onDelete?.(testTypeToDelete._id);
           }
           setShowConfirmModal(false);
           setTestTypeToDelete(null);

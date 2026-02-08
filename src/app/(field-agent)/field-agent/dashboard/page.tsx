@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fieldAgentApi } from '@/lib/api/field-agent';
 import TestsStatCard from '@/components/field-agent/TestsStatCard';
 import RecentRecordsTable from '@/components/field-agent/RecentRecordsTable';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { logger } from '@/lib/utils/logger';
 
 interface DashboardStats {
   totalTests: number;
@@ -20,6 +21,7 @@ interface RecentRecord {
 }
 
 export default function FieldAgentDashboardPage() {
+  const hasFetched = useRef(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalTests: 0,
     lastTestDate: '',
@@ -28,17 +30,23 @@ export default function FieldAgentDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    
+    async function fetchDashboardData() {
+      setLoading(true);
+      setError(null);
+      logger.info('FieldAgentDashboard', 'Fetching dashboard data');
+      const startTime = performance.now();
 
-    try {
-      // Fetch visitations/tests for the field agent
-      const [visitationsRes] = await Promise.all([
-        fieldAgentApi.getMyVisitations(),
-      ]) as any[];
+      try {
+        // Fetch visitations/tests for the field agent
+        const visitationsRes = await fieldAgentApi.getMyVisitations() as any;
 
-      const visitations = visitationsRes.data?.data?.visitations || visitationsRes.data?.visitations || [];
+        const visitations = visitationsRes.data?.data?.visitations || visitationsRes.data?.visitations || [];
+        const duration = Math.round(performance.now() - startTime);
+        logger.info('FieldAgentDashboard', `Visitations loaded (${duration}ms)`, { count: visitations.length });
 
       // Calculate stats
       const totalTests = visitations.length;
@@ -78,42 +86,32 @@ export default function FieldAgentDashboardPage() {
             id: v._id || v.id,
             community: fullCommunityName,
             totalTests: 0,
-            topPositiveTest: v.diagnostics?.[0]?.testType || v.testType || 'HIV/AIDS',
-            topNegativeTest: 'Hepatitis B',
+            topPositiveTest: v.diagnostics?.[0]?.testType || v.testType || 'N/A',
+            topNegativeTest: v.diagnostics?.[1]?.testType || 'N/A',
           });
         }
         communityMap.get(fullCommunityName).totalTests++;
       });
 
       setRecentRecords(Array.from(communityMap.values()).slice(0, 15));
+      logger.info('FieldAgentDashboard', 'Dashboard data processed', { totalTests: visitations.length, communities: communityMap.size });
     } catch (err: any) {
-      console.error('Error fetching dashboard data:', err);
+      logger.error('FieldAgentDashboard', 'Error fetching dashboard data', { error: err?.message || err });
       setError('Failed to load dashboard data');
 
-      // Set fallback demo data
+      // Empty state on error - no fallback data
       setStats({
-        totalTests: 10000,
-        lastTestDate: '23/06/25 6:00PM',
+        totalTests: 0,
+        lastTestDate: 'N/A',
       });
 
-      setRecentRecords([
-        { id: '1', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '2', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '3', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '4', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '5', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '6', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '7', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-        { id: '8', community: 'Baiyeku Ikorodu', totalTests: 679, topPositiveTest: 'HIV/AIDS', topNegativeTest: 'Hepatitis B' },
-      ]);
+      setRecentRecords([]);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
+    }
     fetchDashboardData();
-  }, [fetchDashboardData]);
+  }, []);
 
   if (loading) {
     return (
@@ -124,7 +122,7 @@ export default function FieldAgentDashboardPage() {
   }
 
   return (
-    <div className="bg-white border border-[#d9d9d9] rounded-[20px] lg:rounded-tl-[20px] lg:rounded-bl-[20px] lg:rounded-tr-none lg:rounded-br-none overflow-hidden min-h-[calc(100vh-120px)]">
+    <div className="bg-white border border-[#d9d9d9] border-r-0 rounded-tl-[20px] rounded-bl-[20px] rounded-tr-none rounded-br-none overflow-hidden min-h-[calc(100vh-93px)]">
       <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
         {/* Page Title */}
         <div
@@ -153,8 +151,8 @@ export default function FieldAgentDashboardPage() {
         </div>
 
         {error && (
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-700 text-sm">
-            {error} - Showing demo data
+          <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+            {error}
           </div>
         )}
       </div>

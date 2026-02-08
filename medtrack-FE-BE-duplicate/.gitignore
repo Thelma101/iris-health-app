@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Documentation (exclude from deployment)
+*.md
+!README.md
+docs/
+documentation/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.gz
+*.rar
+*.7z
+
+# Secrets
+*.pem
+*.key
+*.crt
+credentials/
+secrets/
+
+# Test/Coverage
+coverage/
+*.lcov
+
+# Temp
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Postman
+*.postman_collection.json
+*.postman_environment.json
+
+# Cache
+.npm/
+.cache/

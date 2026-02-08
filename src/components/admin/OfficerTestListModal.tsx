@@ -4,23 +4,41 @@ import { useEffect, useState } from 'react';
 import ModalBackdrop from './ModalBackdrop';
 import api from '@/lib/api/index';
 
-interface PatientTestRecord {
+export interface PatientTestRecord {
   index: number;
   name: string;
+  patientId: string;
+  firstName: string;
+  lastName: string;
+  age: string;
+  gender: string;
+  phoneNumber: string;
+  community: string;
+  lga: string;
+  testDetails: Array<{
+    testType: string;
+    testResult: string;
+    dateConducted: string;
+    officerNote: string;
+    testSheetUrl?: string;
+    patientImage?: string;
+  }>;
 }
 
 interface OfficerTestListModalProps {
   isOpen: boolean;
   onClose: () => void;
+  officerId: string;
   officerName: string;
-  testType: string;
+  testType?: string;
   patients?: PatientTestRecord[];
-  onPatientSelect?: (patientName: string) => void;
+  onPatientSelect?: (patient: PatientTestRecord) => void;
 }
 
 export default function OfficerTestListModal({
   isOpen,
   onClose,
+  officerId,
   officerName,
   testType,
   patients,
@@ -30,29 +48,30 @@ export default function OfficerTestListModal({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isOpen && !patients) {
+    if (isOpen && !patients && officerId) {
       setLoading(true);
-      api.getPatients()
+      // Fetch patients filtered by this officer
+      api.getPatientsByOfficer(officerId)
         .then((res) => {
-          const patData = res.data as any;
-          const patientsArray = patData?.data?.patients || patData?.patients || [];
-          const mapped = patientsArray.map((p: any, idx: number) => ({
-            index: idx + 1,
-            name: `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Unknown',
-          }));
-          setApiPatients(mapped);
+          if (res.success && Array.isArray(res.data)) {
+            setApiPatients(res.data as PatientTestRecord[]);
+          } else {
+            setApiPatients([]);
+          }
         })
         .catch((err) => {
-          console.error('Error fetching patients:', err);
+          console.error('Error fetching patients by officer:', err);
           setApiPatients([]);
         })
         .finally(() => {
           setLoading(false);
         });
     }
-  }, [isOpen, patients]);
+  }, [isOpen, patients, officerId]);
 
   const data = patients || apiPatients;
+  // Get display test type from first patient's test or fallback
+  const displayTestType = testType || (data[0]?.testDetails?.[0]?.testType) || 'Test Results';
 
   if (!isOpen) return null;
 
@@ -77,7 +96,7 @@ export default function OfficerTestListModal({
           <div className="p-0 overflow-y-auto max-h-[calc(100vh-48px)]">
             <div className="px-[22px] pt-[23px] space-y-[23px]">
               {/* Test Type Label */}
-              <p className="text-[14px] font-regular text-[#b1b9c0] font-poppins">{testType}</p>
+              <p className="text-[14px] font-regular text-[#b1b9c0] font-poppins">{displayTestType}</p>
 
               {/* Patient List */}
               <div className="space-y-[17px]">
@@ -89,9 +108,9 @@ export default function OfficerTestListModal({
                   data.map((patient, idx) => (
                     <button
                       type="button"
-                      key={patient.index}
-                      onClick={() => onPatientSelect?.(patient.name)}
-                      onKeyDown={(e) => e.key === 'Enter' && onPatientSelect?.(patient.name)}
+                      key={patient.patientId || patient.index}
+                      onClick={() => onPatientSelect?.(patient)}
+                      onKeyDown={(e) => e.key === 'Enter' && onPatientSelect?.(patient)}
                       className={`flex gap-[10px] items-center text-[14px] font-regular font-poppins cursor-pointer transition-colors hover:text-[#2c7be5] text-left w-full bg-transparent border-none p-0 ${idx === 2 ? 'bg-[#f4f5f7] -mx-[22px] px-[22px] py-2' : ''
                         }`}
                     >

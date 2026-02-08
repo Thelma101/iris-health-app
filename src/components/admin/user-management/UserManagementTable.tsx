@@ -16,14 +16,16 @@ interface UserManagementTableProps {
 }
 
 export default function UserManagementTable({ users, onEdit, onToggleStatus, onDelete }: Readonly<UserManagementTableProps>) {
-  const defaultUsers: User[] = [
-    { id: '1', name: 'Tee George', role: 'Admin', lastLogin: '09/01/2026 2:15 PM', status: 'Active' },
-    { id: '2', name: 'Green Lunar', role: 'Field Officer', lastLogin: '09/01/2026 11:45 AM', status: 'Active' },
-    { id: '3', name: 'Sam Mark', role: 'Admin', lastLogin: '23/09/2025 6:30 PM', status: 'Active' },
-    { id: '4', name: 'Jane Doe', role: 'Field Officer', lastLogin: '23/09/2025 6:30 PM', status: 'Inactive' },
-  ];
+  // No fallback data - users must be provided from API
+  const data = users || [];
 
-  const data = users || defaultUsers;
+  if (data.length === 0) {
+    return (
+      <div className="bg-white border border-[#f4f5f7] rounded-[10px] p-8 text-center">
+        <p className="text-[#637381] font-poppins">No users found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border border-[#f4f5f7] rounded-[10px] overflow-hidden">

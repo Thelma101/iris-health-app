@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PatientsHeader from '@/components/admin/view-patients/PatientsHeader';
 import SearchBar from '@/components/admin/view-patients/SearchBar';
 import FilterBar from '@/components/admin/view-patients/FilterBar';
@@ -13,11 +13,7 @@ import { Patient } from '@/lib/constants/patients-data';
 import api from '@/lib/api';
 
 export default function ViewPatientsPage() {
-  // Initialize with today's date in DD/MM/YYYY format
-  const today = new Date();
-  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-  const [selectedDate, setSelectedDate] = useState(formattedToday);
-  const { searchQuery, setSearchQuery, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
+  const { searchQuery, setSearchQuery, selectedDate, setSelectedDate, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -25,26 +21,54 @@ export default function ViewPatientsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Test type lookup map (ObjectId -> name)
+  const [testTypeMap, setTestTypeMap] = useState<Record<string, string>>({});
+
+  // Fetch test types for ID-to-name resolution
+  useEffect(() => {
+    api.getTestTypes()
+      .then((res) => {
+        if (res.success && res.data) {
+          const testData = res.data as any;
+          const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+          const map: Record<string, string> = {};
+          testTypesArray.forEach((tt: any) => {
+            map[tt._id] = tt.name;
+          });
+          setTestTypeMap(map);
+        }
+      })
+      .catch((err) => console.error('Error fetching test types:', err));
+  }, []);
+
+  // Helper to resolve testType (ObjectId or name) to display name
+  const resolveTestTypeName = (testType: any): string => {
+    if (!testType) return 'N/A';
+    // If it's an object with name property (populated)
+    if (typeof testType === 'object' && testType?.name) return testType.name;
+    // If it's a string, check if it's an ObjectId (24 hex chars) and lookup
+    if (typeof testType === 'string') {
+      const isObjectId = /^[a-fA-F0-9]{24}$/.test(testType);
+      if (isObjectId && testTypeMap[testType]) {
+        return testTypeMap[testType];
+      }
+      // Otherwise return as-is (might already be a name)
+      return testType;
+    }
+    return 'N/A';
+  };
 
   const handleViewPatient = (patient: Patient) => {
-    console.log('=== VIEW PATIENT ===' );
-    console.log('Patient Data:', patient);
-    console.log('Patient ID:', patient._id || patient.id);
-    console.log('Test Details:', patient.testDetails);
     setSelectedPatient(patient);
     setShowPatientModal(true);
   };
 
   const handleEditPatient = (patient: Patient) => {
-    console.log('=== EDIT PATIENT ===' );
-    console.log('Patient Data:', patient);
-    console.log('Patient ID:', patient._id || patient.id);
-    console.log('Test Details:', patient.testDetails);
     // Get latest test details from patient data
     const latestTest = patient.testDetails && patient.testDetails.length > 0 
       ? patient.testDetails[patient.testDetails.length - 1] 
       : null;
-    console.log('Latest Test:', latestTest);
     
     setEditingPatient({
       id: patient._id || patient.id || '', // Use MongoDB ObjectId
@@ -67,15 +91,11 @@ export default function ViewPatientsPage() {
   };
 
   const handleUpdatePatient = async (updatedPatient: any, updatedTestDetails?: any) => {
-    console.log('=== UPDATE PATIENT ===' );
-    console.log('Updated Patient Data:', updatedPatient);
-    console.log('Updated Test Details:', updatedTestDetails);
     setActionLoading(true);
     setErrorMessage(null);
     try {
       // Use the MongoDB _id for the API call
       const patientId = updatedPatient.id;
-      console.log('Patient ID for API:', patientId);
       
       if (!patientId || patientId === '' || typeof patientId === 'number') {
         setErrorMessage('Invalid patient ID. Cannot update patient.');
@@ -100,22 +120,23 @@ export default function ViewPatientsPage() {
         // Find the index of the latest test to update
         const latestTestIndex = editingPatient.testDetails.length - 1;
         const existingTests = [...editingPatient.testDetails];
+        const existingTest = existingTests[latestTestIndex];
         
-        // Update the latest test with new details
+        // Update the latest test with new details, explicitly preserving _id
         existingTests[latestTestIndex] = {
-          ...existingTests[latestTestIndex],
+          _id: existingTest._id, // Required for update
           testType: updatedTestDetails.testType,
           testResult: updatedTestDetails.testResult,
           dateConducted: updatedTestDetails.dateConducted,
           officerNotes: updatedTestDetails.officerNote,
+          testSheetUrl: existingTest.testSheetUrl || '',
+          patientImageUrl: existingTest.patientImageUrl || '',
         };
         
         updatePayload.testDetails = existingTests;
       }
 
-      console.log('Update Payload being sent:', updatePayload);
       const res = await api.updatePatient(patientId, updatePayload);
-      console.log('API Response:', res);
       if (res.success) {
         setSuccessMessage('Patient updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
@@ -241,7 +262,7 @@ export default function ViewPatientsPage() {
               ? selectedPatient.testDetails[selectedPatient.testDetails.length - 1]
               : null;
             return {
-              testType: latestTest?.testType || 'N/A',
+              testType: resolveTestTypeName(latestTest?.testType),
               testResult: latestTest?.testResult || selectedPatient.lastTestResult || 'N/A',
               dateConducted: latestTest?.dateConducted 
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -273,7 +294,7 @@ export default function ViewPatientsPage() {
           testDetails={(() => {
             const latestTest = editingPatient.latestTest;
             return {
-              testType: latestTest?.testType || 'N/A',
+              testType: resolveTestTypeName(latestTest?.testType),
               testResult: latestTest?.testResult || editingPatient.lastTestResult || 'N/A',
               dateConducted: latestTest?.dateConducted 
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })

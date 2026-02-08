@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -15,17 +16,44 @@ type NotificationItem = {
   readonly unread: boolean;
 };
 
-const NOTIFICATION_ITEMS: ReadonlyArray<NotificationItem> = [
-  { id: "n1", text: "New community assignment received", date: "Jan 22, 2026 at 9:50 AM", unread: true },
-  { id: "n2", text: "Test record submitted successfully", date: "Jan 21, 2026 at 2:30 PM", unread: false },
-  { id: "n3", text: "Profile updated successfully", date: "Jan 20, 2026 at 11:00 AM", unread: false },
-  { id: "n4", text: "New patient registered", date: "Jan 19, 2026 at 4:15 PM", unread: false },
-];
+// No hardcoded notifications - should come from API
 
 export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
   const [agentName, setAgentName] = useState('Field Agent');
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+  useEffect(() => {
+    // Get agent data from localStorage
+    const agentData = localStorage.getItem('fieldAgentData');
+    if (agentData) {
+      try {
+        const data = JSON.parse(agentData);
+        setAgentName(`${data.firstName || ''} ${data.lastName || ''}`.trim() || 'Field Agent');
+      } catch (err) {
+        console.error('Error parsing agent data:', err);
+      }
+    }
+  }, []);
+
+  // Fetch notifications from API when panel opens
+  useEffect(() => {
+    if (notifOpen) {
+      setLoadingNotifications(true);
+      api.getNotifications()
+        .then((res) => {
+          if (res.success && Array.isArray(res.data)) {
+            setNotifications(res.data);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch notifications:', err);
+        })
+        .finally(() => setLoadingNotifications(false));
+    }
+  }, [notifOpen]);
 
   useEffect(() => {
     // Get agent data from localStorage
@@ -51,7 +79,7 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
     };
   }, [notifOpen]);
 
-  const unreadCount = NOTIFICATION_ITEMS.filter(n => n.unread).length;
+  const unreadCount = notifications.filter(n => n.unread).length;
 
   return (
     <header className="w-full h-[65px] bg-white rounded border border-[#d9d9d9] relative z-20 overflow-visible">
@@ -139,20 +167,30 @@ export default function FieldAgentHeader({ onMenuClick }: HeaderProps) {
 
               {/* Notifications List */}
               <div className="max-h-96 overflow-y-auto p-4 sm:p-6 m-0">
-                <div className="flex flex-col gap-3 sm:gap-4 m-0">
-                  {NOTIFICATION_ITEMS.map((it) => (
-                    <div key={it.id} className="flex items-start gap-2.5 m-0">
-                      {/* Indicator dot */}
-                      <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 m-0 ${it.unread ? 'bg-[#2C7BE5]' : 'bg-zinc-300'}`} />
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 m-0">
-                        <p className="text-gray-800 text-xs sm:text-sm font-normal font-poppins leading-snug m-0">{it.text}</p>
-                        <p className="text-gray-500 text-xs font-normal font-poppins mt-1 m-0">{it.date}</p>
+                {loadingNotifications ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2c7be5]"></div>
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 text-sm font-poppins">No notifications</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 sm:gap-4 m-0">
+                    {notifications.map((it) => (
+                      <div key={it.id} className="flex items-start gap-2.5 m-0">
+                        {/* Indicator dot */}
+                        <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 m-0 ${it.unread ? 'bg-[#2C7BE5]' : 'bg-zinc-300'}`} />
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 m-0">
+                          <p className="text-gray-800 text-xs sm:text-sm font-normal font-poppins leading-snug m-0">{it.text}</p>
+                          <p className="text-gray-500 text-xs font-normal font-poppins mt-1 m-0">{it.date}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </section>
           </div>

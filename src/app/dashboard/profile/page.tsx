@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 interface ProfileData {
   name: string;
   email: string;
@@ -34,8 +36,8 @@ export default function ProfilePage() {
       const token = adminToken || fieldAgentToken;
       const isAdmin = userRole === 'admin' || !!adminToken;
       const apiUrl = isAdmin
-        ? `${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/admin/profile`
-        : `${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/fieldAgent/profile`;
+        ? `${API_BASE_URL}/admin/profile`
+        : `${API_BASE_URL}/fieldAgent/profile`;
 
       if (token) {
         const response = await fetch(apiUrl, {
@@ -134,7 +136,7 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('fieldAgentToken');
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'https://lunar-med-track-backend.onrender.com/api'}/admin/update`,
+        `${API_BASE_URL}/admin/update`,
         {
           method: 'PATCH',
           headers: {

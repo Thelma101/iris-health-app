@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 
 interface TestType {
-  id: string;
+  _id: string;
+  id?: string;
   name: string;
   results: string[];
 }
@@ -62,13 +63,13 @@ const TestTypeListModal: React.FC<TestTypeListModalProps> = ({
           <div className="flex flex-col gap-4">
             {testTypes.map((testType) => (
               <div
-                key={testType.id}
+                key={testType._id}
                 className="border border-[#d9d9d9] rounded-[10px] overflow-hidden"
               >
                 {/* Test Type Header */}
                 <div
                   className="h-12 bg-[#2c7be5] flex items-center justify-between px-4 cursor-pointer"
-                  onClick={() => toggleExpanded(testType.id)}
+                  onClick={() => toggleExpanded(testType._id)}
                 >
                   <span className="font-poppins font-medium text-base text-white">
                     {testType.name}
@@ -93,7 +94,7 @@ const TestTypeListModal: React.FC<TestTypeListModalProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDelete(testType.id);
+                          onDelete(testType._id);
                         }}
                         className="p-1 hover:bg-white/20 rounded"
                       >
@@ -109,7 +110,7 @@ const TestTypeListModal: React.FC<TestTypeListModalProps> = ({
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
-                      className={`transform transition-transform ${expandedId === testType.id ? 'rotate-180' : ''}`}
+                      className={`transform transition-transform ${expandedId === testType._id ? 'rotate-180' : ''}`}
                     >
                       <path d="M6 9L12 15L18 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -117,7 +118,7 @@ const TestTypeListModal: React.FC<TestTypeListModalProps> = ({
                 </div>
 
                 {/* Expected Results (Expanded) */}
-                {expandedId === testType.id && (
+                {expandedId === testType._id && (
                   <div className="p-4 bg-white">
                     <p className="font-poppins font-medium text-sm text-[#637381] mb-3">
                       Expected Results:

@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api/index';
-import { LGA_OPTIONS, COMMUNITY_OPTIONS } from '@/lib/constants/location-options';
 
 interface FieldOfficer {
   _id: string;
@@ -36,6 +35,7 @@ export default function EditCommunityModal({
   const [selectedOfficers, setSelectedOfficers] = useState<FieldOfficer[]>([]);
   const [availableOfficers, setAvailableOfficers] = useState<FieldOfficer[]>([]);
   const [loadingOfficers, setLoadingOfficers] = useState(false);
+  const [lgaOptions, setLgaOptions] = useState<string[]>([]);
 
   // Dropdown states
   const [showCommunityDropdown, setShowCommunityDropdown] = useState(false);
@@ -68,14 +68,29 @@ export default function EditCommunityModal({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch field officers and set initial values when modal opens
+  // Fetch field officers, LGAs and set initial values when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchFieldOfficers();
+      fetchLgaOptions();
       setSelectedCommunity(community?.name || '');
       setSelectedLga(community?.lga || '');
     }
   }, [isOpen, community]);
+
+  // Fetch unique LGAs from communities API
+  const fetchLgaOptions = async () => {
+    try {
+      const res = await api.getCommunities();
+      if (res.success && res.data) {
+        const communities = (res.data as any)?.communities || [];
+        const uniqueLgas = [...new Set(communities.map((c: any) => c.lga).filter(Boolean))] as string[];
+        setLgaOptions(uniqueLgas.sort());
+      }
+    } catch (err) {
+      console.error('Failed to fetch LGAs:', err);
+    }
+  };
 
   const fetchFieldOfficers = async () => {
     setLoadingOfficers(true);
@@ -191,23 +206,7 @@ export default function EditCommunityModal({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {showCommunityDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                      {COMMUNITY_OPTIONS.map((communityOption) => (
-                        <button
-                          key={communityOption}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCommunity(communityOption);
-                            setShowCommunityDropdown(false);
-                          }}
-                          className="w-full px-4 py-3 text-left text-sm text-[#212b36] font-poppins hover:bg-[#f4f5f7] transition-colors"
-                        >
-                          {communityOption}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* Community is now a text input - no dropdown needed */}
                 </div>
               </div>
 
@@ -233,9 +232,9 @@ export default function EditCommunityModal({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {showLgaDropdown && (
+                  {showLgaDropdown && lgaOptions.length > 0 && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                      {LGA_OPTIONS.map((lga) => (
+                      {lgaOptions.map((lga) => (
                         <button
                           key={lga}
                           type="button"

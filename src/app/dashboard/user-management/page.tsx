@@ -22,6 +22,8 @@ export default function UserManagementPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,12 +62,15 @@ export default function UserManagementPage() {
           status: u.status || 'Active',
         }));
         setUsers(mappedUsers);
+        setFilteredUsers(mappedUsers);
       } else {
         setUsers([]);
+        setFilteredUsers([]);
       }
     } catch (err: unknown) {
       setError('Failed to fetch users from server');
       setUsers([]);
+      setFilteredUsers([]);
     } finally {
       setLoading(false);
     }
@@ -89,6 +94,66 @@ export default function UserManagementPage() {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Reactive search with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!searchTerm.trim()) {
+        setFilteredUsers(users);
+        return;
+      }
+      const query = searchTerm.toLowerCase();
+      const filtered = users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query) ||
+          user.role.toLowerCase().includes(query)
+      );
+      setFilteredUsers(filtered);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, users]);
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
+    const filtered = users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredUsers(filtered);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleExport = () => {
+    const headers = ['Name', 'Email', 'Role', 'Last Login', 'Status'];
+    const rows = filteredUsers.map(u => [
+      u.name,
+      u.email,
+      u.role,
+      u.lastLogin,
+      u.status
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleEdit = (userId: string) => {
     const user = users.find(u => u.id === userId);
@@ -205,7 +270,7 @@ export default function UserManagementPage() {
   };
 
   return (
-    <main className="bg-white border border-[#d9d9d9] border-r-0 rounded-bl-[20px] rounded-tl-[20px] w-full min-h-[calc(100vh-93px)] p-4 sm:p-6 space-y-6">
+    <main className="min-h-[calc(100vh-93px)] bg-white rounded-tl-[20px] rounded-bl-[20px] border border-[#d9d9d9] border-r-0 p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Success Message */}
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
@@ -215,8 +280,16 @@ export default function UserManagementPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           {error}
+          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -229,41 +302,81 @@ export default function UserManagementPage() {
 
       {/* Header */}
       <div
-        className="rounded-lg bg-white border-2 border-[#fff9e6] border-solid overflow-hidden px-[17px] py-4"
+        className="h-12 sm:h-[50px] rounded-lg border-2 border-[#fff9e6] flex items-center px-4 sm:px-5"
         style={{
           backgroundImage: 'linear-gradient(172.45deg, rgba(255, 249, 230, 1) 3.64%, rgba(232, 241, 255, 1) 100.8%)',
         }}
       >
-        <h1 className="text-[20px] font-semibold uppercase text-[#212b36] font-poppins">User Management</h1>
+        <span className="text-base sm:text-xl font-semibold text-[#212b36] uppercase font-poppins">User Management</span>
       </div>
 
-      {/* Content Area */}
-      <div className="px-1 space-y-6">
-        {/* Add New User Button */}
-        <div className="flex justify-end">
+      {/* Search and Action Bar */}
+      <div className="flex flex-col gap-4 sm:gap-6 lg:gap-0 lg:flex-row lg:items-center lg:justify-between">
+        {/* Search Section */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-[33px]">
+          {/* Search Input */}
+          <div className="bg-white border border-[#d9d9d9] rounded-[10px] h-10 sm:h-12 overflow-hidden flex items-center px-4 sm:px-[19px]">
+            <div className="flex gap-3 items-center w-full sm:w-[301px]">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#d9d9d9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search here"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1 border-0 outline-none bg-transparent placeholder:text-[#d9d9d9] text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Search Button - Hidden on mobile */}
           <button
-            onClick={handleAddNewUser}
-            disabled={actionLoading}
-            className="bg-[#2c7be5] text-white px-6 h-[48px] rounded-[10px] flex items-center justify-center text-[16px] font-medium font-inter hover:bg-[#1e5aa8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSearch}
+            disabled={loading}
+            className="hidden sm:block bg-[#2c7be5] text-white rounded-[10px] h-10 sm:h-12 px-6 font-medium text-sm sm:text-base hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins"
           >
-            Add New User
+            Search
           </button>
         </div>
 
-        {/* Users Table */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <UserManagementTable 
-            users={users} 
-            onEdit={handleEdit} 
-            onToggleStatus={handleToggleStatus} 
-            onDelete={handleDeleteUser} 
-          />
-        )}
+        <div className="flex justify-between sm:justify-end gap-3 sm:gap-4 lg:gap-6 w-full sm:w-auto">
+          <button
+            onClick={handleExport}
+            disabled={users.length === 0}
+            className="bg-white border border-[#d9d9d9] text-[#637381] rounded-[10px] h-10 sm:h-12 px-6 font-medium text-sm sm:text-base hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins"
+          >
+            Export
+          </button>
+          <button
+            onClick={handleAddNewUser}
+            disabled={actionLoading}
+            className="bg-[#2c7be5] text-white rounded-[10px] h-10 sm:h-12 px-4 sm:px-6 font-medium text-xs sm:text-base whitespace-nowrap hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins flex items-center gap-2"
+          >
+            {actionLoading && <LoadingSpinner />}
+            Add New User
+          </button>
+        </div>
       </div>
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <LoadingSpinner />
+          <p className="text-[#637381] text-sm font-poppins">Loading users...</p>
+        </div>
+      )}
+
+      {/* Users Table */}
+      {!loading && (
+        <UserManagementTable 
+          users={filteredUsers} 
+          onEdit={handleEdit} 
+          onToggleStatus={handleToggleStatus} 
+          onDelete={handleDeleteUser} 
+        />
+      )}
 
       {/* Modals */}
       <AddUserModal 
