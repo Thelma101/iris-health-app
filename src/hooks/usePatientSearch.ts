@@ -2,15 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api/index';
 import { Patient } from '@/lib/constants/patients-data';
 
-// Get today's date in DD/MM/YYYY format
-const getTodayFormatted = () => {
-  const today = new Date();
-  return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-};
-
 export function usePatientSearch() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState(getTodayFormatted); // DD/MM/YYYY format
+  const [selectedDate, setSelectedDate] = useState(''); // Empty = show all patients
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -104,7 +98,7 @@ export function usePatientSearch() {
       );
     }
 
-    // Apply date filter - show patients with tests on or before selected date
+    // Apply date filter - show patients with tests ON the selected date
     if (selectedDate) {
       // Convert DD/MM/YYYY to ISO date for comparison
       const parts = selectedDate.split('/');
@@ -114,15 +108,14 @@ export function usePatientSearch() {
         const filterDateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
         
         filtered = filtered.filter((patient) => {
-          // Check if any test was conducted on or before the selected date
+          // Check if any test was conducted ON the selected date
           if (!patient.testDetails || patient.testDetails.length === 0) {
-            // Include patients without tests - they might have been registered before the date
-            return true;
+            return false; // Exclude patients without tests when filtering by date
           }
           return patient.testDetails.some((test) => {
-            if (!test.dateConducted) return true; // Include tests without date
+            if (!test.dateConducted) return false;
             const testDate = new Date(test.dateConducted).toISOString().split('T')[0];
-            return testDate <= filterDateStr;
+            return testDate === filterDateStr;
           });
         });
       }

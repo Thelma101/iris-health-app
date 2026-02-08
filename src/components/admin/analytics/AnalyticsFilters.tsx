@@ -58,9 +58,13 @@ export default function AnalyticsFilters({
   onDateChange,
   onExport,
 }: AnalyticsFiltersProps) {
-  const today = new Date();
-  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-  const [selectedDate, setSelectedDate] = useState(formattedToday);
+  // Get today's date formatted
+  const getTodayFormatted = () => {
+    const today = new Date();
+    return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+  };
+  
+  const [selectedDate, setSelectedDate] = useState(''); // Empty = All dates
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [selectedTestType, setSelectedTestType] = useState('');
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
@@ -72,6 +76,9 @@ export default function AnalyticsFilters({
   const testTypeDesktopRef = useRef<HTMLDivElement>(null);
   const communityMobileRef = useRef<HTMLDivElement>(null);
   const testTypeMobileRef = useRef<HTMLDivElement>(null);
+
+  // Display date: show today's date as placeholder when empty
+  const displayDate = selectedDate || getTodayFormatted();
 
   useEffect(() => {
     // Fetch communities
@@ -236,7 +243,7 @@ export default function AnalyticsFilters({
               onChange={handleDateTextChange}
               maxLength={10}
               className="text-[14px] lg:text-[16px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[95px]"
-              placeholder="DD/MM/YYYY"
+              placeholder={getTodayFormatted()}
             />
             <input
               ref={dateInputRef}
@@ -306,7 +313,7 @@ export default function AnalyticsFilters({
               onChange={handleDateTextChange}
               maxLength={10}
               className="text-[13px] font-medium text-[#637381] font-inter bg-transparent border-none outline-none w-[80px]"
-              placeholder="DD/MM/YYYY"
+              placeholder={getTodayFormatted()}
             />
             <button
               type="button"

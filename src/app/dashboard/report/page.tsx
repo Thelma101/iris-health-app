@@ -10,11 +10,8 @@ import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal'
 import api from '@/lib/api/index';
 
 export default function ReportPage() {
-  // Initialize with today's date in DD/MM/YYYY format
-  const today = new Date();
-  const formattedToday = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-  
-  const [selectedDate, setSelectedDate] = useState(formattedToday);
+  // Initialize with empty date - shows all data by default
+  const [selectedDate, setSelectedDate] = useState('');
   const [selectedCommunity, setSelectedCommunity] = useState('');
   const [selectedTestType, setSelectedTestType] = useState('');
   const [showOfficerTestsModal, setShowOfficerTestsModal] = useState(false);

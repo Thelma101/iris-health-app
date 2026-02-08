@@ -487,13 +487,13 @@ export default function SubmitTestPage() {
             testType: testDetails.testType,
             dateConducted: testDetails.dateConducted,
             testResult: testDetails.testResult,
-            officerNote: testDetails.officerNote || undefined,
+            officerNotes: testDetails.officerNote || undefined,
           },
         ],
       };
       
       
-      const res = await api.createPatient(payload);
+      const res = await api.createPatientWithTest(payload);
       
       if (res.success) {
         setSubmitSuccess(true);

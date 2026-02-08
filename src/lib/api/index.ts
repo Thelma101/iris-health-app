@@ -335,6 +335,9 @@ export const api = {
   getPatient: (id: string) => apiRequest(`/patients/${id}`),
   createPatient: (data: object) =>
     apiRequest('/patients', { method: 'POST', body: JSON.stringify(data) }),
+  // Create patient with test details (combined endpoint)
+  createPatientWithTest: (data: object) =>
+    apiRequest('/fieldAgent/create', { method: 'POST', body: JSON.stringify(data) }),
   updatePatient: (id: string, data: object) =>
     apiRequest(`/patients/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePatient: (id: string) =>
@@ -580,7 +583,7 @@ export const api = {
             });
           }
           
-          // Apply date filter to count - only count tests on or before selected date
+          // Apply date filter to count - count tests on or before selected date
           if (params?.date) {
             tests = tests.filter((t: any) => {
               if (!t.dateConducted) return false;
@@ -641,7 +644,7 @@ export const api = {
           });
         }
 
-        // Apply date filter
+        // Apply date filter - count tests on or before selected date
         if (params?.date) {
           tests = tests.filter((t: any) => {
             if (!t.dateConducted) return false;
