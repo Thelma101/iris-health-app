@@ -42,8 +42,8 @@ export default function FieldOfficerReport({ officers, onViewTests }: Readonly<F
           Field Officer Report
         </p>
       </div>
-      <div className="overflow-x-auto max-h-[360px] overflow-y-auto">
-        <table className="w-full min-w-[320px]">
+      <div className="max-h-[360px] overflow-y-auto">
+        <table className="w-full">
           <thead className="sticky top-0 z-10">
             <tr className="bg-[#eef2f7] border-b border-[#d9d9d9] text-left">
               <th className="px-3 sm:px-6 py-2.5 sm:py-3 w-[40%] sm:w-[45%] bg-[#eef2f7]">

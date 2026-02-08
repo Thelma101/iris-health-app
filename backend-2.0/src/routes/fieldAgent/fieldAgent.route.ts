@@ -4,7 +4,7 @@ import { deleteFieldAgent, getAllFieldAgents, getFieldAgentById, getfieldAgentPr
 import { createPatient, filterPatients } from "../../controllers/patients.controller";
 import upload from "../../middlewares/upload";
 import { getAllCommunities } from "../../controllers/community.controller";
-import { getAllTestTypes } from "../../controllers/testType.controller";
+import { getAllTestTypes, createTestType, updateTestType, deleteTestType } from "../../controllers/testType.controller";
 const fieldAgentRoutes: Router = Router();
 fieldAgentRoutes.post('/signup', registerfieldAgent)
 fieldAgentRoutes.post('/login', loginfieldAgent)
@@ -15,6 +15,9 @@ fieldAgentRoutes.post('/create', protect, fieldAgentOnly, upload.fields([
   ]), createPatient)
 fieldAgentRoutes.get('/communities', protect, fieldAgentOnly, getAllCommunities)
 fieldAgentRoutes.get('/testtypes', protect, agentOrAdmin, getAllTestTypes)
+fieldAgentRoutes.post('/testtypes', protect, agentOrAdmin, createTestType)
+fieldAgentRoutes.put('/testtypes/:id', protect, agentOrAdmin, updateTestType)
+fieldAgentRoutes.delete('/testtypes/:id', protect, agentOrAdmin, deleteTestType)
 
 fieldAgentRoutes.get("/", protect, adminOnly, getAllFieldAgents);
 fieldAgentRoutes.get("/getFieldOfficersStats", protect, agentOrAdmin, getFieldOfficerSummary);

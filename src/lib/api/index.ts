@@ -195,11 +195,27 @@ export const api = {
     return apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' });
   },
 
-  // Field Agents/Officers - with test count computed from patient data
+  // Field Agents/Officers - use backend summary endpoint for accurate test counts
   getFieldAgents: () => apiRequest('/fieldAgent/'),
   getFieldOfficers: async (): Promise<ApiResponse<Array<{ id: string; name: string; testCount: number }>>> => {
     try {
-      // Fetch both field agents and patients to compute test counts
+      // Use the dedicated backend endpoint that computes counts from community assignments
+      const summaryRes = await apiRequest<{ data: any[] }>('/fieldAgent/getFieldOfficersStats');
+      const summaryData = summaryRes.data as any;
+      const officers = summaryData?.data || summaryData?.officers || [];
+
+      if (Array.isArray(officers) && officers.length > 0) {
+        return {
+          success: true,
+          data: officers.map((officer: any) => ({
+            id: officer.id || officer._id,
+            name: officer.name || 'Unknown',
+            testCount: officer.numberOfTests || 0,
+          })),
+        };
+      }
+
+      // Fallback: fetch agents list and compute from patients
       const [agentsResponse, patientsResponse] = await Promise.all([
         apiRequest<{ agents: any[] }>('/fieldAgent/'),
         apiRequest<{ patients: any[] }>('/patients'),
@@ -211,14 +227,12 @@ export const api = {
 
       const agentsData = agentsResponse.data as any;
       const agents = agentsData?.agents || agentsData?.data?.agents || agentsData?.fieldAgents || [];
-      
+
       const patientsData = patientsResponse.data as any;
       const patients = patientsData?.data?.patients || patientsData?.patients || [];
 
-      // Build a map of officer ID to test count
+      // Count tests by conductedBy field
       const testCountByOfficer: Record<string, number> = {};
-
-      // Count tests where conductedBy matches each officer
       patients.forEach((patient: any) => {
         const tests = patient.testDetails || [];
         tests.forEach((test: any) => {
@@ -252,7 +266,7 @@ export const api = {
     }
   },
 
-  // Get patients filtered by the officer who conducted their tests - returns full patient data
+  // Get patients filtered by the officer - uses conductedBy first, then community assignment fallback
   getPatientsByOfficer: async (officerId: string): Promise<ApiResponse<Array<{
     index: number;
     name: string;
@@ -274,47 +288,79 @@ export const api = {
     }>;
   }>>> => {
     try {
-      const response = await apiRequest<{ patients: any[] }>('/patients');
-      const patientsData = response.data as any;
+      const [patientsRes, communitiesRes] = await Promise.all([
+        apiRequest<{ patients: any[] }>('/patients'),
+        apiRequest<{ communities: any[] }>('/community/all'),
+      ]);
+      const patientsData = patientsRes.data as any;
       const patients = patientsData?.data?.patients || patientsData?.patients || [];
 
-      // Filter patients that have at least one test conducted by this officer
-      const filteredPatients: Array<any> = [];
-      let index = 1;
+      const mapPatient = (patient: any, tests: any[], startIndex: number) => ({
+        index: startIndex,
+        name: `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || 'Unknown',
+        patientId: patient._id,
+        firstName: patient.firstName || '',
+        lastName: patient.lastName || '',
+        age: patient.age?.toString() || '',
+        gender: patient.gender || '',
+        phoneNumber: patient.contact || patient.phoneNumber || patient.phone || '',
+        community: patient.community?.name || patient.community || '',
+        lga: patient.community?.lga || patient.lga || '',
+        testDetails: tests.map((test: any) => ({
+          testType: test.testType?.name || test.testType || '',
+          testResult: test.testResult || '',
+          dateConducted: test.dateVisited || test.dateConducted || '',
+          officerNote: test.notes || test.officerNote || test.officerNotes || '',
+          testSheetUrl: test.testSheetUrl || '',
+          patientImage: test.patientImageUrl || test.patientImage || '',
+        })),
+      });
 
+      // Strategy 1: Filter by conductedBy field
+      const filteredByConductedBy: Array<any> = [];
+      let index = 1;
       patients.forEach((patient: any) => {
         const tests = patient.testDetails || [];
-        // Find tests conducted by this officer
         const testsByOfficer = tests.filter((test: any) => {
           const conductedBy = test.conductedBy?._id || test.conductedBy;
           return conductedBy === officerId;
         });
-
         if (testsByOfficer.length > 0) {
-          filteredPatients.push({
-            index: index++,
-            name: `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || 'Unknown',
-            patientId: patient._id,
-            firstName: patient.firstName || '',
-            lastName: patient.lastName || '',
-            age: patient.age?.toString() || '',
-            gender: patient.gender || '',
-            phoneNumber: patient.contact || patient.phoneNumber || '',
-            community: patient.community?.name || patient.community || '',
-            lga: patient.lga || '',
-            testDetails: testsByOfficer.map((test: any) => ({
-              testType: test.testType?.name || test.testType || '',
-              testResult: test.testResult || '',
-              dateConducted: test.dateVisited || test.dateConducted || '',
-              officerNote: test.notes || test.officerNote || '',
-              testSheetUrl: test.testSheetUrl || '',
-              patientImage: test.patientImage || patient.patientImage || '',
-            })),
-          });
+          filteredByConductedBy.push(mapPatient(patient, testsByOfficer, index++));
         }
       });
 
-      return { success: true, data: filteredPatients };
+      if (filteredByConductedBy.length > 0) {
+        return { success: true, data: filteredByConductedBy };
+      }
+
+      // Strategy 2: Fall back to community assignment
+      const commData = communitiesRes.data as any;
+      const communities = commData?.data?.communities || commData?.communities || [];
+      const officerCommunityIds = new Set<string>();
+      communities.forEach((c: any) => {
+        const officers = c.fieldOfficers || [];
+        officers.forEach((o: any) => {
+          const oid = o._id || o;
+          if (oid === officerId || oid?.toString() === officerId) {
+            officerCommunityIds.add(c._id);
+          }
+        });
+      });
+
+      const filteredByCommunity: Array<any> = [];
+      index = 1;
+      patients.forEach((patient: any) => {
+        const commId = patient.community?._id || patient.community;
+        if (commId && officerCommunityIds.has(commId)) {
+          const tests = patient.testDetails || [];
+          if (tests.length > 0) {
+            filteredByCommunity.push(mapPatient(patient, tests, index++));
+          }
+        }
+      });
+
+      return { success: true, data: filteredByCommunity };
     } catch (error) {
       return {
         success: false,
@@ -402,26 +448,39 @@ export const api = {
   // Dashboard - aggregate calls that compute stats from available data
   getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
     try {
-      const [communitiesRes, fieldAgentsRes, visitationsRes] = await Promise.all([
+      const [communitiesRes, fieldAgentsRes, patientsRes] = await Promise.all([
         api.getCommunities(),
         api.getFieldAgents(),
-        api.getVisitations(),
+        api.getPatients(),
       ]);
 
       // Handle nested response structure
       const commData = communitiesRes.data as any;
       const agentsData = fieldAgentsRes.data as any;
-      const visitData = visitationsRes.data as any;
+      const patData = patientsRes.data as any;
 
       const communities = commData?.data?.communities || commData?.communities || [];
-      // Backend returns { agents: [...] } not { fieldAgents: [...] }
       const fieldAgents = agentsData?.agents || agentsData?.data?.agents || agentsData?.fieldAgents || [];
-      const visitations = visitData?.data?.visitations || visitData?.visitations || [];
+      const patients = patData?.data?.patients || patData?.patients || [];
 
-      const totalTests = visitations.length;
-      const lastVisitation = visitations.sort((a: any, b: any) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0];
+      // Count total tests from community stats OR patient testDetails
+      let totalTests = communities.reduce((sum: number, c: any) => sum + (c.totalTestsConducted || 0), 0);
+      if (totalTests === 0) {
+        // Fallback: count from patient testDetails
+        totalTests = patients.reduce((sum: number, p: any) => sum + (p.testDetails?.length || 0), 0);
+      }
+
+      // Find the most recent test date from patient testDetails
+      let latestDate = '';
+      patients.forEach((p: any) => {
+        const tests = p.testDetails || [];
+        tests.forEach((t: any) => {
+          const d = t.dateConducted || t.dateVisited;
+          if (d && (!latestDate || new Date(d) > new Date(latestDate))) {
+            latestDate = d;
+          }
+        });
+      });
 
       const stats: DashboardStats = {
         communities: communities.length,
@@ -429,14 +488,13 @@ export const api = {
         tests: totalTests,
         communitiesCovered: communities.filter((c: any) => c.totalTestsConducted > 0).length,
         fieldAgentsAvailable: fieldAgents.length,
-        lastTestDate: lastVisitation?.createdAt
-          ? new Date(lastVisitation.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+        lastTestDate: latestDate
+          ? new Date(latestDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
           : 'N/A',
       };
 
       return { success: true, data: stats };
     } catch (error) {
-      // Return empty data when API is not available
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch dashboard stats',
@@ -582,17 +640,18 @@ export const api = {
           // Apply test type filter to count
           if (params?.testType) {
             tests = tests.filter((t: any) => {
-              // Handle testType as object (populated) or string
               const testTypeName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
-              return testTypeName?.toLowerCase().includes(params.testType!.toLowerCase());
+              if (!testTypeName) return false;
+              return testTypeName.toLowerCase() === params.testType!.toLowerCase();
             });
           }
           
-          // Apply date filter to count - count tests on or before selected date
+          // Apply date filter - filter tests on or before selected date
           if (params?.date) {
             tests = tests.filter((t: any) => {
-              if (!t.dateConducted) return false;
-              const testDate = new Date(t.dateConducted).toISOString().split('T')[0];
+              const rawDate = t.dateConducted || t.dateVisited;
+              if (!rawDate) return false;
+              const testDate = new Date(rawDate).toISOString().split('T')[0];
               return testDate <= params.date!;
             });
           }
@@ -641,28 +700,31 @@ export const api = {
       patients.forEach((p: any) => {
         let tests = p.testDetails || [];
         
-        // Apply test type filter - handle testType as object (populated) or string
+        // Apply test type filter
         if (params?.testType) {
           tests = tests.filter((t: any) => {
             const testTypeName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
-            return testTypeName?.toLowerCase().includes(params.testType!.toLowerCase());
+            if (!testTypeName) return false;
+            return testTypeName.toLowerCase() === params.testType!.toLowerCase();
           });
         }
 
         // Apply date filter - count tests on or before selected date
         if (params?.date) {
           tests = tests.filter((t: any) => {
-            if (!t.dateConducted) return false;
-            const testDate = new Date(t.dateConducted).toISOString().split('T')[0];
+            const rawDate = t.dateConducted || t.dateVisited;
+            if (!rawDate) return false;
+            const testDate = new Date(rawDate).toISOString().split('T')[0];
             return testDate <= params.date!;
           });
         }
 
         tests.forEach((test: any) => {
-          const result = (test.testResult || '').toLowerCase();
-          if (result.includes('positive') || result.includes('high') || result.includes('hypertension')) {
+          const result = (test.testResult || '').toLowerCase().trim();
+          const resultClass = classifyResult(result);
+          if (resultClass === 'positive') {
             positiveCount++;
-          } else if (result.includes('negative') || result.includes('normal')) {
+          } else if (resultClass === 'negative') {
             negativeCount++;
           }
         });

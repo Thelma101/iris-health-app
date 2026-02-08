@@ -42,44 +42,74 @@ export default function FieldAgentDashboardPage() {
       const startTime = performance.now();
 
       try {
-        // Fetch visitations/tests for the field agent
-        const visitationsRes = await fieldAgentApi.getMyVisitations() as any;
+        // Fetch communities and patients to compute stats from testDetails
+        const [communitiesRes, patientsRes] = await Promise.all([
+          fieldAgentApi.getMyCommunities(),
+          fieldAgentApi.getPatients(),
+        ]);
 
-        const visitations = visitationsRes.data?.data?.visitations || visitationsRes.data?.visitations || [];
+        const commData = communitiesRes.data as any;
+        const patData = patientsRes.data as any;
+        const communities = commData?.data?.communities || commData?.communities || [];
+        const patients = patData?.data?.patients || patData?.patients || [];
+
         const duration = Math.round(performance.now() - startTime);
-        logger.info('FieldAgentDashboard', `Visitations loaded (${duration}ms)`, { count: visitations.length });
+        logger.info('FieldAgentDashboard', `Data loaded (${duration}ms)`, { communities: communities.length, patients: patients.length });
 
-      // Calculate stats
-      const totalTests = visitations.length;
-      const lastVisitation = visitations.sort((a: any, b: any) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0];
+        // Build a set of community IDs for quick lookup
+        const communityIds = new Set(communities.map((c: any) => c._id || c.id));
 
-      setStats({
-        totalTests,
-        lastTestDate: lastVisitation?.createdAt
-          ? new Date(lastVisitation.createdAt).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          }).replace(',', '')
-          : 'N/A',
-      });
+        // Filter patients belonging to the agent's communities
+        const agentPatients = patients.filter((p: any) => {
+          const commId = p.community?._id || p.community;
+          return commId && communityIds.has(commId);
+        });
 
-      // Group visitations by community for recent records
-      // Track positive/negative test counts per community
-      const communityMap = new Map<string, any>();
-      visitations.forEach((v: any) => {
-        // Backend populates communityId with { name, lga } object
-        const communityName = v.communityId?.name || v.community?.name || v.communityName || 'Unknown';
-        const communityLga = v.communityId?.lga || v.community?.lga || '';
-        const fullCommunityName = communityLga ? `${communityName} ${communityLga}` : communityName;
+        // Count total tests and find latest test date from patient testDetails
+        let totalTests = 0;
+        let latestDate = '';
+        agentPatients.forEach((p: any) => {
+          const tests = p.testDetails || [];
+          totalTests += tests.length;
+          tests.forEach((t: any) => {
+            const d = t.dateConducted || t.dateVisited;
+            if (d && (!latestDate || new Date(d) > new Date(latestDate))) {
+              latestDate = d;
+            }
+          });
+        });
 
-        if (!communityMap.has(fullCommunityName)) {
-          communityMap.set(fullCommunityName, {
-            id: v._id || v.id,
+        // If no test dates found from testDetails, try community totalTestsConducted
+        if (totalTests === 0) {
+          totalTests = communities.reduce((sum: number, c: any) => sum + (c.totalTestsConducted || 0), 0);
+        }
+
+        setStats({
+          totalTests,
+          lastTestDate: latestDate
+            ? new Date(latestDate).toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            }).replace(',', '')
+            : 'N/A',
+        });
+
+        // Group patients by community for recent records
+        // Track positive/negative test counts per community
+        const communityMap = new Map<string, any>();
+
+        // Initialize from communities list
+        communities.forEach((c: any) => {
+          const communityName = c.name || 'Unknown';
+          const communityLga = c.lga || '';
+          const fullCommunityName = communityLga ? `${communityName} ${communityLga}` : communityName;
+          const cId = c._id || c.id;
+
+          communityMap.set(cId, {
+            id: cId,
             community: fullCommunityName,
             totalTests: 0,
             positiveTests: {} as Record<string, number>,
@@ -87,69 +117,72 @@ export default function FieldAgentDashboardPage() {
             topPositiveTest: '-',
             topNegativeTest: '-',
           });
-        }
+        });
 
-        const entry = communityMap.get(fullCommunityName);
-        entry.totalTests++;
+        // Aggregate test data from patients
+        agentPatients.forEach((p: any) => {
+          const commId = p.community?._id || p.community;
+          if (!commId || !communityMap.has(commId)) return;
 
-        // Aggregate diagnostics to find top positive/negative tests
-        // Diagnostics can be plain strings like "Malaria RDT - Positive" or objects with {testType, result}
-        const diagnostics = v.diagnostics || [];
-        diagnostics.forEach((d: any) => {
-          let testName = 'Unknown';
-          let result = '';
+          const entry = communityMap.get(commId);
+          const tests = p.testDetails || [];
 
-          if (typeof d === 'string') {
-            // Parse string format: "TestName - Result"
-            const separatorIdx = d.lastIndexOf(' - ');
-            if (separatorIdx > 0) {
-              testName = d.substring(0, separatorIdx).trim();
-              result = d.substring(separatorIdx + 3).trim().toLowerCase();
-            } else {
-              testName = d;
+          tests.forEach((t: any) => {
+            entry.totalTests++;
+
+            const testName = typeof t.testType === 'object' ? t.testType?.name : t.testType || 'Unknown';
+            const result = (t.testResult || '').toLowerCase().trim();
+
+            const resultClass = classifyResult(result);
+            if (resultClass === 'positive') {
+              entry.positiveTests[testName] = (entry.positiveTests[testName] || 0) + 1;
+            } else if (resultClass === 'negative') {
+              entry.negativeTests[testName] = (entry.negativeTests[testName] || 0) + 1;
             }
-          } else {
-            // Object format: { testType, result }
-            testName = typeof d.testType === 'object' ? d.testType?.name : d.testType || 'Unknown';
-            result = (d.result || d.testResult || '').toLowerCase();
-          }
+          });
+        });
 
-          const resultClass = classifyResult(result);
-          if (resultClass === 'positive') {
-            entry.positiveTests[testName] = (entry.positiveTests[testName] || 0) + 1;
-          } else if (resultClass === 'negative') {
-            entry.negativeTests[testName] = (entry.negativeTests[testName] || 0) + 1;
+        // Use community.totalTestsConducted as fallback for communities with no patient data
+        communities.forEach((c: any) => {
+          const cId = c._id || c.id;
+          const entry = communityMap.get(cId);
+          if (entry && entry.totalTests === 0 && c.totalTestsConducted > 0) {
+            entry.totalTests = c.totalTestsConducted;
           }
         });
-      });
 
-      // Compute top positive/negative from aggregated data
-      communityMap.forEach((entry) => {
-        const topPos = Object.entries(entry.positiveTests as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
-        const topNeg = Object.entries(entry.negativeTests as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
-        entry.topPositiveTest = topPos ? `${topPos[0]} (${topPos[1]})` : '-';
-        entry.topNegativeTest = topNeg ? `${topNeg[0]} (${topNeg[1]})` : '-';
-        // Clean up intermediate data
-        delete entry.positiveTests;
-        delete entry.negativeTests;
-      });
+        // Compute top positive/negative from aggregated data
+        communityMap.forEach((entry) => {
+          const topPos = Object.entries(entry.positiveTests as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
+          const topNeg = Object.entries(entry.negativeTests as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
+          entry.topPositiveTest = topPos ? `${topPos[0]} (${topPos[1]})` : '-';
+          entry.topNegativeTest = topNeg ? `${topNeg[0]} (${topNeg[1]})` : '-';
+          // Clean up intermediate data
+          delete entry.positiveTests;
+          delete entry.negativeTests;
+        });
 
-      setRecentRecords(Array.from(communityMap.values()).slice(0, 15));
-      logger.info('FieldAgentDashboard', 'Dashboard data processed', { totalTests: visitations.length, communities: communityMap.size });
-    } catch (err: any) {
-      logger.error('FieldAgentDashboard', 'Error fetching dashboard data', { error: err?.message || err });
-      setError('Failed to load dashboard data');
+        // Only show communities that have tests
+        const records = Array.from(communityMap.values())
+          .filter((r) => r.totalTests > 0)
+          .slice(0, 15);
 
-      // Empty state on error - no fallback data
-      setStats({
-        totalTests: 0,
-        lastTestDate: 'N/A',
-      });
+        setRecentRecords(records);
+        logger.info('FieldAgentDashboard', 'Dashboard data processed', { totalTests, communities: records.length });
+      } catch (err: any) {
+        logger.error('FieldAgentDashboard', 'Error fetching dashboard data', { error: err?.message || err });
+        setError('Failed to load dashboard data');
 
-      setRecentRecords([]);
-    } finally {
-      setLoading(false);
-    }
+        // Empty state on error - no fallback data
+        setStats({
+          totalTests: 0,
+          lastTestDate: 'N/A',
+        });
+
+        setRecentRecords([]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchDashboardData();
   }, []);

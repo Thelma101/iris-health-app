@@ -2,25 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { fieldAgentApi } from '@/lib/api/field-agent';
+import { classifyResult } from '@/lib/utils/resultClassifier';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-
-interface FieldOfficer {
-  _id?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  name?: string;
-}
 
 interface CommunityDetails {
   _id: string;
   name: string;
   lga: string;
   population: number;
-  fieldOfficers: FieldOfficer[] | string[];
+  fieldOfficers: string[];
   totalTests: number;
+  totalPatients: number;
+  positiveCount: number;
+  negativeCount: number;
   visitationDates: string[];
-  visitationSummary?: string;
+  visitationSummary: string;
+  lastVisitDate: string;
 }
 
 export default function FieldAgentCommunityPage() {
@@ -34,37 +31,98 @@ export default function FieldAgentCommunityPage() {
       setError(null);
       
       try {
-        const res = await fieldAgentApi.getMyCommunities() as any;
-        const communities = res.data?.data?.communities || res.data?.communities || [];
+        // Fetch communities and patients in parallel
+        const [commRes, patRes] = await Promise.all([
+          fieldAgentApi.getMyCommunities() as any,
+          fieldAgentApi.getPatients() as any,
+        ]);
+
+        const communities = commRes.data?.data?.communities || commRes.data?.communities || [];
+        const allPatients = patRes.data?.data?.patients || patRes.data?.patients || [];
         
         if (communities.length > 0) {
           const c = communities[0];
-          // Parse field officers - handle both object array and string array
-          const officers = c.fieldOfficers || [];
-          const parsedOfficers = officers.map((fo: any) => {
+          const communityId = c._id || c.id;
+
+          // Parse field officers
+          const officers = (c.fieldOfficers || []).map((fo: any) => {
             if (typeof fo === 'string') return fo;
             if (fo.firstName || fo.lastName) return `${fo.firstName || ''} ${fo.lastName || ''}`.trim();
             if (fo.name) return fo.name;
             return '';
           }).filter((name: string) => name);
-          
+
+          // Filter patients belonging to this community
+          const communityPatients = allPatients.filter((p: any) => {
+            const pComm = p.community?._id || p.community;
+            return pComm === communityId;
+          });
+
+          // Compute test stats from patient testDetails
+          let totalTests = 0;
+          let positiveCount = 0;
+          let negativeCount = 0;
+          const testDatesSet = new Set<string>();
+
+          communityPatients.forEach((p: any) => {
+            const tests = p.testDetails || [];
+            totalTests += tests.length;
+            tests.forEach((t: any) => {
+              const result = (t.testResult || '').toLowerCase().trim();
+              const cls = classifyResult(result);
+              if (cls === 'positive') positiveCount++;
+              else if (cls === 'negative') negativeCount++;
+              // Collect unique test dates
+              const d = t.dateConducted || t.dateVisited;
+              if (d) {
+                const dateStr = new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                testDatesSet.add(dateStr);
+              }
+            });
+          });
+
+          // Use DB totalTestsConducted as fallback
+          if (totalTests === 0 && c.totalTestsConducted > 0) {
+            totalTests = c.totalTestsConducted;
+          }
+
+          // Sort visitation dates (most recent first)
+          const visitationDates = Array.from(testDatesSet).sort((a, b) =>
+            new Date(b).getTime() - new Date(a).getTime()
+          );
+
+          // Build auto-generated summary
+          const lastDate = visitationDates[0] || (c.dateVisited ? new Date(c.dateVisited).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : null);
+          const dbSummary = c.visitationSummary;
+          let summaryText = '';
+          if (dbSummary) {
+            summaryText = dbSummary;
+          } else if (totalTests > 0) {
+            summaryText = `${totalTests} test${totalTests !== 1 ? 's' : ''} conducted across ${communityPatients.length} patient${communityPatients.length !== 1 ? 's' : ''}. ${positiveCount} positive, ${negativeCount} negative.`;
+            if (lastDate) summaryText += ` Last activity: ${lastDate}.`;
+          } else {
+            summaryText = 'No test activities recorded yet.';
+          }
+
           setCommunity({
-            _id: c._id || c.id,
+            _id: communityId,
             name: c.name || 'Unknown',
             lga: c.lga || 'N/A',
             population: c.totalPopulation || c.population || 0,
-            fieldOfficers: parsedOfficers,
-            totalTests: c.totalTestsConducted || 0,
-            visitationDates: c.visitationDates || [],
-            visitationSummary: c.visitationSummary,
+            fieldOfficers: officers,
+            totalTests,
+            totalPatients: communityPatients.length,
+            positiveCount,
+            negativeCount,
+            visitationDates: visitationDates.slice(0, 10), // Show last 10 dates
+            visitationSummary: summaryText,
+            lastVisitDate: lastDate || 'N/A',
           });
         } else {
-          // No communities found - show empty state
           setCommunity(null);
           setError('No community assigned to this field agent');
         }
       } catch {
-        // API error - show error state
         setCommunity(null);
         setError('Failed to load community data');
       } finally {
@@ -150,7 +208,7 @@ export default function FieldAgentCommunityPage() {
                   Population
                 </p>
                 <p className="font-poppins text-sm text-[#212b36]">
-                  {community.population.toLocaleString()}
+                  {community.population > 0 ? community.population.toLocaleString() : 'Not yet recorded'}
                 </p>
               </div>
 
@@ -170,10 +228,8 @@ export default function FieldAgentCommunityPage() {
                   Field Officers
                 </p>
                 <p className="font-poppins text-sm text-[#212b36]">
-                  {Array.isArray(community.fieldOfficers) 
-                    ? community.fieldOfficers.map((fo: any) => 
-                        typeof fo === 'string' ? fo : `${fo.firstName || ''} ${fo.lastName || ''}`.trim()
-                      ).join(', ') 
+                  {community.fieldOfficers.length > 0
+                    ? community.fieldOfficers.join(', ')
                     : 'No officers assigned'}
                 </p>
               </div>
@@ -188,17 +244,61 @@ export default function FieldAgentCommunityPage() {
                 </p>
               </div>
 
+              {/* Patients Tested */}
+              <div className="border-b border-[#d9d9d9] pb-2 flex flex-col gap-2.5">
+                <p className="font-poppins font-semibold text-base text-[#212b36]">
+                  Patients Tested
+                </p>
+                <p className="font-poppins text-sm text-[#212b36]">
+                  {community.totalPatients.toLocaleString()}
+                </p>
+              </div>
+
+              {/* Test Results Breakdown */}
+              {community.totalTests > 0 && (
+                <div className="border-b border-[#d9d9d9] pb-2 flex flex-col gap-2.5">
+                  <p className="font-poppins font-semibold text-base text-[#212b36]">
+                    Results Breakdown
+                  </p>
+                  <div className="flex gap-4">
+                    <span className="font-poppins text-sm text-green-600">
+                      +ve: {community.positiveCount}
+                    </span>
+                    <span className="font-poppins text-sm text-red-600">
+                      -ve: {community.negativeCount}
+                    </span>
+                    <span className="font-poppins text-sm text-[#637381]">
+                      Other: {community.totalTests - community.positiveCount - community.negativeCount}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Visitation Summary */}
               <div className="border-b border-[#d9d9d9] pb-2 flex flex-col gap-2.5">
                 <p className="font-poppins font-semibold text-base text-[#212b36]">
                   Visitation Summary
                 </p>
-                {community.visitationDates.map((date, index) => (
-                  <p key={index} className="font-poppins text-sm text-[#212b36]">
-                    {date}
-                  </p>
-                ))}
+                <p className="font-poppins text-sm text-[#212b36]">
+                  {community.visitationSummary}
+                </p>
               </div>
+
+              {/* Visitation Dates */}
+              {community.visitationDates.length > 0 && (
+                <div className="border-b border-[#d9d9d9] pb-2 flex flex-col gap-2.5">
+                  <p className="font-poppins font-semibold text-base text-[#212b36]">
+                    Recent Activity Dates
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {community.visitationDates.map((date, index) => (
+                      <span key={index} className="font-poppins text-xs text-[#637381] bg-[#f4f6f8] px-2 py-1 rounded">
+                        {date}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

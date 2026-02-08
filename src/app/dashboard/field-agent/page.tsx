@@ -137,11 +137,11 @@ export default function FieldAgentDashboard() {
               
                 <div className="rounded-lg border border-[#d9d9d9] overflow-hidden max-h-[calc(100vh-450px)] overflow-y-auto">
                   {/* Table Header */}
-                  <div className="bg-[#f4f5f7] px-1 py-1.5 flex items-center overflow-x-auto sticky top-0 z-10">
-                    <div className="min-w-[211px] w-[211px] text-[#637381] text-sm font-semibold font-poppins px-1 bg-[#f4f5f7]">Communities</div>
-                    <div className="min-w-[143px] w-[143px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] bg-[#f4f5f7]">Total Test</div>
-                    <div className="min-w-[202px] w-[202px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] bg-[#f4f5f7]">Top Tests +ve</div>
-                    <div className="min-w-[188px] w-[188px] text-[#637381] text-sm font-semibold font-poppins ml-[114px] hidden sm:block bg-[#f4f5f7]">Top Tests -ve</div>
+                  <div className="bg-[#f4f5f7] px-1 py-1.5 grid grid-cols-4 gap-2 sticky top-0 z-10">
+                    <div className="text-[#637381] text-sm font-semibold font-poppins px-1 bg-[#f4f5f7]">Communities</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins bg-[#f4f5f7]">Total Test</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins bg-[#f4f5f7]">Top Tests +ve</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins bg-[#f4f5f7]">Top Tests -ve</div>
                   </div>
 
                   {/* Table Body */}
@@ -150,20 +150,20 @@ export default function FieldAgentDashboard() {
                       recentRecords.map((record, idx) => (
                         <div
                           key={`${record.community}-${idx}`}
-                          className={`px-1 py-1.5 flex items-center overflow-x-auto transition-colors border-b border-[#e5e7eb] ${
+                          className={`px-1 py-1.5 grid grid-cols-4 gap-2 transition-colors border-b border-[#e5e7eb] ${
                             idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'
                           }`}
                         >
-                          <div className="min-w-[211px] w-[211px] text-[#637381] text-sm font-normal font-poppins px-1 truncate">
+                          <div className="text-[#637381] text-sm font-normal font-poppins px-1 truncate">
                             {record.community}
                           </div>
-                          <div className="min-w-[143px] w-[143px] text-[#637381] text-sm font-normal font-poppins ml-[114px]">
+                          <div className="text-[#637381] text-sm font-normal font-poppins">
                             {record.totalTests}
                           </div>
-                          <div className="min-w-[202px] w-[202px] text-[#637381] text-sm font-normal font-poppins ml-[114px]">
+                          <div className="text-[#637381] text-sm font-normal font-poppins break-words">
                             {record.topPositiveTest}
                           </div>
-                          <div className="min-w-[188px] w-[188px] text-[#637381] text-sm font-normal font-poppins ml-[114px] hidden sm:block">
+                          <div className="text-[#637381] text-sm font-normal font-poppins break-words">
                             {record.topNegativeTest}
                           </div>
                         </div>

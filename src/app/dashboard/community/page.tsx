@@ -427,8 +427,8 @@ export default function CommunityPage() {
         <>
           {/* Desktop Table View */}
           <div className="hidden sm:block bg-white rounded-lg border border-[#f4f5f7] overflow-hidden">
-            <div className="overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
-              <table className="w-full min-w-[900px]">
+            <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+              <table className="w-full table-fixed">
                 {/* Table Header */}
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-[#f4f5f7] border-b border-[#f4f5f7]">

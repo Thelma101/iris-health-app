@@ -30,7 +30,7 @@ export default function UserManagementTable({ users, onEdit, onToggleStatus, onD
   return (
     <div className="bg-white border border-[#f4f5f7] rounded-[10px] overflow-hidden">
       {/* Desktop Table */}
-      <div className="hidden sm:block overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
+      <div className="hidden sm:block max-h-[calc(100vh-320px)] overflow-y-auto">
         {/* Header */}
         <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] grid grid-cols-5 gap-8 h-[48px] items-center px-4 py-3 sticky top-0 z-10">
           <span className="text-[14px] font-semibold text-[#637381] font-poppins">Name</span>

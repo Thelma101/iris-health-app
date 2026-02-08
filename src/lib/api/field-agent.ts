@@ -93,11 +93,11 @@ export const fieldAgentApi = {
   // Test Types
   getTestTypes: () => fieldAgentRequest('/fieldAgent/testtypes'),
   createTestType: (data: { name: string; allowedResults: string[] }) =>
-    fieldAgentRequest('/admin/testtypes', { method: 'POST', body: JSON.stringify(data) }),
+    fieldAgentRequest('/fieldAgent/testtypes', { method: 'POST', body: JSON.stringify(data) }),
   updateTestType: (id: string, data: { name: string; allowedResults: string[] }) =>
-    fieldAgentRequest(`/admin/testtypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    fieldAgentRequest(`/fieldAgent/testtypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTestType: (id: string) =>
-    fieldAgentRequest(`/admin/testtypes/${id}`, { method: 'DELETE' }),
+    fieldAgentRequest(`/fieldAgent/testtypes/${id}`, { method: 'DELETE' }),
 
   // Dashboard stats
   getDashboardStats: async (): Promise<ApiResponse<{

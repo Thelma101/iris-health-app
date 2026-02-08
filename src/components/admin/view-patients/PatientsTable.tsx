@@ -12,33 +12,33 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
     <div className="w-full">
       {/* Desktop Table View */}
       <div className="hidden sm:block rounded-lg bg-white border border-[#f4f5f7] overflow-hidden">
-        <div className="overflow-x-auto max-h-[calc(100vh-320px)] overflow-y-auto">
-          <table className="w-full min-w-[900px]">
+        <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+          <table className="w-full table-fixed">
             {/* Table Header */}
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#f4f5f7] border-b border-[#f4f5f7]">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[211px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[18%]">
                   Patient Name
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[60px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[6%]">
                   Age
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[60px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[8%]">
                   Gender
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[143px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[18%]">
                   Community
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[143px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[12%]">
                   LGA
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[92px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[8%]">
                   Tests Taken
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[117px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[16%]">
                   Last Test Result
                 </th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-[#637381] font-poppins whitespace-nowrap w-[144px] bg-[#f4f5f7]">
+                <th className="px-3 py-3 text-center text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[14%]">
                   Action
                 </th>
               </tr>
@@ -49,28 +49,28 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
               {patients.length > 0 ? (
                 patients.map((patient) => (
                   <tr key={patient.id} className="border-b border-[#f4f5f7] hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[211px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins break-words">
                       {patient.name}
                     </td>
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[60px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins">
                       {patient.age}
                     </td>
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[60px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins">
                       {patient.gender}
                     </td>
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[143px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins break-words">
                       {patient.community}
                     </td>
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[143px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins break-words">
                       {patient.lga}
                     </td>
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[92px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins">
                       {patient.testsTaken}
                     </td>
-                    <td className="px-6 py-3 text-sm text-[#637381] font-poppins whitespace-nowrap w-[117px]">
+                    <td className="px-3 py-3 text-sm text-[#637381] font-poppins break-words">
                       {patient.lastTestResult}
                     </td>
-                    <td className="px-6 py-3 text-sm font-semibold text-center whitespace-nowrap w-[144px]">
+                    <td className="px-3 py-3 text-sm font-semibold text-center">
                       <span
                         onClick={() => onViewPatient?.(patient)}
                         className="text-[#f4a100] cursor-pointer hover:underline mr-3"
