@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import TestResultModal from './TestResultModal';
-import api from '@/lib/api';
 
 interface TestTypeOption {
   _id: string;
@@ -24,6 +23,8 @@ interface TestDetailsFormProps {
   onBlur?: (field: string) => void;
   errors?: Record<string, string | null>;
   touched?: Record<string, boolean>;
+  testTypes?: TestTypeOption[];
+  testTypesLoading?: boolean;
 }
 
 export default function TestDetailsForm({ 
@@ -34,41 +35,17 @@ export default function TestDetailsForm({
   onBlur,
   errors = {},
   touched = {},
+  testTypes: testTypesProp = [],
+  testTypesLoading = false,
 }: TestDetailsFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [showTestResultModal, setShowTestResultModal] = useState(false);
-  const [testTypeOptions, setTestTypeOptions] = useState<TestTypeOption[]>([]);
   const [availableResults, setAvailableResults] = useState<string[]>([]);
-  const [testTypesError, setTestTypesError] = useState<string | null>(null);
 
-  // Fetch test types from API
-  useEffect(() => {
-    api.getTestTypes()
-      .then((res) => {
-        if (!res.success) {
-          setTestTypesError(res.error || 'Failed to load test types');
-          setTestTypeOptions([]);
-          return;
-        }
-        const testData = res.data as any;
-        const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
-        // Map API allowedResults to results for local interface compatibility
-        const mappedTestTypes = testTypesArray.map((t: any) => ({
-          _id: t._id,
-          name: t.name,
-          results: t.allowedResults || t.results || [],
-        }));
-        setTestTypeOptions(mappedTestTypes);
-        setTestTypesError(null);
-      })
-      .catch((err) => {
-        console.error('Error fetching test types:', err);
-        setTestTypesError('Failed to load test types');
-        setTestTypeOptions([]);
-      });
-  }, []);
+  // Use test types from prop (parent manages fetch)
+  const testTypeOptions = testTypesProp;
 
   // Track if selected test type has no configured results
   const [noResultsConfigured, setNoResultsConfigured] = useState(false);
@@ -137,16 +114,6 @@ export default function TestDetailsForm({
 
   return (
     <div className="flex flex-col gap-6">
-      {testTypesError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600 font-poppins flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {testTypesError}. Please try refreshing the page or logging in again.
-          </p>
-        </div>
-      )}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
         <div className={`relative h-12 rounded bg-white border ${getFieldClasses('testType')}`}>
@@ -157,7 +124,7 @@ export default function TestDetailsForm({
             className={`w-full h-full px-5 bg-transparent text-sm font-poppins appearance-none focus:outline-none cursor-pointer ${selectTextClass}`}
           >
             <option value="" disabled hidden>
-              {testTypeOptions.length === 0 && !testTypesError ? 'Loading test types...' : 'Select test type'}
+              {testTypesLoading ? 'Loading test types...' : testTypeOptions.length === 0 ? 'No test types available — create one first' : 'Select test type'}
             </option>
             {testTypeOptions.map((option) => (
               <option key={option._id} value={option._id}>{option.name}</option>

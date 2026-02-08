@@ -74,6 +74,7 @@ export default function FieldAgentDashboardPage() {
       });
 
       // Group visitations by community for recent records
+      // Track positive/negative test counts per community
       const communityMap = new Map<string, any>();
       visitations.forEach((v: any) => {
         // Backend populates communityId with { name, lga } object
@@ -86,11 +87,38 @@ export default function FieldAgentDashboardPage() {
             id: v._id || v.id,
             community: fullCommunityName,
             totalTests: 0,
-            topPositiveTest: v.diagnostics?.[0]?.testType || v.testType || 'N/A',
-            topNegativeTest: v.diagnostics?.[1]?.testType || 'N/A',
+            positiveTests: {} as Record<string, number>,
+            negativeTests: {} as Record<string, number>,
+            topPositiveTest: '-',
+            topNegativeTest: '-',
           });
         }
-        communityMap.get(fullCommunityName).totalTests++;
+
+        const entry = communityMap.get(fullCommunityName);
+        entry.totalTests++;
+
+        // Aggregate diagnostics to find top positive/negative tests
+        const diagnostics = v.diagnostics || [];
+        diagnostics.forEach((d: any) => {
+          const testName = typeof d.testType === 'object' ? d.testType?.name : d.testType || 'Unknown';
+          const result = (d.result || d.testResult || '').toLowerCase();
+          if (result.includes('positive') || result === 'reactive') {
+            entry.positiveTests[testName] = (entry.positiveTests[testName] || 0) + 1;
+          } else if (result.includes('negative') || result === 'non-reactive') {
+            entry.negativeTests[testName] = (entry.negativeTests[testName] || 0) + 1;
+          }
+        });
+      });
+
+      // Compute top positive/negative from aggregated data
+      communityMap.forEach((entry) => {
+        const topPos = Object.entries(entry.positiveTests as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
+        const topNeg = Object.entries(entry.negativeTests as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
+        entry.topPositiveTest = topPos ? `${topPos[0]} (${topPos[1]})` : '-';
+        entry.topNegativeTest = topNeg ? `${topNeg[0]} (${topNeg[1]})` : '-';
+        // Clean up intermediate data
+        delete entry.positiveTests;
+        delete entry.negativeTests;
       });
 
       setRecentRecords(Array.from(communityMap.values()).slice(0, 15));

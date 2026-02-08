@@ -54,6 +54,13 @@ export const createVisitation =asyncHandler(async (req: Request, res: Response):
     notes
   });
 
+  // Auto-update community's dateVisited to the visit date or now
+  if (communityId) {
+    await Community.findByIdAndUpdate(communityId, {
+      dateVisited: visitDate ? new Date(visitDate) : new Date()
+    });
+  }
+
   const populatedVisitation = await visitation.populate([
     { path: "patientId", select: "firstName lastName phone" },
     { path: "communityId", select: "name lga" }

@@ -165,8 +165,8 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Desktop Table View */}
-                <div className="hidden md:block rounded-lg border border-[#d9d9d9] overflow-hidden">
-                  <div className="bg-[#f4f5f7] px-4 py-2 grid grid-cols-4 gap-4">
+                <div className="hidden md:block rounded-lg border border-[#d9d9d9] overflow-hidden max-h-[calc(100vh-420px)] overflow-y-auto">
+                  <div className="bg-[#f4f5f7] px-4 py-2 grid grid-cols-4 gap-4 sticky top-0 z-10">
                     <div className="text-[#637381] text-sm font-semibold font-poppins">Communities</div>
                     <div className="text-[#637381] text-sm font-semibold font-poppins">Total Test</div>
                     <div className="text-[#637381] text-sm font-semibold font-poppins">Top Tests +ve</div>

@@ -42,6 +42,13 @@ const formatDate = (dateString: string | undefined): string => {
   }
 };
 
+// Pick the best available date for "Date Visited"
+const getVisitDate = (community: APICommunity): string => {
+  // Prefer dateVisited, fall back to updatedAt, then createdAt
+  const raw = community.dateVisited || community.updatedAt || community.createdAt;
+  return formatDate(raw);
+};
+
 export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -72,7 +79,7 @@ export default function CommunityPage() {
           _id: c._id,
           name: c.name,
           lga: c.lga,
-          dateVisited: formatDate(c.dateVisited),
+          dateVisited: getVisitDate(c),
           fieldOfficers: c.fieldOfficers,
           fieldOfficer: c.fieldOfficers && c.fieldOfficers.length > 0
             ? c.fieldOfficers

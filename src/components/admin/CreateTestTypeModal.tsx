@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import SuccessModal from './SuccessModal';
+import api from '@/lib/api';
 
 interface CreateTestTypeModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
   const [expectedResults, setExpectedResults] = useState<string[]>(['', '']);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleAddResult = () => {
     setExpectedResults([...expectedResults, '']);
@@ -24,17 +26,33 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
     setExpectedResults(newResults);
   };
 
-  const handleSubmit = () => {
-    if (testType && expectedResults.some(r => r.trim())) {
-      const savedTestType = testType;
-      onAdd?.(testType, expectedResults.filter(r => r.trim()));
-      setTestType('');
-      setExpectedResults(['', '']);
-      setSuccessMessage(`Test type "${savedTestType}" has been added successfully!`);
-      setShowSuccessModal(true);
-    } else {
+  const handleSubmit = async () => {
+    if (!testType.trim() || !expectedResults.some(r => r.trim())) {
       setSuccessMessage('Please enter a test type name and at least one expected result.');
       setShowSuccessModal(true);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const filteredResults = expectedResults.filter(r => r.trim());
+      const res = await api.createTestType({ name: testType.trim(), allowedResults: filteredResults });
+      if (res.success) {
+        const savedTestType = testType;
+        onAdd?.(testType, filteredResults);
+        setTestType('');
+        setExpectedResults(['', '']);
+        setSuccessMessage(`Test type "${savedTestType}" has been added successfully!`);
+        setShowSuccessModal(true);
+      } else {
+        setSuccessMessage(res.error || 'Failed to create test type. Please try again.');
+        setShowSuccessModal(true);
+      }
+    } catch {
+      setSuccessMessage('Failed to create test type. Please try again.');
+      setShowSuccessModal(true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -109,9 +127,10 @@ export default function CreateTestTypeModal({ isOpen, onClose, onAdd }: CreateTe
 
             <button
               onClick={handleSubmit}
-              className="w-full h-12 rounded-[10px] bg-[#2c7be5] text-white font-medium font-inter hover:bg-blue-600 transition-colors cursor-pointer"
+              disabled={isSaving}
+              className={`w-full h-12 rounded-[10px] text-white font-medium font-inter transition-colors cursor-pointer ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2c7be5] hover:bg-blue-600'}`}
             >
-              Add Test Type
+              {isSaving ? 'Saving...' : 'Add Test Type'}
             </button>
           </div>
         </div>

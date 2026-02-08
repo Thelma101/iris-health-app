@@ -422,11 +422,11 @@ export const api = {
         communities: communities.length,
         fieldAgents: fieldAgents.length,
         tests: totalTests,
-        communitiesCovered: communities.filter((c: any) => c.totalTestsConducted > 0).length || Math.min(communities.length, Math.ceil(communities.length * 0.6)),
+        communitiesCovered: communities.filter((c: any) => c.totalTestsConducted > 0).length,
         fieldAgentsAvailable: fieldAgents.length,
         lastTestDate: lastVisitation?.createdAt
           ? new Date(lastVisitation.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
-          : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
+          : 'N/A',
       };
 
       return { success: true, data: stats };
@@ -441,7 +441,7 @@ export const api = {
           tests: 0,
           communitiesCovered: 0,
           fieldAgentsAvailable: 0,
-          lastTestDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
+          lastTestDate: 'N/A',
         },
       };
     }

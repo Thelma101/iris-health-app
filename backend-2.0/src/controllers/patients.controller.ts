@@ -243,11 +243,14 @@ for (const test of testDetails) {
     });
 
     await Community.findByIdAndUpdate(community, {
-      $inc: { totalTestsConducted: patient.numberOfTests,
-  topPositive: positiveCount,
-    topNegative: negativeCount,
+      $inc: {
+        totalTestsConducted: patient.numberOfTests,
+        topPositive: positiveCount,
+        topNegative: negativeCount,
       },
-     
+      $set: {
+        dateVisited: new Date(),
+      },
     });
 
     const populatedPatient = await patient.populate([
@@ -269,6 +272,7 @@ for (const test of testDetails) {
 export const getAllPatients = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const patients = await Patient.find()
     .populate("community", "name lga")
+    .populate("testDetails.testType", "name")
     .sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -481,6 +485,7 @@ export const filterPatients = asyncHandler(
 
     const patients = await Patient.find(filter)
       .populate("community", "name lga")
+      .populate("testDetails.testType", "name")
       .sort({ "testDetails.dateConducted": -1 });
 
     res.status(200).json({

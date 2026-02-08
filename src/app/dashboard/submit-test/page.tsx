@@ -87,6 +87,7 @@ export default function SubmitTestPage() {
 
   // Test Types State - start empty, no dummy data
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
+  const [testTypesLoading, setTestTypesLoading] = useState(true);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -303,26 +304,30 @@ export default function SubmitTestPage() {
   }, [fetchCommunities]);
 
   // Fetch test types from API
-  useEffect(() => {
-    const fetchTestTypes = async () => {
-      try {
-        const res = await api.getTestTypes();
-        if (res.success) {
-          const testData = res.data as any;
-          const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
-          const mapped = testTypesArray.map((t: any) => ({
-            _id: t._id,
-            name: t.name,
-            results: t.allowedResults || t.results || [],
-          }));
-          setTestTypes(mapped);
-        }
-      } catch (err) {
-        console.error('Error fetching test types:', err);
+  const fetchTestTypes = useCallback(async () => {
+    setTestTypesLoading(true);
+    try {
+      const res = await api.getTestTypes();
+      if (res.success) {
+        const testData = res.data as any;
+        const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+        const mapped = testTypesArray.map((t: any) => ({
+          _id: t._id,
+          name: t.name,
+          results: t.allowedResults || t.results || [],
+        }));
+        setTestTypes(mapped);
       }
-    };
-    fetchTestTypes();
+    } catch (err) {
+      console.error('Error fetching test types:', err);
+    } finally {
+      setTestTypesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTestTypes();
+  }, [fetchTestTypes]);
 
   // Helper to get test type name from ID
   const getTestTypeName = useCallback((testTypeId: string): string => {
@@ -399,28 +404,32 @@ export default function SubmitTestPage() {
     setShowCameraCapture(true);
   };
 
-  const handleAddTestType = (testType: string, expectedResults: string[]) => {
-
-    const newTestType: TestType = {
-      _id: `temp_${Date.now()}`,
-      name: testType,
-      results: expectedResults,
-    };
-
-    const updatedTestTypes = [...testTypes, newTestType];
-    setTestTypes(updatedTestTypes);
+  const handleAddTestType = () => {
+    // CreateTestTypeModal now handles API call directly.
+    // Just re-fetch to get the latest list with real IDs.
+    fetchTestTypes();
   };
 
-  const handleEditTestType = (_id: string, testType: string, expectedResults: string[]) => {
-
-    const updated = testTypes.map((t) => (t._id === _id ? { ...t, name: testType, results: expectedResults } : t));
-    setTestTypes(updated);
+  const handleEditTestType = async (_id: string, testType: string, expectedResults: string[]) => {
+    try {
+      const res = await api.updateTestType(_id, { name: testType, allowedResults: expectedResults });
+      if (res.success) {
+        fetchTestTypes();
+      }
+    } catch (err) {
+      console.error('Error updating test type:', err);
+    }
   };
 
-  const handleDeleteTestType = (_id: string) => {
-
-    const filtered = testTypes.filter((t) => t._id !== _id);
-    setTestTypes(filtered);
+  const handleDeleteTestType = async (_id: string) => {
+    try {
+      const res = await api.deleteTestType(_id);
+      if (res.success) {
+        fetchTestTypes();
+      }
+    } catch (err) {
+      console.error('Error deleting test type:', err);
+    }
   };
 
   const handleSubmit = async () => {
@@ -599,6 +608,8 @@ export default function SubmitTestPage() {
                 onBlur={handleFieldBlur}
                 errors={fieldErrors}
                 touched={touchedFields}
+                testTypes={testTypes}
+                testTypesLoading={testTypesLoading}
               />
             )}
             {currentStep === 3 && (

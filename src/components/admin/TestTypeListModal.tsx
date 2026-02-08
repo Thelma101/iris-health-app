@@ -33,7 +33,7 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
         aria-label="Close modal"
       />
       
-      {/* Modal - Full height on mobile starting from top, side panel on desktop */}
+      {/* Modal - Full height on mobile, side panel on desktop */}
       <div className="relative w-full sm:max-w-[554px] h-screen sm:max-h-screen rounded-none sm:rounded-bl-[10px] bg-white overflow-hidden shadow-[0px_12px_35px_rgba(0,0,0,0.18)] flex flex-col">
         {/* Header */}
         <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px]">
@@ -52,52 +52,54 @@ export default function TestTypeListModal({ isOpen, onClose, testTypes, onEdit, 
               <p className="text-[#637381] text-sm font-poppins">No test types found. Create one to get started.</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-[30px]">
               {testTypes.map((testType) => (
                 <div
                   key={testType._id}
-                  className="rounded-[10px] border border-[#d9d9d9] overflow-hidden shadow-[0px_4px_16px_rgba(0,0,0,0.06)]"
+                  className="border-b border-[#d9d9d9] pb-2 flex flex-col gap-[13px]"
                 >
-                  {/* Row header with actions inline per Figma */}
-                  <div className="h-10 bg-[#2c7be5] px-4 flex items-center gap-3">
-                    <div className="flex-1 font-medium text-white text-[16px] font-poppins leading-none">
+                  {/* Blue header bar */}
+                  <div className="h-6 bg-[#2c7be5] px-1 flex items-center">
+                    <span className="flex-1 font-medium text-white text-[16px] font-poppins leading-normal">
                       {testType.name}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => onEdit?.(testType)}
-                        className="w-8 h-8 rounded-full bg-white/15 border border-white/30 flex items-center justify-center hover:bg-white/25 transition-colors cursor-pointer"
-                        aria-label="Edit test type"
-                      >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setTestTypeToDelete(testType);
-                          setShowConfirmModal(true);
-                        }}
-                        className="w-8 h-8 rounded-full bg-white/15 border border-white/30 flex items-center justify-center hover:bg-white/25 transition-colors cursor-pointer"
-                        aria-label="Delete test type"
-                      >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                    </span>
                   </div>
 
-                  {/* Results */}
-                  <div className="px-4 py-3 flex flex-col gap-2">
+                  {/* Results list */}
+                  <div className="flex flex-col gap-[10px]">
                     {testType.results.map((result) => (
-                      <div
+                      <p
                         key={result}
-                        className="text-sm text-[#212b36] font-poppins leading-[18px] border-b last:border-b-0 border-[#ecf0f4] pb-2 last:pb-0"
+                        className="text-sm text-[#637381] font-poppins leading-normal"
                       >
                         {result}
-                      </div>
+                      </p>
                     ))}
+                  </div>
+
+                  {/* Edit / Delete icons at bottom */}
+                  <div className="flex items-center justify-between h-6">
+                    <button
+                      onClick={() => onEdit?.(testType)}
+                      className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer"
+                      aria-label="Edit test type"
+                    >
+                      <svg className="w-5 h-5 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTestTypeToDelete(testType);
+                        setShowConfirmModal(true);
+                      }}
+                      className="w-6 h-6 flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer"
+                      aria-label="Delete test type"
+                    >
+                      <svg className="w-5 h-5 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               ))}
