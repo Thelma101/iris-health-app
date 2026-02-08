@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import adminModel from '../models/admin.model';
