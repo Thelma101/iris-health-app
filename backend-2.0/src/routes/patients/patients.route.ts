@@ -3,7 +3,7 @@ import { adminOnly, agentOrAdmin, protect } from "../../middlewares/authMiddlewa
 import { createPatient, deletePatient, getAllPatients, getPatientById, updatePatient } from "../../controllers/patients.controller";
 import upload from "../../middlewares/upload";
 const patientRoutes: Router = Router();
-patientRoutes.post('/', protect, adminOnly, upload.fields([
+patientRoutes.post('/', protect, agentOrAdmin, upload.fields([
     { name: "testSheet", maxCount: 1 },
     { name: "patientImage", maxCount: 1 },
   ]), createPatient)

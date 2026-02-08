@@ -9,7 +9,7 @@ const fieldAgentRoutes: Router = Router();
 fieldAgentRoutes.post('/signup', registerfieldAgent)
 fieldAgentRoutes.post('/login', loginfieldAgent)
 fieldAgentRoutes.get('/profile', protect, getfieldAgentProfile)
-fieldAgentRoutes.post('/create', protect, fieldAgentOnly, upload.fields([
+fieldAgentRoutes.post('/create', protect, agentOrAdmin, upload.fields([
     { name: "testSheet", maxCount: 1 },
     { name: "patientImage", maxCount: 1 },
   ]), createPatient)
