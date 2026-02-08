@@ -48,41 +48,6 @@ app.use((req, res, next) => {
 // API Routes
 app.use("/api", rootRoutes);
 
-// Temporary seed route - REMOVE AFTER USE
-app.post("/seed-users", async (req, res) => {
-  try {
-    const bcrypt = await import('bcryptjs');
-    const adminModel = (await import('./models/admin.model')).default;
-    const fieldAgentModel = (await import('./models/fieldAgent.model')).default;
-
-    const results: string[] = [];
-
-    // Create admin
-    const existingAdmin = await adminModel.findOne({ email: 'admin@mail.com' });
-    if (!existingAdmin) {
-      const hashedAdmin = await bcrypt.default.hash('12345', 10);
-      await adminModel.create({ name: 'Admin', email: 'admin@mail.com', password: hashedAdmin });
-      results.push('Admin created: admin@mail.com');
-    } else {
-      results.push('Admin already exists: admin@mail.com');
-    }
-
-    // Create field agent
-    const existingAgent = await fieldAgentModel.findOne({ email: 'agent@mail.com' });
-    if (!existingAgent) {
-      const hashedAgent = await bcrypt.default.hash('12345', 10);
-      await fieldAgentModel.create({ firstName: 'Field', lastName: 'Agent', email: 'agent@mail.com', password: hashedAgent });
-      results.push('Field Agent created: agent@mail.com');
-    } else {
-      results.push('Field Agent already exists: agent@mail.com');
-    }
-
-    res.json({ success: true, results });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // Health check
 app.use("/healthz", (req, res) => {
   res.status(200).json({ status: "ok" });
