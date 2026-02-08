@@ -56,9 +56,10 @@ app.use("/healthz", (req, res) => {
 // Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   const statusCode = (err as any).statusCode || 500;
+  console.error(`[ERROR] ${req.method} ${req.path}:`, err.message);
   res.status(statusCode).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    message: err.message || 'Internal server error',
     ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
   });
 });
