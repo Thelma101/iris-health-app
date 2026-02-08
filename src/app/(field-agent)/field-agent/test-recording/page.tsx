@@ -444,21 +444,49 @@ export default function TestRecordingPage() {
     setShowCameraCapture(false);
   };
 
-  const handleAddTestType = (testType: string, expectedResults: string[]) => {
-    const newTestType: TestType = {
-      _id: `temp_${Date.now()}`,
-      name: testType,
-      results: expectedResults,
-    };
-    setTestTypes([...testTypes, newTestType]);
+  const fetchTestTypesRefresh = async () => {
+    try {
+      const res = await fieldAgentApi.getTestTypes();
+      if (res.success) {
+        const testData = res.data as any;
+        const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
+        const mapped = testTypesArray.map((t: any) => ({
+          _id: t._id,
+          name: t.name,
+          results: t.allowedResults || t.results || [],
+        }));
+        setTestTypes(mapped);
+      }
+    } catch (err) {
+      console.error('Error refreshing test types:', err);
+    }
   };
 
-  const handleEditTestType = (_id: string, testType: string, expectedResults: string[]) => {
-    setTestTypes(testTypes.map((t) => (t._id === _id ? { ...t, name: testType, results: expectedResults } : t)));
+  const handleAddTestType = async (testType: string, expectedResults: string[]) => {
+    try {
+      await fieldAgentApi.createTestType({ name: testType, allowedResults: expectedResults });
+      await fetchTestTypesRefresh();
+    } catch (err) {
+      console.error('Error creating test type:', err);
+    }
   };
 
-  const handleDeleteTestType = (_id: string) => {
-    setTestTypes(testTypes.filter((t) => t._id !== _id));
+  const handleEditTestType = async (_id: string, testType: string, expectedResults: string[]) => {
+    try {
+      await fieldAgentApi.updateTestType(_id, { name: testType, allowedResults: expectedResults });
+      await fetchTestTypesRefresh();
+    } catch (err) {
+      console.error('Error updating test type:', err);
+    }
+  };
+
+  const handleDeleteTestType = async (_id: string) => {
+    try {
+      await fieldAgentApi.deleteTestType(_id);
+      await fetchTestTypesRefresh();
+    } catch (err) {
+      console.error('Error deleting test type:', err);
+    }
   };
 
   const handleSubmit = async () => {

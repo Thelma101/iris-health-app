@@ -7,7 +7,7 @@ import CreateTestTypeModal from '@/components/field-agent/CreateTestTypeModal';
 import EditTestTypeModal from '@/components/field-agent/EditTestTypeModal';
 import TestTypeListModal from '@/components/field-agent/TestTypeListModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import api from '@/lib/api';
+import { fieldAgentApi } from '@/lib/api/field-agent';
 
 interface TestType {
   _id: string;
@@ -34,7 +34,7 @@ export default function TestTypesPage() {
   const fetchTestTypes = async () => {
     setIsLoading(true);
     try {
-      const res = await api.getTestTypes();
+      const res = await fieldAgentApi.getTestTypes();
       const testData = res.data as any;
       const testTypesArray = testData?.data?.testTypes || testData?.testTypes || [];
       // Map the API response to match our local interface
@@ -56,7 +56,7 @@ export default function TestTypesPage() {
 
   const handleCreateTestType = async (data: { name: string; results: string[] }) => {
     try {
-      const res = await api.createTestType({ name: data.name, allowedResults: data.results });
+      const res = await fieldAgentApi.createTestType({ name: data.name, allowedResults: data.results });
       await fetchTestTypes(); // Refresh the list
       setIsCreateModalOpen(false);
       setIsListModalOpen(true);
@@ -74,7 +74,7 @@ export default function TestTypesPage() {
 
   const handleUpdateTestType = async (updatedTestType: TestType) => {
     try {
-      await api.updateTestType(updatedTestType._id, {
+      await fieldAgentApi.updateTestType(updatedTestType._id, {
         name: updatedTestType.name,
         allowedResults: updatedTestType.results,
       });
@@ -95,7 +95,7 @@ export default function TestTypesPage() {
   const handleConfirmDelete = async () => {
     if (testTypeToDelete) {
       try {
-        await api.deleteTestType(testTypeToDelete);
+        await fieldAgentApi.deleteTestType(testTypeToDelete);
         await fetchTestTypes(); 
         setTestTypeToDelete(null);
         setIsDeleteModalOpen(false);
