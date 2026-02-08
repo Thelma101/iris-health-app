@@ -64,7 +64,7 @@ export const fieldAgentApi = {
     fieldAgentRequest('/fieldAgent/profile', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Communities (field agent's assigned communities)
-  getMyCommunities: () => fieldAgentRequest('/community/all'),
+  getMyCommunities: () => fieldAgentRequest('/fieldAgent/communities'),
   getCommunity: (id: string) => fieldAgentRequest(`/community/${id}`),
 
   // Patients
