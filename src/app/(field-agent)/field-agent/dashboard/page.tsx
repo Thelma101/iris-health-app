@@ -64,13 +64,7 @@ export default function FieldAgentDashboardPage() {
             hour: '2-digit',
             minute: '2-digit',
           }).replace(',', '')
-          : new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          }).replace(',', ''),
+          : 'N/A',
       });
 
       // Group visitations by community for recent records
@@ -98,10 +92,27 @@ export default function FieldAgentDashboardPage() {
         entry.totalTests++;
 
         // Aggregate diagnostics to find top positive/negative tests
+        // Diagnostics can be plain strings like "Malaria RDT - Positive" or objects with {testType, result}
         const diagnostics = v.diagnostics || [];
         diagnostics.forEach((d: any) => {
-          const testName = typeof d.testType === 'object' ? d.testType?.name : d.testType || 'Unknown';
-          const result = (d.result || d.testResult || '').toLowerCase();
+          let testName = 'Unknown';
+          let result = '';
+
+          if (typeof d === 'string') {
+            // Parse string format: "TestName - Result"
+            const separatorIdx = d.lastIndexOf(' - ');
+            if (separatorIdx > 0) {
+              testName = d.substring(0, separatorIdx).trim();
+              result = d.substring(separatorIdx + 3).trim().toLowerCase();
+            } else {
+              testName = d;
+            }
+          } else {
+            // Object format: { testType, result }
+            testName = typeof d.testType === 'object' ? d.testType?.name : d.testType || 'Unknown';
+            result = (d.result || d.testResult || '').toLowerCase();
+          }
+
           if (result.includes('positive') || result === 'reactive') {
             entry.positiveTests[testName] = (entry.positiveTests[testName] || 0) + 1;
           } else if (result.includes('negative') || result === 'non-reactive') {
