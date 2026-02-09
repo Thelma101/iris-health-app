@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import SuccessModal from '@/components/admin/SuccessModal';
 import ErrorModal from '@/components/ui/ErrorModal';
+import { classifyResult } from '@/lib/utils/resultClassifier';
 
 // Field officer can be either a full object (from GET) or just an ID (for PUT/POST)
 type FieldOfficerRef = string | { _id: string; firstName: string; lastName: string; email: string };
@@ -24,6 +25,14 @@ interface Community {
   totalPopulation?: number;
   totalTestsConducted?: number;
   visitationDates?: string[];
+  // Computed stats from patient data
+  computedTotalTests?: number;
+  computedTotalPatients?: number;
+  computedPositive?: number;
+  computedNegative?: number;
+  computedActivityDates?: string[];
+  computedSummary?: string;
+  visitationSummary?: string;
 }
 
 // Helper function to format date
@@ -67,39 +76,103 @@ export default function CommunityPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState('');
 
-  // Fetch communities from API
+  // Fetch communities + patients from API, compute stats from real test data
   const fetchCommunities = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.getCommunities();
-      if (res?.success && res.data) {
-        const communityData = (res.data as { communities: APICommunity[] })?.communities || [];
-        const mappedCommunities: Community[] = communityData.map((c) => ({
-          _id: c._id,
-          name: c.name,
-          lga: c.lga,
-          dateVisited: getVisitDate(c),
-          fieldOfficers: c.fieldOfficers,
-          fieldOfficer: c.fieldOfficers && c.fieldOfficers.length > 0
-            ? c.fieldOfficers
-              .map(fo => {
-                // Handle both object format and string ID format
-                if (typeof fo === 'object' && fo && fo.firstName && fo.lastName) {
-                  return `${fo.firstName} ${fo.lastName}`;
+      const [commRes, patientsRes] = await Promise.all([
+        api.getCommunities(),
+        api.getPatients(),
+      ]);
+
+      if (commRes?.success && commRes.data) {
+        const communityData = (commRes.data as { communities: APICommunity[] })?.communities || [];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let allPatients: any[] = [];
+        if (patientsRes?.success && patientsRes.data) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const pd = patientsRes.data as any;
+          allPatients = pd.patients || pd.data?.patients || (Array.isArray(pd) ? pd : []);
+        }
+
+        const mappedCommunities: Community[] = communityData.map((c) => {
+          // Find patients belonging to this community
+          const communityPatients = allPatients.filter((p: { community?: string | { _id?: string } }) => {
+            const cId = typeof p.community === 'object' ? p.community?._id : p.community;
+            return cId === c._id;
+          });
+
+          // Compute stats from testDetails
+          let totalTests = 0;
+          let positiveCount = 0;
+          let negativeCount = 0;
+          const activityDateSet = new Set<string>();
+
+          communityPatients.forEach((p: { testDetails?: Array<{ testResult?: string; dateConducted?: string }> }) => {
+            if (p.testDetails && Array.isArray(p.testDetails)) {
+              totalTests += p.testDetails.length;
+              p.testDetails.forEach((td) => {
+                if (td.testResult) {
+                  const cls = classifyResult(td.testResult);
+                  if (cls === 'positive') positiveCount++;
+                  else if (cls === 'negative') negativeCount++;
                 }
-                return null;
-              })
-              .filter(Boolean)
-              .join(', ') || '-'
-            : '-',
-          totalPopulation: c.totalPopulation,
-          totalTestsConducted: c.totalTestsConducted,
-        }));
+                if (td.dateConducted) {
+                  activityDateSet.add(new Date(td.dateConducted).toLocaleDateString('en-GB', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                  }));
+                }
+              });
+            }
+          });
+
+          const activityDates = Array.from(activityDateSet).sort((a, b) =>
+            new Date(b).getTime() - new Date(a).getTime()
+          );
+
+          // Auto-generate summary
+          let computedSummary = '';
+          if (totalTests > 0) {
+            computedSummary = `${totalTests} test${totalTests !== 1 ? 's' : ''} conducted across ${communityPatients.length} patient${communityPatients.length !== 1 ? 's' : ''}. ${positiveCount} positive, ${negativeCount} negative.`;
+            if (activityDates.length > 0) {
+              computedSummary += ` Last activity: ${activityDates[0]}.`;
+            }
+          }
+
+          return {
+            _id: c._id,
+            name: c.name,
+            lga: c.lga,
+            dateVisited: getVisitDate(c),
+            fieldOfficers: c.fieldOfficers,
+            fieldOfficer: c.fieldOfficers && c.fieldOfficers.length > 0
+              ? c.fieldOfficers
+                .map(fo => {
+                  if (typeof fo === 'object' && fo && fo.firstName && fo.lastName) {
+                    return `${fo.firstName} ${fo.lastName}`;
+                  }
+                  return null;
+                })
+                .filter(Boolean)
+                .join(', ') || '-'
+              : '-',
+            totalPopulation: c.totalPopulation,
+            totalTestsConducted: totalTests > 0 ? totalTests : c.totalTestsConducted,
+            computedTotalTests: totalTests,
+            computedTotalPatients: communityPatients.length,
+            computedPositive: positiveCount,
+            computedNegative: negativeCount,
+            computedActivityDates: activityDates,
+            computedSummary,
+            visitationSummary: (c as unknown as { visitationSummary?: string }).visitationSummary,
+          };
+        });
         setCommunities(mappedCommunities);
         setFilteredData(mappedCommunities);
       } else {
-        setError(res?.error || 'Failed to fetch communities');
+        setError(commRes?.error || 'Failed to fetch communities');
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch communities';

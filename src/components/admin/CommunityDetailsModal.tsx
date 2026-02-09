@@ -20,6 +20,14 @@ interface CommunityDetailsModalProps {
     visitationDates?: string[];
     dateVisited?: string;
     mapImageUrl?: string;
+    // Computed stats from patient data
+    computedTotalTests?: number;
+    computedTotalPatients?: number;
+    computedPositive?: number;
+    computedNegative?: number;
+    computedActivityDates?: string[];
+    computedSummary?: string;
+    visitationSummary?: string;
   };
 }
 
@@ -92,7 +100,9 @@ export default function CommunityDetailsModal({
             <div className="border-b border-[#e5e7eb] py-4">
               <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Population</h3>
               <p className="text-sm text-[#637381] font-poppins">
-                {formatNumber(community.totalPopulation) || community.population || '-'}
+                {community.totalPopulation && community.totalPopulation > 0
+                  ? formatNumber(community.totalPopulation)
+                  : community.population || 'Not yet recorded'}
               </p>
             </div>
 
@@ -112,15 +122,48 @@ export default function CommunityDetailsModal({
             <div className="border-b border-[#e5e7eb] py-4">
               <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Total Tests Conducted</h3>
               <p className="text-sm text-[#637381] font-poppins">
-                {formatNumber(community.totalTestsConducted) || community.totalTests || '-'}
+                {community.computedTotalTests && community.computedTotalTests > 0
+                  ? formatNumber(community.computedTotalTests)
+                  : formatNumber(community.totalTestsConducted) || community.totalTests || '-'}
               </p>
             </div>
+
+            {/* Patients Tested */}
+            {(community.computedTotalPatients ?? 0) > 0 && (
+              <div className="border-b border-[#e5e7eb] py-4">
+                <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Patients Tested</h3>
+                <p className="text-sm text-[#637381] font-poppins">
+                  {formatNumber(community.computedTotalPatients)}
+                </p>
+              </div>
+            )}
+
+            {/* Results Breakdown */}
+            {((community.computedPositive ?? 0) > 0 || (community.computedNegative ?? 0) > 0) && (
+              <div className="border-b border-[#e5e7eb] py-4">
+                <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Results Breakdown</h3>
+                <div className="flex gap-4 mt-1">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-poppins">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
+                    <span className="text-[#637381]">Positive: {community.computedPositive}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-poppins">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />
+                    <span className="text-[#637381]">Negative: {community.computedNegative}</span>
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Visitation Summary */}
             <div className="border-b border-[#e5e7eb] py-4">
               <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-1">Visitation Summary</h3>
               <div className="space-y-1">
-                {community.visitationDates && community.visitationDates.length > 0 ? (
+                {community.computedSummary ? (
+                  <p className="text-sm text-[#637381] font-poppins">{community.computedSummary}</p>
+                ) : community.visitationSummary ? (
+                  <p className="text-sm text-[#637381] font-poppins">{community.visitationSummary}</p>
+                ) : community.visitationDates && community.visitationDates.length > 0 ? (
                   community.visitationDates.map((date, index) => (
                     <p key={index} className="text-sm text-[#637381] font-poppins">
                       {date}
@@ -133,6 +176,23 @@ export default function CommunityDetailsModal({
                 )}
               </div>
             </div>
+
+            {/* Recent Activity Dates */}
+            {community.computedActivityDates && community.computedActivityDates.length > 0 && (
+              <div className="py-4">
+                <h3 className="text-sm font-semibold text-[#212b36] font-poppins mb-2">Recent Activity Dates</h3>
+                <div className="flex flex-wrap gap-2">
+                  {community.computedActivityDates.slice(0, 8).map((date, index) => (
+                    <span
+                      key={index}
+                      className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full font-poppins"
+                    >
+                      {date}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
