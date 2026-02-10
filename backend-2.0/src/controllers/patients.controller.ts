@@ -291,16 +291,49 @@ for (const test of testDetails) {
 
 /**
  * Get all patients with their records
+ * Supports query params: community, page, limit, search
  */
 export const getAllPatients = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const patients = await Patient.find()
-    .populate("community", "name lga")
-    .populate("testDetails.testType", "name")
-    .sort({ createdAt: -1 });
+  const { community, page, limit, search } = req.query;
+
+  // Build filter
+  const filter: any = {};
+  if (community && Types.ObjectId.isValid(community as string)) {
+    filter.community = new Types.ObjectId(community as string);
+  }
+  if (search) {
+    const searchRegex = new RegExp(search as string, 'i');
+    filter.$or = [
+      { firstName: searchRegex },
+      { lastName: searchRegex },
+      { phone: searchRegex },
+    ];
+  }
+
+  // Pagination
+  const pageNum = Math.max(1, parseInt(page as string) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(limit as string) || 50));
+  const skip = (pageNum - 1) * pageSize;
+
+  const [patients, total] = await Promise.all([
+    Patient.find(filter)
+      .populate("community", "name lga")
+      .populate("testDetails.testType", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize),
+    Patient.countDocuments(filter),
+  ]);
 
   res.status(200).json({
     message: "Patients fetched successfully",
-    patients
+    patients,
+    pagination: {
+      page: pageNum,
+      limit: pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+    },
   });
 });
 
@@ -465,6 +498,104 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response): P
   res.status(200).json({
     message: "Patient updated successfully",
     patient: populatedPatient
+  });
+});
+
+/**
+ * Add a new test to an existing patient
+ */
+export const addTestToPatient = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  const patient = await Patient.findById(id);
+  if (!patient) {
+    res.status(404).json({ message: "Patient not found" });
+    return;
+  }
+
+  let testDetails: any[] = [];
+  if (req.body.testDetails) {
+    testDetails =
+      typeof req.body.testDetails === "string"
+        ? JSON.parse(req.body.testDetails)
+        : req.body.testDetails;
+  }
+
+  if (!Array.isArray(testDetails) || testDetails.length === 0) {
+    res.status(400).json({ message: "At least one test detail is required" });
+    return;
+  }
+
+  // Validate test types + results
+  const bpPattern = /^\d{2,3}\/\d{2,3}$/;
+  for (const test of testDetails) {
+    const testTypeDoc = await testTypeModel.findById(test.testType);
+    if (!testTypeDoc) {
+      res.status(400).json({ message: `Invalid test type: ${test.testType}` });
+      return;
+    }
+    const testResultValue = String(test.testResult || '').trim();
+    const isBpReading = bpPattern.test(testResultValue);
+    if (testResultValue && !isBpReading && !testTypeDoc.allowedResults.includes(test.testResult)) {
+      res.status(400).json({ message: `Invalid result for ${testTypeDoc.name}` });
+      return;
+    }
+  }
+
+  // Get the authenticated user's ID
+  const conductedBy = (req as any).user?.id;
+
+  const enrichedTestDetails = testDetails.map((test) => {
+    const bmiResult = calculateBMI(test.weightKg, test.heightCm);
+    const bpCategory = classifyBloodPressure(test.bloodPressureSystolic, test.bloodPressureDiastolic);
+
+    return {
+      ...test,
+      conductedBy,
+      heightCm: test.heightCm || undefined,
+      weightKg: test.weightKg || undefined,
+      bmi: bmiResult?.bmi || undefined,
+      bmiCategory: bmiResult?.category || undefined,
+      bloodPressureSystolic: test.bloodPressureSystolic || undefined,
+      bloodPressureDiastolic: test.bloodPressureDiastolic || undefined,
+      bpCategory: bpCategory || undefined,
+      glucoseLevel: test.glucoseLevel || undefined,
+      glucoseUnit: test.glucoseUnit || undefined,
+    };
+  });
+
+  // Push new tests into patient's testDetails array
+  patient.testDetails.push(...enrichedTestDetails as any);
+  patient.numberOfTests = patient.testDetails.length;
+
+  // Update community stats
+  let positiveCount = 0;
+  let negativeCount = 0;
+  for (const test of testDetails) {
+    const result = String(test.testResult || '').toLowerCase();
+    if (result === "positive") positiveCount++;
+    if (result === "negative") negativeCount++;
+  }
+
+  await Community.findByIdAndUpdate(patient.community, {
+    $inc: {
+      totalTestsConducted: enrichedTestDetails.length,
+      topPositive: positiveCount,
+      topNegative: negativeCount,
+    },
+    $set: { dateVisited: new Date() },
+  });
+
+  await patient.save();
+
+  const populatedPatient = await patient.populate([
+    { path: "community", select: "name lga" },
+    { path: "testDetails.testType", select: "name" },
+  ]);
+
+  res.status(201).json({
+    message: "Test added to patient successfully",
+    patient: populatedPatient,
   });
 });
 

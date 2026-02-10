@@ -13,7 +13,7 @@ import { Patient } from '@/lib/constants/patients-data';
 import api from '@/lib/api';
 
 export default function ViewPatientsPage() {
-  const { searchQuery, setSearchQuery, selectedDate, setSelectedDate, filteredPatients, handleSearch, handleExport, loading, error, refetch } = usePatientSearch();
+  const { searchQuery, setSearchQuery, selectedDate, setSelectedDate, selectedCommunity, setSelectedCommunity, filteredPatients, handleSearch, handleExport, loading, error, refetch, pagination, goToPage, currentPage } = usePatientSearch();
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -24,6 +24,22 @@ export default function ViewPatientsPage() {
   
   // Test type lookup map (ObjectId -> name)
   const [testTypeMap, setTestTypeMap] = useState<Record<string, string>>({});
+
+  // Community list for filter dropdown
+  const [communities, setCommunities] = useState<{ value: string; label: string }[]>([]);
+
+  // Fetch communities for filter
+  useEffect(() => {
+    api.getCommunities()
+      .then((res) => {
+        if (res.success && res.data) {
+          const comData = res.data as any;
+          const comArray = comData?.communities || comData?.data?.communities || [];
+          setCommunities(comArray.map((c: any) => ({ value: c._id, label: c.name })));
+        }
+      })
+      .catch((err) => console.error('Error fetching communities:', err));
+  }, []);
 
   // Fetch test types for ID-to-name resolution
   useEffect(() => {
@@ -214,6 +230,9 @@ export default function ViewPatientsPage() {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onExport={() => handleExport(selectedDate)}
+            communities={communities}
+            selectedCommunity={selectedCommunity}
+            onCommunityChange={setSelectedCommunity}
           />
         </div>
         
@@ -227,12 +246,22 @@ export default function ViewPatientsPage() {
             onDateChange={setSelectedDate}
             onExport={() => handleExport(selectedDate)}
             className="justify-between"
+            communities={communities}
+            selectedCommunity={selectedCommunity}
+            onCommunityChange={setSelectedCommunity}
           />
         </div>
       </div>
 
       {/* Patients Count */}
-      <div className="text-sm text-[#637381] font-poppins">Total: {filteredPatients.length}</div>
+      <div className="text-sm text-[#637381] font-poppins">
+        Total: {pagination ? pagination.total : filteredPatients.length}
+        {selectedCommunity && communities.length > 0 && (
+          <span className="ml-2 text-[#2c7be5]">
+            ({communities.find(c => c.value === selectedCommunity)?.label})
+          </span>
+        )}
+      </div>
 
       {/* Patients Table */}
       {loading ? (
@@ -247,6 +276,53 @@ export default function ViewPatientsPage() {
           onViewPatient={handleViewPatient}
           onEditPatient={handleEditPatient}
         />
+      )}
+
+      {/* Pagination Controls */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              currentPage <= 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white border border-[#d9d9d9] text-[#637381] hover:border-[#2c7be5] hover:text-[#2c7be5] cursor-pointer'
+            }`}
+          >
+            Previous
+          </button>
+          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === pagination.totalPages || Math.abs(p - currentPage) <= 2)
+            .map((p, idx, arr) => (
+              <React.Fragment key={p}>
+                {idx > 0 && arr[idx - 1] !== p - 1 && (
+                  <span className="text-[#637381] text-sm">...</span>
+                )}
+                <button
+                  onClick={() => goToPage(p)}
+                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    p === currentPage
+                      ? 'bg-[#2c7be5] text-white'
+                      : 'bg-white border border-[#d9d9d9] text-[#637381] hover:border-[#2c7be5] hover:text-[#2c7be5]'
+                  }`}
+                >
+                  {p}
+                </button>
+              </React.Fragment>
+            ))}
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= pagination.totalPages}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              currentPage >= pagination.totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white border border-[#d9d9d9] text-[#637381] hover:border-[#2c7be5] hover:text-[#2c7be5] cursor-pointer'
+            }`}
+          >
+            Next
+          </button>
+        </div>
       )}
 
       {/* Patient Details Modal */}

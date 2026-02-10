@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { Types } from "mongoose";
 import communityModel from '../models/community.model';
+import Patient from '../models/patient.model';
 
 export const createCommunity = asyncHandler(async (req: Request, res: Response): Promise<void> =>  {
     const { name, lga, dateVisited, visitationSummary, fieldOfficers, totalPopulation, totalTestsConducted } = req.body;
@@ -104,6 +105,52 @@ export const deleteCommunity = asyncHandler(async (req: Request, res: Response):
   await community.deleteOne();
 
   res.status(200).json({ message: "Community deleted successfully" });
+});
+
+/**
+ * Get all patients belonging to a specific community
+ * Supports pagination via query params: page, limit
+ */
+export const getPatientsByCommunity = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  if (!Types.ObjectId.isValid(id)) {
+    res.status(400).json({ message: "Invalid community ID" });
+    return;
+  }
+
+  const community = await communityModel.findById(id);
+  if (!community) {
+    res.status(404).json({ message: "Community not found" });
+    return;
+  }
+
+  const { page, limit } = req.query;
+  const pageNum = Math.max(1, parseInt(page as string) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(limit as string) || 50));
+  const skip = (pageNum - 1) * pageSize;
+
+  const [patients, total] = await Promise.all([
+    Patient.find({ community: new Types.ObjectId(id) })
+      .populate("community", "name lga")
+      .populate("testDetails.testType", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize),
+    Patient.countDocuments({ community: new Types.ObjectId(id) }),
+  ]);
+
+  res.status(200).json({
+    message: "Patients fetched successfully",
+    patients,
+    community: { _id: community._id, name: community.name, lga: community.lga },
+    pagination: {
+      page: pageNum,
+      limit: pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+    },
+  });
 });
 
 export const getCommunityLga = asyncHandler(

@@ -1,10 +1,18 @@
 import React, { useRef } from 'react';
 
+interface CommunityOption {
+  value: string;
+  label: string;
+}
+
 interface FilterBarProps {
   selectedDate: string;
   onDateChange?: (date: string) => void;
   onExport: () => void;
   className?: string;
+  communities?: CommunityOption[];
+  selectedCommunity?: string;
+  onCommunityChange?: (communityId: string) => void;
 }
 
 // Format date string to DD/MM/YYYY format
@@ -30,7 +38,7 @@ const formatDateForInput = (displayDate: string) => {
   return displayDate;
 };
 
-export default function FilterBar({ selectedDate, onDateChange, onExport, className = '' }: FilterBarProps) {
+export default function FilterBar({ selectedDate, onDateChange, onExport, className = '', communities, selectedCommunity, onCommunityChange }: FilterBarProps) {
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   // Get today's date formatted for display
@@ -61,6 +69,20 @@ export default function FilterBar({ selectedDate, onDateChange, onExport, classN
 
   return (
     <div className={`flex flex-row gap-3 items-center w-full sm:w-auto ${className}`}>
+      {/* Community Filter */}
+      {communities && communities.length > 0 && (
+        <select
+          value={selectedCommunity || ''}
+          onChange={(e) => onCommunityChange?.(e.target.value)}
+          className="h-12 px-3 rounded-[10px] bg-white border border-[#d9d9d9] text-sm font-medium font-inter text-[#637381] hover:border-[#2c7be5] transition-colors cursor-pointer min-w-[150px] max-w-[200px] appearance-none"
+          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23637381' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+        >
+          <option value="">All Communities</option>
+          {communities.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      )}
       <button
         onClick={onExport}
         className="h-12 px-6 rounded-[10px] bg-white border border-[#d9d9d9] text-[#637381] font-medium font-inter hover:bg-gray-50 transition-colors"

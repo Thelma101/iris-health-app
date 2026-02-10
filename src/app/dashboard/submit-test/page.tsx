@@ -51,6 +51,16 @@ interface CommunityOption {
 export default function SubmitTestPage() {
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Patient mode: 'new' or 'existing'
+  const [patientMode, setPatientMode] = useState<'new' | 'existing'>('new');
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [selectedPatientDisplay, setSelectedPatientDisplay] = useState<string>('');
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
+  const [patientSearchResults, setPatientSearchResults] = useState<any[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const patientDropdownRef = useRef<HTMLDivElement>(null);
+
   // Communities and LGAs from API
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
   const [lgas, setLgas] = useState<{ value: string; label: string }[]>([]);
@@ -118,6 +128,15 @@ export default function SubmitTestPage() {
   const validateStep1 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
     const errors: Record<string, string | null> = {};
     
+    // Existing patient mode — just need a patient selected
+    if (patientMode === 'existing') {
+      if (!selectedPatientId) {
+        errors.patient = 'Please select an existing patient';
+      }
+      const errorMessages = Object.values(errors).filter(Boolean) as string[];
+      return { isValid: errorMessages.length === 0, errors, firstError: errorMessages[0] || null };
+    }
+    
     if (!formData.lga) {
       errors.lga = 'Please select an LGA';
     }
@@ -161,7 +180,7 @@ export default function SubmitTestPage() {
       errors,
       firstError: errorMessages[0] || null,
     };
-  }, [formData]);
+  }, [formData, patientMode, selectedPatientId]);
 
   const validateStep2 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
     // Health details step - all optional
@@ -284,6 +303,89 @@ export default function SubmitTestPage() {
     fetchCommunities();
   }, [fetchCommunities]);
 
+  // Search existing patients (debounced by community filter)
+  const searchExistingPatients = useCallback(async (query: string, communityId?: string) => {
+    if (!query.trim() && !communityId) {
+      setPatientSearchResults([]);
+      return;
+    }
+    setLoadingPatients(true);
+    try {
+      const params: any = { limit: 20 };
+      if (communityId) params.community = communityId;
+      if (query.trim()) params.search = query.trim();
+      const res = await api.getPatients(params);
+      if (res.success) {
+        const data = res.data as any;
+        const patients = data?.patients || data?.data?.patients || [];
+        setPatientSearchResults(patients);
+      }
+    } catch {
+      setPatientSearchResults([]);
+    } finally {
+      setLoadingPatients(false);
+    }
+  }, []);
+
+  // Debounce patient search
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (patientMode !== 'existing') return;
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      searchExistingPatients(patientSearchQuery, formData.community || undefined);
+    }, 300);
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
+  }, [patientSearchQuery, formData.community, patientMode, searchExistingPatients]);
+
+  // Close patient dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target as Node)) {
+        setShowPatientDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Select an existing patient
+  const handleSelectPatient = (patient: any) => {
+    setSelectedPatientId(patient._id);
+    const displayName = `${patient.firstName} ${patient.lastName}`;
+    setSelectedPatientDisplay(displayName);
+    setPatientSearchQuery(displayName);
+    setShowPatientDropdown(false);
+
+    // Populate form data from patient (read-only display)
+    const communityId = patient.community?._id || patient.community;
+    const communityObj = communities.find(c => c.value === communityId);
+    setFormData({
+      lga: communityObj?.lga || patient.lga || '',
+      community: communityId || '',
+      firstName: patient.firstName || '',
+      lastName: patient.lastName || '',
+      age: patient.age ? String(patient.age) : '',
+      gender: patient.gender || 'male',
+      phoneNumber: patient.phone || '',
+    });
+  };
+
+  // Reset patient mode
+  const handleModeChange = (mode: 'new' | 'existing') => {
+    setPatientMode(mode);
+    setSelectedPatientId('');
+    setSelectedPatientDisplay('');
+    setPatientSearchQuery('');
+    setPatientSearchResults([]);
+    setShowPatientDropdown(false);
+    setFormData({ lga: '', community: '', firstName: '', lastName: '', age: '', gender: 'male', phoneNumber: '' });
+    setTouchedFields({});
+    setFieldErrors({});
+    setValidationError(null);
+    setCurrentStep(1);
+  };
+
   // Fetch test types from API
   const fetchTestTypes = useCallback(async () => {
     setTestTypesLoading(true);
@@ -399,28 +501,8 @@ export default function SubmitTestPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
-    
-    // Validate required patient info fields
-    if (!formData.firstName?.trim()) {
-      setSubmitError('Please enter patient first name');
-      setIsSubmitting(false);
-      return;
-    }
-    if (!formData.lastName?.trim()) {
-      setSubmitError('Please enter patient last name');
-      setIsSubmitting(false);
-      return;
-    }
-    if (!formData.phoneNumber?.trim()) {
-      setSubmitError('Please enter patient phone number');
-      setIsSubmitting(false);
-      return;
-    }
-    if (!formData.community) {
-      setSubmitError('Please select a community');
-      setIsSubmitting(false);
-      return;
-    }
+
+    // Common test validation
     if (!testDetails.dateConducted) {
       setSubmitError('Please enter the date the test was conducted');
       setIsSubmitting(false);
@@ -431,35 +513,61 @@ export default function SubmitTestPage() {
       setIsSubmitting(false);
       return;
     }
+
+    const testPayload = {
+      testType: testDetails.testType,
+      dateConducted: testDetails.dateConducted,
+      testResult: testDetails.testResult || undefined,
+      officerNotes: testDetails.officerNote || undefined,
+      heightCm: testDetails.heightCm ? parseFloat(testDetails.heightCm) : undefined,
+      weightKg: testDetails.weightKg ? parseFloat(testDetails.weightKg) : undefined,
+      bloodPressureSystolic: testDetails.bloodPressureSystolic ? parseInt(testDetails.bloodPressureSystolic, 10) : undefined,
+      bloodPressureDiastolic: testDetails.bloodPressureDiastolic ? parseInt(testDetails.bloodPressureDiastolic, 10) : undefined,
+      glucoseLevel: testDetails.glucoseLevel ? parseFloat(testDetails.glucoseLevel) : undefined,
+      glucoseUnit: testDetails.glucoseUnit || 'mg/dL',
+    };
     
     try {
-      // Prepare payload for API - community should be the ObjectId
-      const payload = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        phone: formData.phoneNumber.trim(),
-        age: formData.age ? parseInt(formData.age, 10) : undefined,
-        gender: formData.gender,
-        community: formData.community, // This should be the community _id
-        testDetails: [
-          {
-            testType: testDetails.testType,
-            dateConducted: testDetails.dateConducted,
-            testResult: testDetails.testResult || undefined,
-            officerNotes: testDetails.officerNote || undefined,
-            // Health metrics
-            heightCm: testDetails.heightCm ? parseFloat(testDetails.heightCm) : undefined,
-            weightKg: testDetails.weightKg ? parseFloat(testDetails.weightKg) : undefined,
-            bloodPressureSystolic: testDetails.bloodPressureSystolic ? parseInt(testDetails.bloodPressureSystolic, 10) : undefined,
-            bloodPressureDiastolic: testDetails.bloodPressureDiastolic ? parseInt(testDetails.bloodPressureDiastolic, 10) : undefined,
-            glucoseLevel: testDetails.glucoseLevel ? parseFloat(testDetails.glucoseLevel) : undefined,
-            glucoseUnit: testDetails.glucoseUnit || 'mg/dL',
-          },
-        ],
-      };
-      
-      
-      const res = await api.createPatientWithTest(payload);
+      let res;
+
+      if (patientMode === 'existing' && selectedPatientId) {
+        // Add test to existing patient
+        res = await api.addTestToPatient(selectedPatientId, { testDetails: [testPayload] });
+      } else {
+        // Create new patient with test
+        if (!formData.firstName?.trim()) {
+          setSubmitError('Please enter patient first name');
+          setIsSubmitting(false);
+          return;
+        }
+        if (!formData.lastName?.trim()) {
+          setSubmitError('Please enter patient last name');
+          setIsSubmitting(false);
+          return;
+        }
+        if (!formData.phoneNumber?.trim()) {
+          setSubmitError('Please enter patient phone number');
+          setIsSubmitting(false);
+          return;
+        }
+        if (!formData.community) {
+          setSubmitError('Please select a community');
+          setIsSubmitting(false);
+          return;
+        }
+
+        const payload = {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          phone: formData.phoneNumber.trim(),
+          age: formData.age ? parseInt(formData.age, 10) : undefined,
+          gender: formData.gender,
+          community: formData.community,
+          testDetails: [testPayload],
+        };
+        
+        res = await api.createPatientWithTest(payload);
+      }
       
       if (res.success) {
         setSubmitSuccess(true);
@@ -467,6 +575,11 @@ export default function SubmitTestPage() {
         
         // Reset form after successful submission
         setCurrentStep(1);
+        setPatientMode('new');
+        setSelectedPatientId('');
+        setSelectedPatientDisplay('');
+        setPatientSearchQuery('');
+        setPatientSearchResults([]);
         setFormData({
           lga: '',
           community: '',
@@ -559,16 +672,158 @@ export default function SubmitTestPage() {
               {currentStep === 4 && 'Summary'}
             </h2>
             {currentStep === 1 && (
-              <PatientInfoForm
-                formData={formData}
-                onChange={handlePatientInfoChange}
-                communities={communities}
-                lgas={lgas}
-                loading={loadingCommunities}
-                onBlur={handleFieldBlur}
-                errors={fieldErrors}
-                touched={touchedFields}
-              />
+              <div className="flex flex-col gap-6">
+                {/* Patient Mode Toggle */}
+                <div className="flex rounded-lg border border-[#d9d9d9] overflow-hidden">
+                  <button
+                    onClick={() => handleModeChange('new')}
+                    className={`flex-1 h-11 text-sm font-medium font-poppins transition-colors ${
+                      patientMode === 'new'
+                        ? 'bg-[#2c7be5] text-white'
+                        : 'bg-white text-[#637381] hover:bg-gray-50'
+                    }`}
+                  >
+                    New Patient
+                  </button>
+                  <button
+                    onClick={() => handleModeChange('existing')}
+                    className={`flex-1 h-11 text-sm font-medium font-poppins transition-colors ${
+                      patientMode === 'existing'
+                        ? 'bg-[#2c7be5] text-white'
+                        : 'bg-white text-[#637381] hover:bg-gray-50'
+                    }`}
+                  >
+                    Existing Patient
+                  </button>
+                </div>
+
+                {patientMode === 'existing' ? (
+                  <div className="flex flex-col gap-[26px]">
+                    {/* Community filter for existing patient search */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-[#637381] font-poppins">Filter by Community (optional)</label>
+                      <div className="relative h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                        <select
+                          value={formData.community}
+                          onChange={(e) => {
+                            setFormData((prev) => ({ ...prev, community: e.target.value }));
+                            setSelectedPatientId('');
+                            setSelectedPatientDisplay('');
+                            setPatientSearchQuery('');
+                          }}
+                          className="w-full h-full px-[22px] bg-transparent text-[#212b36] font-poppins appearance-none focus:outline-none cursor-pointer"
+                        >
+                          <option value="">All Communities</option>
+                          {communities.map((c) => (
+                            <option key={c.value} value={c.value}>{c.label}</option>
+                          ))}
+                        </select>
+                        <svg className="absolute top-1/2 right-[10px] -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Patient search */}
+                    <div className="flex flex-col gap-1.5" ref={patientDropdownRef}>
+                      <label className="text-sm font-medium text-[#637381] font-poppins">Search Patient</label>
+                      <div className="relative">
+                        <div className={`h-12 rounded bg-white border ${selectedPatientId ? 'border-green-500 bg-green-50/30' : 'border-[#d9d9d9]'} focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40`}>
+                          <input
+                            type="text"
+                            value={patientSearchQuery}
+                            onChange={(e) => {
+                              setPatientSearchQuery(e.target.value);
+                              setSelectedPatientId('');
+                              setSelectedPatientDisplay('');
+                              setShowPatientDropdown(true);
+                            }}
+                            onFocus={() => setShowPatientDropdown(true)}
+                            placeholder="Type patient name or phone..."
+                            className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                          />
+                        </div>
+                        {/* Dropdown results */}
+                        {showPatientDropdown && (patientSearchQuery.trim() || formData.community) && (
+                          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {loadingPatients ? (
+                              <div className="px-4 py-3 text-sm text-gray-500 font-poppins">Searching...</div>
+                            ) : patientSearchResults.length === 0 ? (
+                              <div className="px-4 py-3 text-sm text-gray-500 font-poppins">No patients found</div>
+                            ) : (
+                              patientSearchResults.map((p: any) => (
+                                <button
+                                  key={p._id}
+                                  onClick={() => handleSelectPatient(p)}
+                                  className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                                    selectedPatientId === p._id ? 'bg-blue-50' : ''
+                                  }`}
+                                >
+                                  <div className="text-sm font-medium text-[#212b36] font-poppins">
+                                    {p.firstName} {p.lastName}
+                                  </div>
+                                  <div className="text-xs text-gray-500 font-poppins mt-0.5">
+                                    {p.phone && `${p.phone} · `}
+                                    {p.community?.name || 'Unknown community'}
+                                    {p.age ? ` · Age ${p.age}` : ''}
+                                    {p.numberOfTests ? ` · ${p.numberOfTests} test${p.numberOfTests > 1 ? 's' : ''}` : ''}
+                                  </div>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {!selectedPatientId && (
+                        <p className="text-xs text-gray-400 font-poppins">Select a community or type a name/phone to search</p>
+                      )}
+                    </div>
+
+                    {/* Selected patient preview */}
+                    {selectedPatientId && (
+                      <div className="rounded-lg border border-green-200 bg-green-50/50 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="text-sm font-medium text-green-700 font-poppins">Patient Selected</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedPatientId('');
+                              setSelectedPatientDisplay('');
+                              setPatientSearchQuery('');
+                              setFormData({ lga: '', community: formData.community, firstName: '', lastName: '', age: '', gender: 'male', phoneNumber: '' });
+                            }}
+                            className="text-xs text-red-500 hover:text-red-700 font-poppins"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm font-poppins">
+                          <div><span className="text-[#637381]">Name:</span> <span className="text-[#212b36] font-medium">{formData.firstName} {formData.lastName}</span></div>
+                          <div><span className="text-[#637381]">Phone:</span> <span className="text-[#212b36]">{formData.phoneNumber || '-'}</span></div>
+                          <div><span className="text-[#637381]">Age:</span> <span className="text-[#212b36]">{formData.age || '-'}</span></div>
+                          <div><span className="text-[#637381]">Gender:</span> <span className="text-[#212b36] capitalize">{formData.gender || '-'}</span></div>
+                          <div className="col-span-2"><span className="text-[#637381]">Community:</span> <span className="text-[#212b36]">{communities.find(c => c.value === formData.community)?.label || '-'}</span></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <PatientInfoForm
+                    formData={formData}
+                    onChange={handlePatientInfoChange}
+                    communities={communities}
+                    lgas={lgas}
+                    loading={loadingCommunities}
+                    onBlur={handleFieldBlur}
+                    errors={fieldErrors}
+                    touched={touchedFields}
+                  />
+                )}
+              </div>
             )}
             {currentStep === 2 && (
               <div className="flex flex-col gap-6">
@@ -717,8 +972,11 @@ export default function SubmitTestPage() {
               <div className="flex flex-col gap-6">
                 {/* Patient Info Section */}
                 <div className="flex flex-col gap-4">
-                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center justify-between">
                     <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Info</span>
+                    {patientMode === 'existing' && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-poppins">Existing Patient</span>
+                    )}
                   </div>
 
                   {/* LGA */}

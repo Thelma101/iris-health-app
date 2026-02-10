@@ -1,20 +1,30 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/lib/api/index';
 import { Patient } from '@/lib/constants/patients-data';
+
+const POLL_INTERVAL = 30000; // 30 seconds
 
 export function usePatientSearch() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(''); // Empty = show all patients
+  const [selectedCommunity, setSelectedCommunity] = useState(''); // Community filter
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<{ page: number; limit: number; total: number; totalPages: number } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
-  const fetchPatients = useCallback(async () => {
-    setLoading(true);
+  const fetchPatients = useCallback(async (page = 1, silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
-      const res = await api.getPatients();
+      const params: { community?: string; page?: number; limit?: number } = { page, limit: 50 };
+      if (selectedCommunity) params.community = selectedCommunity;
+
+      const res = await api.getPatients(params);
 
       // Handle different response structures
       const patients = (res.data as any)?.patients || res.data;
@@ -73,6 +83,9 @@ export function usePatientSearch() {
         });
         setAllPatients(mappedPatients);
         setFilteredPatients(mappedPatients);
+        // Store pagination info
+        const paginationData = (res.data as any)?.pagination;
+        if (paginationData) setPagination(paginationData);
       } else {
         // No data available
         setAllPatients([]);
@@ -84,14 +97,30 @@ export function usePatientSearch() {
       setAllPatients([]);
       setFilteredPatients([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }, []);
+  }, [selectedCommunity]);
 
-  // Fetch patients on mount
+  // Fetch patients on mount and when community changes
   useEffect(() => {
-    fetchPatients();
+    setCurrentPage(1);
+    fetchPatients(1);
   }, [fetchPatients]);
+
+  // Auto-refresh polling for real-time updates
+  useEffect(() => {
+    isMountedRef.current = true;
+    pollRef.current = setInterval(() => {
+      if (isMountedRef.current) {
+        fetchPatients(currentPage, true); // silent refresh
+      }
+    }, POLL_INTERVAL);
+
+    return () => {
+      isMountedRef.current = false;
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [fetchPatients, currentPage]);
 
   // Filter patients when search query or date changes
   useEffect(() => {
@@ -158,11 +187,20 @@ export function usePatientSearch() {
     setSearchQuery,
     selectedDate,
     setSelectedDate,
+    selectedCommunity,
+    setSelectedCommunity,
     filteredPatients,
     handleSearch,
     handleExport,
     loading,
     error,
-    refetch: fetchPatients,
+    pagination,
+    currentPage,
+    setCurrentPage,
+    goToPage: (page: number) => {
+      setCurrentPage(page);
+      fetchPatients(page);
+    },
+    refetch: () => fetchPatients(currentPage),
   };
 }

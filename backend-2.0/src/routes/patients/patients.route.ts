@@ -1,6 +1,6 @@
 import { Express, Router } from "express";
 import { adminOnly, agentOrAdmin, protect } from "../../middlewares/authMiddleware";
-import { createPatient, deletePatient, getAllPatients, getPatientById, updatePatient } from "../../controllers/patients.controller";
+import { createPatient, deletePatient, getAllPatients, getPatientById, updatePatient, addTestToPatient } from "../../controllers/patients.controller";
 import upload from "../../middlewares/upload";
 const patientRoutes: Router = Router();
 patientRoutes.post('/', protect, agentOrAdmin, upload.fields([
@@ -8,6 +8,7 @@ patientRoutes.post('/', protect, agentOrAdmin, upload.fields([
     { name: "patientImage", maxCount: 1 },
   ]), createPatient)
 patientRoutes.get('/', protect, agentOrAdmin, getAllPatients)
+patientRoutes.post('/:id/tests', protect, agentOrAdmin, addTestToPatient)
 patientRoutes.get('/:id', protect, agentOrAdmin, getPatientById)
 patientRoutes.put('/:id', protect, agentOrAdmin, updatePatient)
 patientRoutes.delete('/:id', protect, adminOnly, deletePatient)

@@ -393,7 +393,22 @@ export const api = {
     apiRequest(`/fieldAgent/${id}`, { method: 'DELETE' }),
 
   // Patients
-  getPatients: () => apiRequest('/patients'),
+  getPatients: (params?: { community?: string; page?: number; limit?: number; search?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.community) searchParams.set('community', params.community);
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+    if (params?.search) searchParams.set('search', params.search);
+    const qs = searchParams.toString();
+    return apiRequest(`/patients${qs ? `?${qs}` : ''}`);
+  },
+  getPatientsByCommunity: (communityId: string, params?: { page?: number; limit?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+    const qs = searchParams.toString();
+    return apiRequest(`/community/${communityId}/patients${qs ? `?${qs}` : ''}`);
+  },
   getPatient: (id: string) => apiRequest(`/patients/${id}`),
   getPatientById: (id: string) => apiRequest(`/patients/${id}`),
   createPatient: (data: object) =>
@@ -405,6 +420,9 @@ export const api = {
     apiRequest(`/patients/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePatient: (id: string) =>
     apiRequest(`/patients/${id}`, { method: 'DELETE' }),
+  // Add a new test to an existing patient
+  addTestToPatient: (patientId: string, data: object) =>
+    apiRequest(`/patients/${patientId}/tests`, { method: 'POST', body: JSON.stringify(data) }),
   searchPatients: (query: string) =>
     apiRequest(`/patients/search?q=${encodeURIComponent(query)}`),
 
