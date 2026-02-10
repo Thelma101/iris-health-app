@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { calculateBMI, classifyBloodPressure, getBMICategoryColor, getBPCategoryColor } from '@/lib/utils/bmiCalculator';
+import { generatePatientReportPDF } from '@/lib/utils/generatePDF';
 
 interface TestDetail {
   _id?: string;
@@ -152,6 +153,38 @@ function PatientReportPageContent() {
     window.print();
   };
 
+  const handleDownloadPDF = () => {
+    if (!patient) return;
+    const doc = generatePatientReportPDF({
+      name: `${patient.firstName} ${patient.lastName}`,
+      patientId: patient._id,
+      age: patient.age,
+      gender: patient.gender,
+      phone: patient.phone,
+      community: getCommunityName(patient.community),
+      lga: patient.lga || getCommunityLga(patient.community),
+      registeredDate: patient.createdAt,
+      totalTests: patient.numberOfTests || patient.testDetails?.length || 0,
+      testDetails: patient.testDetails?.map(t => ({
+        testType: getTestTypeName(t.testType),
+        testResult: t.testResult,
+        dateConducted: t.dateConducted,
+        officerNote: t.officerNotes,
+        heightCm: t.heightCm,
+        weightKg: t.weightKg,
+        bmi: t.bmi,
+        bmiCategory: t.bmiCategory,
+        bloodPressureSystolic: t.bloodPressureSystolic,
+        bloodPressureDiastolic: t.bloodPressureDiastolic,
+        bpCategory: t.bpCategory,
+        glucoseLevel: t.glucoseLevel,
+        glucoseUnit: t.glucoseUnit,
+        conductedBy: getConductedByName(t.conductedBy),
+      })) || [],
+    });
+    doc.save(`patient-report-${patient.firstName}-${patient.lastName}.pdf`);
+  };
+
   if (loading) {
     return (
       <main className="bg-white border border-[#d9d9d9] border-r-0 rounded-bl-[20px] rounded-tl-[20px] w-full min-h-[calc(100vh-93px)] p-6 flex items-center justify-center">
@@ -214,13 +247,22 @@ function PatientReportPageContent() {
             Back
           </button>
           <button
+            onClick={handleDownloadPDF}
+            className="h-10 px-4 rounded-lg bg-green-600 text-white font-medium font-poppins hover:bg-green-700 transition-colors cursor-pointer text-sm flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download PDF
+          </button>
+          <button
             onClick={handlePrint}
             className="h-10 px-4 rounded-lg bg-[#2c7be5] text-white font-medium font-poppins hover:bg-blue-600 transition-colors cursor-pointer text-sm flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Print / Save PDF
+            Print
           </button>
         </div>
       </div>

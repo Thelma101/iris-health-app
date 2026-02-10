@@ -9,6 +9,7 @@ import OfficerTestListModal, { PatientTestRecord } from '@/components/admin/Offi
 import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal';
 import api from '@/lib/api/index';
 import { calculateBMI } from '@/lib/utils/bmiCalculator';
+import { generatePatientReportPDF, generateCommunityReportPDF, formatDate } from '@/lib/utils/generatePDF';
 
 interface CommunityStats {
   id: string;
@@ -264,7 +265,7 @@ export default function ReportPage() {
     fetchCommunityStats();
   }, [fetchCommunityStats]);
 
-  // Bulk download community report
+  // Bulk download community report as PDF
   const handleBulkDownload = async (communityId?: string) => {
     setBulkDownloadLoading(true);
     try {
@@ -275,63 +276,19 @@ export default function ReportPage() {
       const communityName = communityId 
         ? communityStats.find(c => c.id === communityId)?.name || 'Community'
         : 'All Communities';
-      
-      let report = `COMMUNITY HEALTH REPORT\n`;
-      report += `${'='.repeat(60)}\n`;
-      report += `Community: ${communityName}\n`;
-      report += `Generated: ${new Date().toLocaleString()}\n`;
-      report += `Total Patients: ${patients.length}\n`;
-      report += `${'='.repeat(60)}\n\n`;
 
-      patients.forEach((p: any, idx: number) => {
-        const communityObj = p.community;
-        const commName = typeof communityObj === 'object' ? communityObj?.name : communityObj;
-        report += `--- Patient ${idx + 1} ---\n`;
-        report += `Name: ${p.firstName} ${p.lastName}\n`;
-        report += `Age: ${p.age || '-'} | Gender: ${p.gender || '-'}\n`;
-        report += `Phone: ${p.phone || '-'}\n`;
-        report += `Community: ${commName || '-'}\n`;
-        report += `LGA: ${p.lga || (typeof communityObj === 'object' ? communityObj?.lga : '-')}\n`;
-        report += `Total Tests: ${p.testDetails?.length || 0}\n`;
-        
-        if (p.testDetails?.length) {
-          const sorted = [...p.testDetails].sort((a: any, b: any) => 
-            new Date(b.dateConducted).getTime() - new Date(a.dateConducted).getTime()
-          );
-          sorted.forEach((t: any, ti: number) => {
-            const testName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
-            report += `  Test ${ti + 1}: ${testName || 'N/A'} - ${t.testResult || 'N/A'} (${t.dateConducted ? new Date(t.dateConducted).toLocaleDateString() : '-'})\n`;
-            if (t.bmi) report += `    BMI: ${t.bmi} (${t.bmiCategory || '-'})\n`;
-            if (t.bloodPressureSystolic) report += `    BP: ${t.bloodPressureSystolic}/${t.bloodPressureDiastolic || '-'} mmHg (${t.bpCategory || '-'})\n`;
-            if (t.glucoseLevel) report += `    Glucose: ${t.glucoseLevel} ${t.glucoseUnit || 'mg/dL'}\n`;
-            if (t.officerNotes) report += `    Notes: ${t.officerNotes}\n`;
-          });
-        }
-        report += '\n';
-      });
+      const stats = communityId ? communityStats.find(c => c.id === communityId) : undefined;
 
-      // Add community summary
-      if (communityId) {
-        const stats = communityStats.find(c => c.id === communityId);
-        if (stats) {
-          report += `\n${'='.repeat(60)}\n`;
-          report += `COMMUNITY SUMMARY\n`;
-          report += `Total Patients: ${stats.totalPatients}\n`;
-          report += `Total Tests: ${stats.totalTests}\n`;
-          report += `Positive Results: ${stats.positiveTests}\n`;
-          report += `Negative Results: ${stats.negativeTests}\n`;
-          report += `Assigned Agents: ${stats.assignedAgents}\n`;
-          if (stats.agentNames.length > 0) report += `Agents: ${stats.agentNames.join(', ')}\n`;
-        }
-      }
+      const doc = generateCommunityReportPDF(communityName, patients, stats ? {
+        totalPatients: stats.totalPatients,
+        totalTests: stats.totalTests,
+        positiveTests: stats.positiveTests,
+        negativeTests: stats.negativeTests,
+        assignedAgents: stats.assignedAgents,
+        agentNames: stats.agentNames,
+      } : undefined);
 
-      const blob = new Blob([report], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `health-report-${communityName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      doc.save(`health-report-${communityName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (err) {
       console.error('Bulk download error:', err);
     } finally {
@@ -342,15 +299,18 @@ export default function ReportPage() {
   const handleExport = async () => {
     setExportLoading(true);
     try {
-      // Generate report data
-      const reportData = `Analytics Report - ${selectedDate}\n\nCommunity: ${selectedCommunity || 'All'}\nTest Type: ${selectedTestType || 'All'}\n\nGenerated at: ${new Date().toLocaleString()}`;
-      const blob = new Blob([reportData], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `analytics-report-${selectedDate.replace(/\//g, '-')}.txt`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      // Fetch all patients for full export
+      const patRes = await api.getPatients(selectedCommunity ? { community: selectedCommunity } : undefined);
+      const patData = patRes.data as any;
+      const patients = patData?.data?.patients || patData?.patients || [];
+      const commName = selectedCommunity
+        ? communityStats.find(c => c.id === selectedCommunity)?.name || 'Filtered'
+        : 'All Communities';
+
+      const doc = generateCommunityReportPDF(commName, patients);
+      doc.save(`analytics-report-${commName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      console.error('Export error:', err);
     } finally {
       setExportLoading(false);
     }
@@ -621,16 +581,32 @@ export default function ReportPage() {
             glucoseUnit: selectedPatient.testDetails[0].glucoseUnit,
           } : undefined}
           onDownload={() => {
-            // Generate patient report from actual data
-            const test = selectedPatient.testDetails?.[0];
-            const reportData = `Patient Report\n\nName: ${selectedPatient.name}\nCommunity: ${selectedPatient.community}\nLGA: ${selectedPatient.lga}\nAge: ${selectedPatient.age}\nGender: ${selectedPatient.gender}\nPhone: ${selectedPatient.phoneNumber}\n\nTest Type: ${test?.testType || 'N/A'}\nTest Result: ${test?.testResult || 'N/A'}\nDate: ${test?.dateConducted || 'N/A'}\nNotes: ${test?.officerNote || 'N/A'}\n\nGenerated at: ${new Date().toLocaleString()}`;
-            const blob = new Blob([reportData], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `patient-report-${selectedPatient.name.replace(/\s+/g, '-')}.txt`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            const doc = generatePatientReportPDF({
+              name: selectedPatient.name,
+              patientId: selectedPatient.patientId || '',
+              age: selectedPatient.age,
+              gender: selectedPatient.gender,
+              phone: selectedPatient.phoneNumber,
+              community: selectedPatient.community,
+              lga: selectedPatient.lga,
+              totalTests: selectedPatient.testDetails?.length || 0,
+              testDetails: selectedPatient.testDetails?.map((t: any) => ({
+                testType: t.testType,
+                testResult: t.testResult,
+                dateConducted: t.dateConducted,
+                officerNote: t.officerNote,
+                heightCm: t.heightCm,
+                weightKg: t.weightKg,
+                bmi: t.bmi,
+                bmiCategory: t.bmiCategory,
+                bloodPressureSystolic: t.bloodPressureSystolic,
+                bloodPressureDiastolic: t.bloodPressureDiastolic,
+                bpCategory: t.bpCategory,
+                glucoseLevel: t.glucoseLevel,
+                glucoseUnit: t.glucoseUnit,
+              })) || [],
+            });
+            doc.save(`patient-report-${selectedPatient.name.replace(/\s+/g, '-')}.pdf`);
           }}
         />
       )}

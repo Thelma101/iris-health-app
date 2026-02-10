@@ -238,7 +238,7 @@ export default function OfficerTestDetailsModal({
                   <div className="flex flex-col gap-0.5">
                     <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Date Conducted</label>
                     <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
-                      <p className="text-sm text-[#212b36] font-poppins">{testDetails.dateConducted}</p>
+                      <p className="text-sm text-[#212b36] font-poppins">{testDetails.dateConducted ? new Date(testDetails.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</p>
                     </div>
                   </div>
 
