@@ -145,68 +145,62 @@ export default function PatientDetailsModal({
             </div>
 
             {/* Health Metrics Section */}
-            {testDetails && (testDetails.heightCm || testDetails.weightKg || testDetails.bloodPressureSystolic || testDetails.glucoseLevel) && (
+            {testDetails && (
               <div className="flex flex-col gap-3">
                 <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-1 px-1">
                   <h3 className="text-base font-medium text-[#212b36] font-poppins">Health Metrics</h3>
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {(testDetails.heightCm || testDetails.weightKg) && (
-                    <div className="flex gap-4">
-                      <div className="flex-1 flex flex-col gap-0.5">
-                        <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Height</label>
-                        <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
-                          <p className="text-sm text-[#212b36] font-poppins">{testDetails.heightCm ? `${testDetails.heightCm} cm` : '-'}</p>
-                        </div>
-                      </div>
-                      <div className="flex-1 flex flex-col gap-0.5">
-                        <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Weight</label>
-                        <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
-                          <p className="text-sm text-[#212b36] font-poppins">{testDetails.weightKg ? `${testDetails.weightKg} kg` : '-'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {testDetails.bmi && (
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">BMI</label>
-                      <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9] gap-2">
-                        <p className="text-sm font-semibold text-[#212b36] font-poppins">{testDetails.bmi}</p>
-                        {testDetails.bmiCategory && (
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${getBMICategoryColor(testDetails.bmiCategory)}`}>
-                            {testDetails.bmiCategory}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {(testDetails.bloodPressureSystolic || testDetails.bloodPressureDiastolic) && (
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Blood Pressure</label>
-                      <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9] gap-2">
-                        <p className="text-sm text-[#212b36] font-poppins">
-                          {testDetails.bloodPressureSystolic || '-'}/{testDetails.bloodPressureDiastolic || '-'} mmHg
-                        </p>
-                        {testDetails.bpCategory && (
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${getBPCategoryColor(testDetails.bpCategory)}`}>
-                            {testDetails.bpCategory}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {testDetails.glucoseLevel && (
-                    <div className="flex flex-col gap-0.5">
-                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Glucose Level</label>
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col gap-0.5">
+                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Height</label>
                       <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
-                        <p className="text-sm text-[#212b36] font-poppins">{testDetails.glucoseLevel} {testDetails.glucoseUnit || 'mg/dL'}</p>
+                        <p className="text-sm text-[#212b36] font-poppins">{testDetails.heightCm ? `${testDetails.heightCm} cm` : '-'}</p>
                       </div>
                     </div>
-                  )}
+                    <div className="flex-1 flex flex-col gap-0.5">
+                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Weight</label>
+                      <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                        <p className="text-sm text-[#212b36] font-poppins">{testDetails.weightKg ? `${testDetails.weightKg} kg` : '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">BMI</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9] gap-2">
+                      <p className="text-sm font-semibold text-[#212b36] font-poppins">{testDetails.bmi || '-'}</p>
+                      {testDetails.bmiCategory && (
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${getBMICategoryColor(testDetails.bmiCategory)}`}>
+                          {testDetails.bmiCategory}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Blood Pressure</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9] gap-2">
+                      <p className="text-sm text-[#212b36] font-poppins">
+                        {testDetails.bloodPressureSystolic || '-'}/{testDetails.bloodPressureDiastolic || '-'} mmHg
+                      </p>
+                      {testDetails.bpCategory && (
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${getBPCategoryColor(testDetails.bpCategory)}`}>
+                          {testDetails.bpCategory}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Glucose Level</label>
+                    <div className="bg-white rounded h-7 flex items-center px-3 border border-[#d9d9d9]">
+                      <p className="text-sm text-[#212b36] font-poppins">
+                        {testDetails.glucoseLevel ? `${testDetails.glucoseLevel} ${testDetails.glucoseUnit || 'mg/dL'}` : '-'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
