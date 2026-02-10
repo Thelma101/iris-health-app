@@ -187,16 +187,6 @@ export default function SubmitTestPage() {
     if (!testDetails.officerNote.trim()) {
       errors.officerNote = 'Please add an officer note';
     }
-    if (!testDetails.testImage) {
-      errors.testImage = 'Please upload a test image';
-    } else {
-      if (testDetails.testImage.size > 10 * 1024 * 1024) {
-        errors.testImage = 'Photo size must be less than 10MB';
-      }
-      if (!testDetails.testImage.type.startsWith('image/')) {
-        errors.testImage = 'Please upload a valid image file';
-      }
-    }
 
     const errorMessages = Object.values(errors).filter(Boolean) as string[];
     return {
