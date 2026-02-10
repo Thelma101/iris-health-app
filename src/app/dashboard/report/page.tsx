@@ -10,6 +10,18 @@ import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal'
 import api from '@/lib/api/index';
 import { calculateBMI } from '@/lib/utils/bmiCalculator';
 
+interface CommunityStats {
+  id: string;
+  name: string;
+  lga: string;
+  totalPatients: number;
+  totalTests: number;
+  positiveTests: number;
+  negativeTests: number;
+  assignedAgents: number;
+  agentNames: string[];
+}
+
 export default function ReportPage() {
   // Initialize with empty date - shows all data by default
   const [selectedDate, setSelectedDate] = useState('');
@@ -20,6 +32,11 @@ export default function ReportPage() {
   const [showTestDetailsModal, setShowTestDetailsModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<PatientTestRecord | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
+  const [bulkDownloadLoading, setBulkDownloadLoading] = useState(false);
+  
+  // Community summary stats
+  const [communityStats, setCommunityStats] = useState<CommunityStats[]>([]);
+  const [communityStatsLoading, setCommunityStatsLoading] = useState(true);
   
   // Chart data states
   const [casesData, setCasesData] = useState<Array<{ label: string; value: number }>>([]);
@@ -190,6 +207,138 @@ export default function ReportPage() {
     fetchBmiStats();
   }, [fetchBmiStats]);
 
+  // Fetch community summary statistics
+  const fetchCommunityStats = useCallback(async () => {
+    setCommunityStatsLoading(true);
+    try {
+      const [commRes, patRes] = await Promise.all([
+        api.getCommunities(),
+        api.getPatients(),
+      ]);
+      const commData = commRes.data as any;
+      const communities = commData?.data?.communities || commData?.communities || [];
+      const patData = patRes.data as any;
+      const patients = patData?.data?.patients || patData?.patients || [];
+
+      const stats: CommunityStats[] = communities.map((c: any) => {
+        const communityPatients = patients.filter((p: any) => {
+          const commId = p.community?._id || p.community;
+          return commId === c._id;
+        });
+        let positive = 0;
+        let negative = 0;
+        let totalTests = 0;
+        communityPatients.forEach((p: any) => {
+          const tests = p.testDetails || [];
+          totalTests += tests.length;
+          tests.forEach((t: any) => {
+            const r = (t.testResult || '').toLowerCase().trim();
+            if (r === 'positive') positive++;
+            else if (r === 'negative') negative++;
+          });
+        });
+
+        const agents = c.fieldOfficers || [];
+        return {
+          id: c._id,
+          name: c.name,
+          lga: c.lga || '-',
+          totalPatients: communityPatients.length,
+          totalTests,
+          positiveTests: positive,
+          negativeTests: negative,
+          assignedAgents: agents.length,
+          agentNames: agents.map((a: any) => `${a.firstName || ''} ${a.lastName || ''}`.trim()).filter(Boolean),
+        };
+      });
+
+      setCommunityStats(stats);
+    } catch (err) {
+      console.error('[ReportPage] Error fetching community stats:', err);
+    } finally {
+      setCommunityStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCommunityStats();
+  }, [fetchCommunityStats]);
+
+  // Bulk download community report
+  const handleBulkDownload = async (communityId?: string) => {
+    setBulkDownloadLoading(true);
+    try {
+      const patRes = await api.getPatients(communityId ? { community: communityId } : undefined);
+      const patData = patRes.data as any;
+      const patients = patData?.data?.patients || patData?.patients || [];
+      
+      const communityName = communityId 
+        ? communityStats.find(c => c.id === communityId)?.name || 'Community'
+        : 'All Communities';
+      
+      let report = `COMMUNITY HEALTH REPORT\n`;
+      report += `${'='.repeat(60)}\n`;
+      report += `Community: ${communityName}\n`;
+      report += `Generated: ${new Date().toLocaleString()}\n`;
+      report += `Total Patients: ${patients.length}\n`;
+      report += `${'='.repeat(60)}\n\n`;
+
+      patients.forEach((p: any, idx: number) => {
+        const communityObj = p.community;
+        const commName = typeof communityObj === 'object' ? communityObj?.name : communityObj;
+        report += `--- Patient ${idx + 1} ---\n`;
+        report += `Name: ${p.firstName} ${p.lastName}\n`;
+        report += `Age: ${p.age || '-'} | Gender: ${p.gender || '-'}\n`;
+        report += `Phone: ${p.phone || '-'}\n`;
+        report += `Community: ${commName || '-'}\n`;
+        report += `LGA: ${p.lga || (typeof communityObj === 'object' ? communityObj?.lga : '-')}\n`;
+        report += `Total Tests: ${p.testDetails?.length || 0}\n`;
+        
+        if (p.testDetails?.length) {
+          const sorted = [...p.testDetails].sort((a: any, b: any) => 
+            new Date(b.dateConducted).getTime() - new Date(a.dateConducted).getTime()
+          );
+          sorted.forEach((t: any, ti: number) => {
+            const testName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
+            report += `  Test ${ti + 1}: ${testName || 'N/A'} - ${t.testResult || 'N/A'} (${t.dateConducted ? new Date(t.dateConducted).toLocaleDateString() : '-'})\n`;
+            if (t.bmi) report += `    BMI: ${t.bmi} (${t.bmiCategory || '-'})\n`;
+            if (t.bloodPressureSystolic) report += `    BP: ${t.bloodPressureSystolic}/${t.bloodPressureDiastolic || '-'} mmHg (${t.bpCategory || '-'})\n`;
+            if (t.glucoseLevel) report += `    Glucose: ${t.glucoseLevel} ${t.glucoseUnit || 'mg/dL'}\n`;
+            if (t.officerNotes) report += `    Notes: ${t.officerNotes}\n`;
+          });
+        }
+        report += '\n';
+      });
+
+      // Add community summary
+      if (communityId) {
+        const stats = communityStats.find(c => c.id === communityId);
+        if (stats) {
+          report += `\n${'='.repeat(60)}\n`;
+          report += `COMMUNITY SUMMARY\n`;
+          report += `Total Patients: ${stats.totalPatients}\n`;
+          report += `Total Tests: ${stats.totalTests}\n`;
+          report += `Positive Results: ${stats.positiveTests}\n`;
+          report += `Negative Results: ${stats.negativeTests}\n`;
+          report += `Assigned Agents: ${stats.assignedAgents}\n`;
+          if (stats.agentNames.length > 0) report += `Agents: ${stats.agentNames.join(', ')}\n`;
+        }
+      }
+
+      const blob = new Blob([report], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `health-report-${communityName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.txt`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Bulk download error:', err);
+    } finally {
+      setBulkDownloadLoading(false);
+    }
+  };
+
   const handleExport = async () => {
     setExportLoading(true);
     try {
@@ -347,6 +496,75 @@ export default function ReportPage() {
                   <p className="text-sm text-[#637381] font-poppins py-4 text-center">No BMI data available for age range analysis</p>
                 );
               })()}
+            </div>
+          </div>
+
+          {/* Community Summary Statistics */}
+          <div className="border border-[#d9d9d9] rounded-lg overflow-hidden bg-white">
+            <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-2 px-4 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-[#212b36] font-poppins">Community Summary</h3>
+              <button
+                onClick={() => handleBulkDownload()}
+                disabled={bulkDownloadLoading || communityStatsLoading}
+                className="text-xs px-3 py-1.5 rounded-lg bg-[#2c7be5] text-white font-poppins hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {bulkDownloadLoading ? (
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                )}
+                Download All
+              </button>
+            </div>
+            <div className="p-4">
+              {communityStatsLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2c7be5]" />
+                </div>
+              ) : communityStats.length === 0 ? (
+                <p className="text-sm text-[#637381] font-poppins py-4 text-center">No community data available</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-[#d9d9d9]">
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 pr-3 uppercase">Community</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase">LGA</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase text-center">Patients</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase text-center">Tests</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase text-center">Positive</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase text-center">Negative</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase text-center">Agents</th>
+                        <th className="text-xs font-semibold text-[#637381] font-poppins py-2 px-3 uppercase text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {communityStats.map((stat) => (
+                        <tr key={stat.id} className="border-b border-[#f4f5f7] hover:bg-[#f9fafb] transition-colors">
+                          <td className="text-sm font-medium text-[#212b36] font-poppins py-2.5 pr-3">{stat.name}</td>
+                          <td className="text-sm text-[#637381] font-poppins py-2.5 px-3">{stat.lga}</td>
+                          <td className="text-sm font-semibold text-[#212b36] font-poppins py-2.5 px-3 text-center">{stat.totalPatients}</td>
+                          <td className="text-sm text-[#212b36] font-poppins py-2.5 px-3 text-center">{stat.totalTests}</td>
+                          <td className="text-sm text-red-600 font-poppins py-2.5 px-3 text-center">{stat.positiveTests}</td>
+                          <td className="text-sm text-green-600 font-poppins py-2.5 px-3 text-center">{stat.negativeTests}</td>
+                          <td className="text-sm text-[#637381] font-poppins py-2.5 px-3 text-center" title={stat.agentNames.join(', ')}>{stat.assignedAgents}</td>
+                          <td className="text-sm font-poppins py-2.5 px-3 text-right">
+                            <button
+                              onClick={() => handleBulkDownload(stat.id)}
+                              disabled={bulkDownloadLoading}
+                              className="text-xs px-2 py-1 rounded bg-[#e8f1ff] text-[#2c7be5] hover:bg-[#d0e3ff] transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              Download
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
 

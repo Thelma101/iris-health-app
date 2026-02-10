@@ -114,6 +114,8 @@ export default function SubmitTestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [lastSubmittedPatientId, setLastSubmittedPatientId] = useState<string>('');
+  const [lastSubmittedPatientName, setLastSubmittedPatientName] = useState<string>('');
 
   // Validation State
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -570,6 +572,17 @@ export default function SubmitTestPage() {
       }
       
       if (res.success) {
+        // Save the patient ID for "Add Another Test" flow
+        const responseData = res.data as any;
+        const savedPatientId = patientMode === 'existing' 
+          ? selectedPatientId 
+          : (responseData?.patient?._id || responseData?.data?.patient?._id || '');
+        const savedPatientName = patientMode === 'existing'
+          ? selectedPatientDisplay
+          : `${formData.firstName} ${formData.lastName}`;
+        setLastSubmittedPatientId(savedPatientId);
+        setLastSubmittedPatientName(savedPatientName);
+        
         setSubmitSuccess(true);
         setIsSubmitModalOpen(false);
         
@@ -1223,18 +1236,52 @@ export default function SubmitTestPage() {
         </div>
       )}
       
-      {/* Success Toast */}
+      {/* Success Toast with Add Another Test */}
       {submitSuccess && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-md bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
-          <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span className="font-medium">Test recording submitted successfully!</span>
-          <button onClick={() => setSubmitSuccess(false)} className="ml-2 hover:opacity-80">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <div className="fixed bottom-4 right-4 z-50 max-w-lg bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg">
+          <div className="flex items-center gap-3">
+            <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-          </button>
+            <span className="font-medium">Test recording submitted successfully!</span>
+            <button onClick={() => setSubmitSuccess(false)} className="ml-2 hover:opacity-80">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          {lastSubmittedPatientId && (
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setSubmitSuccess(false);
+                  setPatientMode('existing');
+                  setSelectedPatientId(lastSubmittedPatientId);
+                  setSelectedPatientDisplay(lastSubmittedPatientName);
+                  setCurrentStep(2);
+                  setTestDetails({
+                    testType: '',
+                    dateConducted: new Date().toISOString().split('T')[0],
+                    testResult: '',
+                    officerNote: '',
+                    testImage: null,
+                    heightCm: '',
+                    weightKg: '',
+                    bloodPressureSystolic: '',
+                    bloodPressureDiastolic: '',
+                    glucoseLevel: '',
+                    glucoseUnit: 'mg/dL',
+                  });
+                }}
+                className="text-sm px-4 py-1.5 bg-white text-green-700 rounded-lg font-medium hover:bg-green-50 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Another Test for {lastSubmittedPatientName || 'this patient'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </main>

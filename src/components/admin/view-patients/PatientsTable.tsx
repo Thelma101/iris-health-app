@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Patient } from '@/lib/constants/patients-data';
 
 interface PatientsTableProps {
@@ -8,6 +9,7 @@ interface PatientsTableProps {
 }
 
 export default function PatientsTable({ patients, onViewPatient, onEditPatient }: PatientsTableProps) {
+  const router = useRouter();
   return (
     <div className="w-full">
       {/* Desktop Table View */}
@@ -79,9 +81,15 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
                       </span>
                       <span
                         onClick={() => onEditPatient?.(patient)}
-                        className="text-[#00c897] cursor-pointer hover:underline"
+                        className="text-[#00c897] cursor-pointer hover:underline mr-3"
                       >
                         Edit
+                      </span>
+                      <span
+                        onClick={() => router.push(`/dashboard/patient-report?id=${patient._id || patient.id}`)}
+                        className="text-[#2c7be5] cursor-pointer hover:underline"
+                      >
+                        Report
                       </span>
                     </td>
                   </tr>
@@ -175,6 +183,12 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
                   className="text-[14px] text-[#00c897] font-poppins hover:underline transition-colors cursor-pointer font-medium"
                 >
                   Edit
+                </button>
+                <button
+                  onClick={() => router.push(`/dashboard/patient-report?id=${patient._id || patient.id}`)}
+                  className="text-[14px] text-[#2c7be5] font-poppins hover:underline transition-colors cursor-pointer font-medium"
+                >
+                  Report
                 </button>
               </div>
             </div>
