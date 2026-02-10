@@ -662,7 +662,7 @@ export default function SubmitTestPage() {
       )}
 
       <div className="flex justify-center">
-        <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
+        <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] p-6">
           <FormProgress currentStep={currentStep} stepLabels={['Patient\ninfo', 'Health Details', 'Test Type\nDetails', 'Submit']} />
           <div className="max-w-[517px] mx-auto">
             <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
