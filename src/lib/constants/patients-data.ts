@@ -6,6 +6,16 @@ export interface TestDetail {
   officerNotes?: string;
   testSheetUrl?: string;
   patientImageUrl?: string;
+  // Health metrics
+  heightCm?: number;
+  weightKg?: number;
+  bmi?: number;
+  bmiCategory?: string;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  bpCategory?: string;
+  glucoseLevel?: number;
+  glucoseUnit?: string;
 }
 
 export interface Patient {
@@ -24,5 +34,3 @@ export interface Patient {
   testSheetUrl?: string;
   patientImageUrl?: string;
 }
-
-// REMOVED: Dummy PATIENTS_DATA - All patient data must come from API (/patients)

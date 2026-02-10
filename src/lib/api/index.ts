@@ -283,8 +283,15 @@ export const api = {
       testResult: string;
       dateConducted: string;
       officerNote: string;
-      testSheetUrl?: string;
-      patientImage?: string;
+      heightCm?: number;
+      weightKg?: number;
+      bmi?: number;
+      bmiCategory?: string;
+      bloodPressureSystolic?: number;
+      bloodPressureDiastolic?: number;
+      bpCategory?: string;
+      glucoseLevel?: number;
+      glucoseUnit?: string;
     }>;
   }>>> => {
     try {
@@ -311,8 +318,15 @@ export const api = {
           testResult: test.testResult || '',
           dateConducted: test.dateVisited || test.dateConducted || '',
           officerNote: test.notes || test.officerNote || test.officerNotes || '',
-          testSheetUrl: test.testSheetUrl || '',
-          patientImage: test.patientImageUrl || test.patientImage || '',
+          heightCm: test.heightCm,
+          weightKg: test.weightKg,
+          bmi: test.bmi,
+          bmiCategory: test.bmiCategory,
+          bloodPressureSystolic: test.bloodPressureSystolic,
+          bloodPressureDiastolic: test.bloodPressureDiastolic,
+          bpCategory: test.bpCategory,
+          glucoseLevel: test.glucoseLevel,
+          glucoseUnit: test.glucoseUnit,
         })),
       });
 
@@ -381,6 +395,7 @@ export const api = {
   // Patients
   getPatients: () => apiRequest('/patients'),
   getPatient: (id: string) => apiRequest(`/patients/${id}`),
+  getPatientById: (id: string) => apiRequest(`/patients/${id}`),
   createPatient: (data: object) =>
     apiRequest('/patients', { method: 'POST', body: JSON.stringify(data) }),
   // Create patient with test details (combined endpoint)

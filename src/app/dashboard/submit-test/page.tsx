@@ -9,6 +9,7 @@ import PatientInfoForm from '@/components/admin/submit-test/PatientInfoForm';
 import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
 import CameraCapture from '@/components/admin/CameraCapture';
 import api from '@/lib/api/index';
+import { calculateBMI, classifyBloodPressure } from '@/lib/utils/bmiCalculator';
 
 interface PatientInfo {
   lga: string;
@@ -26,6 +27,13 @@ interface TestDetails {
   testResult: string;
   officerNote: string;
   testImage: File | null;
+  // Health metrics
+  heightCm: string;
+  weightKg: string;
+  bloodPressureSystolic: string;
+  bloodPressureDiastolic: string;
+  glucoseLevel: string;
+  glucoseUnit: string;
 }
 
 interface TestType {
@@ -65,14 +73,18 @@ export default function SubmitTestPage() {
     testResult: '',
     officerNote: '',
     testImage: null,
+    heightCm: '',
+    weightKg: '',
+    bloodPressureSystolic: '',
+    bloodPressureDiastolic: '',
+    glucoseLevel: '',
+    glucoseUnit: 'mg/dL',
   });
 
   const [patientPhoto, setPatientPhoto] = useState<File | null>(null);
   const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
-  const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
-  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
-  const [cameraTarget, setCameraTarget] = useState<'test' | 'patient'>('patient');
+  const [cameraTarget, setCameraTarget] = useState<'test' | 'patient'>('test');
 
   // Refs for file inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +97,6 @@ export default function SubmitTestPage() {
   const [isEditTestTypeModalOpen, setIsEditTestTypeModalOpen] = useState(false);
   const [selectedTestType, setSelectedTestType] = useState<TestType | null>(null);
 
-  // Test Types State - start empty, no dummy data
   const [testTypes, setTestTypes] = useState<TestType[]>([]);
   const [testTypesLoading, setTestTypesLoading] = useState(true);
 
@@ -153,6 +164,11 @@ export default function SubmitTestPage() {
   }, [formData]);
 
   const validateStep2 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
+    // Health details step - all optional
+    return { isValid: true, errors: {}, firstError: null };
+  }, []);
+
+  const validateStep3 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
     const errors: Record<string, string | null> = {};
     
     if (!testDetails.testType) {
@@ -167,9 +183,6 @@ export default function SubmitTestPage() {
       if (date > today) {
         errors.dateConducted = 'Date cannot be in the future';
       }
-    }
-    if (!testDetails.testResult) {
-      errors.testResult = 'Please select a test result';
     }
     if (!testDetails.officerNote.trim()) {
       errors.officerNote = 'Please add an officer note';
@@ -192,28 +205,6 @@ export default function SubmitTestPage() {
       firstError: errorMessages[0] || null,
     };
   }, [testDetails]);
-
-  const validateStep3 = useCallback((): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
-    const errors: Record<string, string | null> = {};
-    
-    if (!patientPhoto) {
-      errors.patientPhoto = 'Please upload a patient photo';
-    } else {
-      if (patientPhoto.size > 10 * 1024 * 1024) {
-        errors.patientPhoto = 'Photo size must be less than 10MB';
-      }
-      if (!patientPhoto.type.startsWith('image/')) {
-        errors.patientPhoto = 'Please upload a valid image file';
-      }
-    }
-
-    const errorMessages = Object.values(errors).filter(Boolean) as string[];
-    return {
-      isValid: errorMessages.length === 0,
-      errors,
-      firstError: errorMessages[0] || null,
-    };
-  }, [patientPhoto]);
 
   // Get current step validation result
   const getCurrentStepValidation = useCallback(() => {
@@ -239,8 +230,8 @@ export default function SubmitTestPage() {
     // Touch all fields in current step to show errors
     const stepFields: Record<number, string[]> = {
       1: ['lga', 'community', 'firstName', 'lastName', 'age', 'gender', 'phoneNumber'],
-      2: ['testType', 'dateConducted', 'testResult', 'officerNote', 'testImage'],
-      3: ['patientPhoto'],
+      2: [],
+      3: ['testType', 'dateConducted', 'officerNote'],
     };
     
     const fieldsToTouch = stepFields[currentStep] || [];
@@ -373,29 +364,12 @@ export default function SubmitTestPage() {
     }
   };
 
-  const handlePatientPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setPatientPhoto(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle camera capture - supports both test image and patient photo
+  // Handle camera capture
   const handleCameraCapture = (file: File) => {
-    if (cameraTarget === 'test') {
-      setTestDetails((prev) => ({ ...prev, testImage: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => setTestImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPatientPhoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    setTestDetails((prev) => ({ ...prev, testImage: file }));
+    const reader = new FileReader();
+    reader.onloadend = () => setTestImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
   };
 
   // Open camera for test image (step 2)
@@ -467,11 +441,6 @@ export default function SubmitTestPage() {
       setIsSubmitting(false);
       return;
     }
-    if (!testDetails.testResult) {
-      setSubmitError('Please select a test result');
-      setIsSubmitting(false);
-      return;
-    }
     
     try {
       // Prepare payload for API - community should be the ObjectId
@@ -486,8 +455,15 @@ export default function SubmitTestPage() {
           {
             testType: testDetails.testType,
             dateConducted: testDetails.dateConducted,
-            testResult: testDetails.testResult,
+            testResult: testDetails.testResult || undefined,
             officerNotes: testDetails.officerNote || undefined,
+            // Health metrics
+            heightCm: testDetails.heightCm ? parseFloat(testDetails.heightCm) : undefined,
+            weightKg: testDetails.weightKg ? parseFloat(testDetails.weightKg) : undefined,
+            bloodPressureSystolic: testDetails.bloodPressureSystolic ? parseInt(testDetails.bloodPressureSystolic, 10) : undefined,
+            bloodPressureDiastolic: testDetails.bloodPressureDiastolic ? parseInt(testDetails.bloodPressureDiastolic, 10) : undefined,
+            glucoseLevel: testDetails.glucoseLevel ? parseFloat(testDetails.glucoseLevel) : undefined,
+            glucoseUnit: testDetails.glucoseUnit || 'mg/dL',
           },
         ],
       };
@@ -516,9 +492,14 @@ export default function SubmitTestPage() {
           testResult: '',
           officerNote: '',
           testImage: null,
+          heightCm: '',
+          weightKg: '',
+          bloodPressureSystolic: '',
+          bloodPressureDiastolic: '',
+          glucoseLevel: '',
+          glucoseUnit: 'mg/dL',
         });
         setPatientPhoto(null);
-        setPatientPhotoPreview(null);
         setTestImagePreview(null);
         setTouchedFields({});
         setFieldErrors({});
@@ -579,12 +560,12 @@ export default function SubmitTestPage() {
 
       <div className="flex justify-center">
         <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
-          <FormProgress currentStep={currentStep} />
+          <FormProgress currentStep={currentStep} stepLabels={['Patient\ninfo', 'Health Details', 'Test Type\nDetails', 'Submit']} />
           <div className="max-w-[517px] mx-auto">
             <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
               {currentStep === 1 && 'Patient Info'}
-              {currentStep === 2 && 'Test Details'}
-              {currentStep === 3 && 'Upload photo/attachment'}
+              {currentStep === 2 && 'Health Details'}
+              {currentStep === 3 && 'Test Type Details'}
               {currentStep === 4 && 'Summary'}
             </h2>
             {currentStep === 1 && (
@@ -600,6 +581,133 @@ export default function SubmitTestPage() {
               />
             )}
             {currentStep === 2 && (
+              <div className="flex flex-col gap-6">
+                <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                  <span className="text-sm font-medium text-[#2c7be5] font-poppins">Health Metrics</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Height (cm)</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="300"
+                        value={testDetails.heightCm}
+                        onChange={(e) => handleTestDetailsChange('heightCm', e.target.value)}
+                        placeholder="e.g. 170"
+                        className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Weight (kg)</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="500"
+                        value={testDetails.weightKg}
+                        onChange={(e) => handleTestDetailsChange('weightKg', e.target.value)}
+                        placeholder="e.g. 70"
+                        className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {(() => {
+                  const bmi = testDetails.heightCm && testDetails.weightKg ? calculateBMI(parseFloat(testDetails.weightKg), parseFloat(testDetails.heightCm)) : null;
+                  return bmi ? (
+                    <div className="flex items-center gap-3 p-3 rounded border border-[#d9d9d9] bg-gray-50">
+                      <span className="text-sm font-medium text-[#637381] font-poppins">BMI:</span>
+                      <span className="text-sm font-semibold text-[#212b36] font-poppins">{bmi.bmi}</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-white">{bmi.category}</span>
+                    </div>
+                  ) : null;
+                })()}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">BP Systolic (mmHg)</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                      <input
+                        type="number"
+                        min="0"
+                        max="300"
+                        value={testDetails.bloodPressureSystolic}
+                        onChange={(e) => handleTestDetailsChange('bloodPressureSystolic', e.target.value)}
+                        placeholder="e.g. 120"
+                        className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">BP Diastolic (mmHg)</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                      <input
+                        type="number"
+                        min="0"
+                        max="200"
+                        value={testDetails.bloodPressureDiastolic}
+                        onChange={(e) => handleTestDetailsChange('bloodPressureDiastolic', e.target.value)}
+                        placeholder="e.g. 80"
+                        className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {(() => {
+                  const bp = testDetails.bloodPressureSystolic && testDetails.bloodPressureDiastolic
+                    ? classifyBloodPressure(parseInt(testDetails.bloodPressureSystolic, 10), parseInt(testDetails.bloodPressureDiastolic, 10))
+                    : null;
+                  return bp ? (
+                    <div className="flex items-center gap-3 p-3 rounded border border-[#d9d9d9] bg-gray-50">
+                      <span className="text-sm font-medium text-[#637381] font-poppins">Blood Pressure:</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-white">{bp}</span>
+                    </div>
+                  ) : null;
+                })()}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Glucose Level</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={testDetails.glucoseLevel}
+                        onChange={(e) => handleTestDetailsChange('glucoseLevel', e.target.value)}
+                        placeholder="e.g. 95"
+                        className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Glucose Unit</label>
+                    <div className="relative h-12 rounded bg-white border border-[#d9d9d9] focus-within:border-[#2c7be5] focus-within:ring-2 focus-within:ring-[#2c7be5]/40">
+                      <select
+                        value={testDetails.glucoseUnit}
+                        onChange={(e) => handleTestDetailsChange('glucoseUnit', e.target.value)}
+                        className="w-full h-full px-5 bg-transparent text-sm font-poppins appearance-none focus:outline-none cursor-pointer text-[#212b36]"
+                      >
+                        <option value="mg/dL">mg/dL</option>
+                        <option value="mmol/L">mmol/L</option>
+                      </select>
+                      <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {currentStep === 3 && (
               <TestDetailsForm 
                 testDetails={testDetails} 
                 onChange={handleTestDetailsChange} 
@@ -610,111 +718,10 @@ export default function SubmitTestPage() {
                 touched={touchedFields}
                 testTypes={testTypes}
                 testTypesLoading={testTypesLoading}
+                hideHealthMetrics
+                hideTestResult
+                hideTestImage
               />
-            )}
-            {currentStep === 3 && (
-              <div className="flex flex-col gap-[26px]">
-                {testImagePreview && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Image Preview</label>
-                    <img src={testImagePreview} alt="Test" className="max-w-[300px] rounded border border-[#d9d9d9]" />
-                  </div>
-                )}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
-                  {/* Hidden file inputs */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePatientPhotoChange}
-                    className="hidden"
-                  />
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handlePatientPhotoChange}
-                    className="hidden"
-                  />
-
-                  {/* Upload box with dashed border */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-                      className="w-full h-[140px] rounded bg-white border-2 border-dashed border-[#2c7be5] flex flex-col items-center justify-center gap-2 hover:bg-blue-50/30 transition-colors cursor-pointer"
-                    >
-                      {/* Camera Icon */}
-                      <svg className="w-12 h-12 text-[#2c7be5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-[#2c7be5] text-base font-medium font-poppins">Upload</span>
-                    </button>
-
-                    {/* Upload Options Popup - inside the box area */}
-                    {showPhotoOptions && (
-                      <>
-                        {/* Backdrop to close popup */}
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setShowPhotoOptions(false)}
-                        />
-                        {/* Options menu - positioned at bottom center */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-56 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowPhotoOptions(false);
-                              setCameraTarget('patient');
-                              setShowCameraCapture(true);
-                            }}
-                            className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors border-b border-[#d9d9d9]"
-                          >
-                            Take photo
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowPhotoOptions(false);
-                              fileInputRef.current?.click();
-                            }}
-                            className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors"
-                          >
-                            Choose existing photo
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {fieldErrors.patientPhoto && touchedFields.patientPhoto && (
-                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {fieldErrors.patientPhoto}
-                    </p>
-                  )}
-
-                  {patientPhoto && (
-                    <p className="mt-1 text-sm text-green-600 font-poppins flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Selected: {patientPhoto.name}
-                    </p>
-                  )}
-                </div>
-                {patientPhotoPreview && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo Preview</label>
-                    <img src={patientPhotoPreview} alt="Patient" className="max-w-[300px] rounded border border-[#d9d9d9]" />
-                  </div>
-                )}
-              </div>
             )}
             {currentStep === 4 && (
               <div className="flex flex-col gap-6">
@@ -805,14 +812,6 @@ export default function SubmitTestPage() {
                     </div>
                   </div>
 
-                  {/* Test Result */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
-                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testResult || '-'}</span>
-                    </div>
-                  </div>
-
                   {/* Officer Note */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
@@ -820,44 +819,75 @@ export default function SubmitTestPage() {
                       <span className="text-[#212b36] font-poppins text-sm">{testDetails.officerNote || '-'}</span>
                     </div>
                   </div>
+                </div>
 
-                  {/* Test Sheet - inside Test Details section */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Sheet</label>
-                    {testImagePreview ? (
-                      <img 
-                        src={testImagePreview} 
-                        alt="Test" 
-                        className="w-full max-w-[250px] rounded border border-[#d9d9d9] object-cover"
-                      />
-                    ) : (
-                      <div className="h-32 max-w-[250px] rounded bg-gray-100 border border-[#d9d9d9] flex items-center justify-center">
-                        <span className="text-[#637381] text-sm font-poppins">No image uploaded</span>
+                {/* Health Metrics Section */}
+                {(testDetails.heightCm || testDetails.weightKg || testDetails.bloodPressureSystolic || testDetails.glucoseLevel) && (
+                  <div className="flex flex-col gap-4">
+                    <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
+                      <span className="text-sm font-medium text-[#2c7be5] font-poppins">Health Metrics</span>
+                    </div>
+
+                    {(testDetails.heightCm || testDetails.weightKg) && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-sm font-medium text-[#637381] font-poppins">Height</label>
+                          <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                            <span className="text-[#212b36] font-poppins text-sm">{testDetails.heightCm ? `${testDetails.heightCm} cm` : '-'}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-sm font-medium text-[#637381] font-poppins">Weight</label>
+                          <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                            <span className="text-[#212b36] font-poppins text-sm">{testDetails.weightKg ? `${testDetails.weightKg} kg` : '-'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {testDetails.heightCm && testDetails.weightKg && (() => {
+                      const bmi = calculateBMI(parseFloat(testDetails.weightKg), parseFloat(testDetails.heightCm));
+                      return bmi ? (
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-sm font-medium text-[#637381] font-poppins">BMI</label>
+                          <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px] gap-3">
+                            <span className="text-[#212b36] font-poppins text-sm font-semibold">{bmi.bmi}</span>
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-gray-50">{bmi.category}</span>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {(testDetails.bloodPressureSystolic || testDetails.bloodPressureDiastolic) && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-[#637381] font-poppins">Blood Pressure</label>
+                        <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px] gap-3">
+                          <span className="text-[#212b36] font-poppins text-sm">
+                            {testDetails.bloodPressureSystolic || '-'}/{testDetails.bloodPressureDiastolic || '-'} mmHg
+                          </span>
+                          {(() => {
+                            const bp = classifyBloodPressure(
+                              parseInt(testDetails.bloodPressureSystolic, 10),
+                              parseInt(testDetails.bloodPressureDiastolic, 10)
+                            );
+                            return bp ? (
+                              <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-gray-50">{bp}</span>
+                            ) : null;
+                          })()}
+                        </div>
+                      </div>
+                    )}
+
+                    {testDetails.glucoseLevel && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-[#637381] font-poppins">Glucose Level</label>
+                        <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                          <span className="text-[#212b36] font-poppins text-sm">{testDetails.glucoseLevel} {testDetails.glucoseUnit || 'mg/dL'}</span>
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Patient Image Section */}
-                <div className="flex flex-col gap-4">
-                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
-                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Patient Image</span>
-                  </div>
-                  
-                  <div className="flex flex-col gap-1.5">
-                    {patientPhotoPreview ? (
-                      <img 
-                        src={patientPhotoPreview} 
-                        alt="Patient" 
-                        className="w-full max-w-[250px] rounded border border-[#d9d9d9] object-cover"
-                      />
-                    ) : (
-                      <div className="h-32 max-w-[250px] rounded bg-gray-100 border border-[#d9d9d9] flex items-center justify-center">
-                        <span className="text-[#637381] text-sm font-poppins">No photo uploaded</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>

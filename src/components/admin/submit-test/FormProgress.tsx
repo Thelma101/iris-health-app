@@ -2,15 +2,13 @@ import React from 'react';
 
 interface FormProgressProps {
   currentStep: number;
+  stepLabels?: string[];
 }
 
-export default function FormProgress({ currentStep }: FormProgressProps) {
-  const steps = [
-    { number: 1, label: 'Patient\ninfo' },
-    { number: 2, label: 'Test Details' },
-    { number: 3, label: 'Upload Photos/Attachment' },
-    { number: 4, label: 'Submit' },
-  ];
+export default function FormProgress({ currentStep, stepLabels }: FormProgressProps) {
+  const defaultLabels = ['Patient\ninfo', 'Test Details', 'Upload Photos/Attachment', 'Submit'];
+  const labels = stepLabels || defaultLabels;
+  const steps = labels.map((label, i) => ({ number: i + 1, label }));
 
   return (
     <div className="flex flex-col items-center gap-[11px] mb-8">
@@ -57,7 +55,7 @@ export default function FormProgress({ currentStep }: FormProgressProps) {
           <div
             key={step.number}
             className={`whitespace-pre-wrap ${
-              step.label === 'Test Details' ? 'w-[38px]' : step.label === 'Upload Photos/Attachment' ? 'w-[60px]' : step.label === 'Submit' ? 'w-[45px]' : 'w-[43px]'
+              step.label.length > 15 ? 'w-[60px]' : step.label.length > 10 ? 'w-[50px]' : 'w-[45px]'
             } ${
               currentStep === step.number ? 'text-[#2c7be5]' : 'text-[#637381]'
             }`}

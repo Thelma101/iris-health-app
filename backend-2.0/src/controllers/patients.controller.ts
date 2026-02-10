@@ -5,6 +5,7 @@ import Community from "../models/community.model";
 import { Types } from "mongoose";
 import { uploadBuffer } from "../utils/uploadToCloudinary";
 import testTypeModel from "../models/testType.model";
+import { calculateBMI, classifyBloodPressure } from "../utils/bmiCalculator";
 
 /**
  * Create patient (also records first test)
@@ -154,11 +155,12 @@ export const createPatient = asyncHandler(
     }
 
     if (!Array.isArray(testDetails) || testDetails.length === 0) {
-      res.status(400).json({ message: "At least one test detail is required" });
-      return;
+      // Allow creating patient without test details
+      testDetails = [];
     }
 
     // ✅ Validate test types + results
+    const bpPattern = /^\d{2,3}\/\d{2,3}$/;
     for (const test of testDetails) {
       const testTypeDoc = await testTypeModel.findById(test.testType);
 
@@ -169,7 +171,11 @@ export const createPatient = asyncHandler(
         return;
       }
 
-      if (!testTypeDoc.allowedResults.includes(test.testResult)) {
+      const testResultValue = String(test.testResult || '').trim();
+      const isBpReading = bpPattern.test(testResultValue);
+
+      // Only validate testResult if one was provided
+      if (testResultValue && !isBpReading && !testTypeDoc.allowedResults.includes(test.testResult)) {
         res.status(400).json({
           message: `Invalid result for ${testTypeDoc.name}`
         });
@@ -216,18 +222,35 @@ export const createPatient = asyncHandler(
     // Get the authenticated user's ID (field agent or admin who conducted the test)
     const conductedBy = (req as any).user?.id;
 
-    const enrichedTestDetails = testDetails.map((test) => ({
-      ...test,
-      testSheetUrl,
-      patientImageUrl,
-      conductedBy, // Track which field agent conducted this test
-    }));
+    const enrichedTestDetails = testDetails.map((test) => {
+      // Auto-calculate BMI if height and weight are provided
+      const bmiResult = calculateBMI(test.weightKg, test.heightCm);
+      const bpCategory = classifyBloodPressure(test.bloodPressureSystolic, test.bloodPressureDiastolic);
+
+      return {
+        ...test,
+        testSheetUrl,
+        patientImageUrl,
+        conductedBy, // Track which field agent conducted this test
+        // Health metrics - pass through from request
+        heightCm: test.heightCm || undefined,
+        weightKg: test.weightKg || undefined,
+        bmi: bmiResult?.bmi || undefined,
+        bmiCategory: bmiResult?.category || undefined,
+        bloodPressureSystolic: test.bloodPressureSystolic || undefined,
+        bloodPressureDiastolic: test.bloodPressureDiastolic || undefined,
+        bpCategory: bpCategory || undefined,
+        glucoseLevel: test.glucoseLevel || undefined,
+        glucoseUnit: test.glucoseUnit || undefined,
+      };
+    });
 let positiveCount = 0;
 let negativeCount = 0;
 
 for (const test of testDetails) {
-  if (test.testResult.toLowerCase() === "positive") positiveCount++;
-  if (test.testResult.toLowerCase() === "negative") negativeCount++;
+  const result = String(test.testResult || '').toLowerCase();
+  if (result === "positive") positiveCount++;
+  if (result === "negative") negativeCount++;
 }
 
     const patient = await Patient.create({
@@ -384,11 +407,16 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response): P
         return;
       }
 
-      if (!testTypeDoc.allowedResults.includes(test.testResult)) {
-        res.status(400).json({
-          message: `Invalid result for ${testTypeDoc.name}. Allowed: ${testTypeDoc.allowedResults.join(", ")}`
-        });
-        return;
+      const testResultValue = String(test.testResult || '').trim();
+      if (testResultValue && !testTypeDoc.allowedResults.includes(testResultValue)) {
+        // Also allow BP pattern
+        const bpPattern = /^\d{2,3}\/\d{2,3}$/;
+        if (!bpPattern.test(testResultValue)) {
+          res.status(400).json({
+            message: `Invalid result for ${testTypeDoc.name}. Allowed: ${testTypeDoc.allowedResults.join(", ")}`
+          });
+          return;
+        }
       }
 
       // ✅ UPDATE existing test (NO PUSH)
@@ -398,6 +426,16 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response): P
       if (test.officerNotes !== undefined) existingTest.officerNotes = test.officerNotes;
       if (test.testSheetUrl !== undefined) existingTest.testSheetUrl = test.testSheetUrl;
       if (test.patientImageUrl !== undefined) existingTest.patientImageUrl = test.patientImageUrl;
+      // Health metrics
+      if (test.heightCm !== undefined) existingTest.heightCm = test.heightCm;
+      if (test.weightKg !== undefined) existingTest.weightKg = test.weightKg;
+      if (test.bmi !== undefined) existingTest.bmi = test.bmi;
+      if (test.bmiCategory !== undefined) existingTest.bmiCategory = test.bmiCategory;
+      if (test.bloodPressureSystolic !== undefined) existingTest.bloodPressureSystolic = test.bloodPressureSystolic;
+      if (test.bloodPressureDiastolic !== undefined) existingTest.bloodPressureDiastolic = test.bloodPressureDiastolic;
+      if (test.bpCategory !== undefined) existingTest.bpCategory = test.bpCategory;
+      if (test.glucoseLevel !== undefined) existingTest.glucoseLevel = test.glucoseLevel;
+      if (test.glucoseUnit !== undefined) existingTest.glucoseUnit = test.glucoseUnit;
     }
   }
 

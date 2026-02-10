@@ -10,6 +10,16 @@ export interface ITestDetail {
   testSheetUrl?: string;    // or GridFS id
   patientImageUrl?: string; // or GridFS id
   conductedBy?: Types.ObjectId; // ref FieldAgent - who conducted this test
+  // Health metrics
+  heightCm?: number;
+  weightKg?: number;
+  bmi?: number;
+  bmiCategory?: string; // Underweight | Normal | Overweight | Obese
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  bpCategory?: string; // Normal | Elevated | High (Stage 1) | High (Stage 2) | Crisis
+  glucoseLevel?: number;
+  glucoseUnit?: string; // mg/dL or mmol/L
 }
 
 export interface IPatient extends Document {
@@ -32,7 +42,7 @@ const TestDetailSchema = new Schema<ITestDetail>({
     ref: "TestType",
     required: true
   },
-  testResult: { type: String, required: true },
+  testResult: { type: String },
   dateConducted: { type: Date, required: true },
   officerNotes: { type: String },
   testSheetUrl: { type: String },
@@ -41,7 +51,17 @@ const TestDetailSchema = new Schema<ITestDetail>({
     type: Schema.Types.ObjectId,
     ref: "FieldAgent",
     index: true
-  }
+  },
+  // Health metrics
+  heightCm: { type: Number },
+  weightKg: { type: Number },
+  bmi: { type: Number },
+  bmiCategory: { type: String },
+  bloodPressureSystolic: { type: Number },
+  bloodPressureDiastolic: { type: Number },
+  bpCategory: { type: String },
+  glucoseLevel: { type: Number },
+  glucoseUnit: { type: String, enum: ["mg/dL", "mmol/L"], default: "mg/dL" },
 })
 
 const PatientSchema = new Schema<IPatient>({

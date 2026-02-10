@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import CreateTestTypeModal from '@/components/admin/CreateTestTypeModal';
 import SubmitTestModal from '@/components/admin/SubmitTestModal';
 import TestTypeListModal from '@/components/admin/TestTypeListModal';
@@ -8,6 +8,7 @@ import FormProgress from '@/components/admin/submit-test/FormProgress';
 import TestDetailsForm from '@/components/admin/submit-test/TestDetailsForm';
 import CameraCapture from '@/components/admin/CameraCapture';
 import { fieldAgentApi } from '@/lib/api/field-agent';
+import { calculateBMI, classifyBloodPressure } from '@/lib/utils/bmiCalculator';
 
 interface PatientInfo {
   lga: string;
@@ -27,6 +28,13 @@ interface TestDetails {
   testResult: string;
   officerNote: string;
   testImage: File | null;
+  // Health metrics
+  heightCm: string;
+  weightKg: string;
+  bloodPressureSystolic: string;
+  bloodPressureDiastolic: string;
+  glucoseLevel: string;
+  glucoseUnit: string;
 }
 
 interface TestType {
@@ -67,18 +75,16 @@ export default function TestRecordingPage() {
     testResult: '',
     officerNote: '',
     testImage: null,
+    heightCm: '',
+    weightKg: '',
+    bloodPressureSystolic: '',
+    bloodPressureDiastolic: '',
+    glucoseLevel: '',
+    glucoseUnit: 'mg/dL',
   });
 
-  const [patientPhoto, setPatientPhoto] = useState<File | null>(null);
   const [testImagePreview, setTestImagePreview] = useState<string | null>(null);
-  const [patientPhotoPreview, setPatientPhotoPreview] = useState<string | null>(null);
-  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
-  const [cameraTarget, setCameraTarget] = useState<'patient' | 'test' | null>(null);
-
-  // Refs for file inputs
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modal States
   const [isCreateTestTypeModalOpen, setIsCreateTestTypeModalOpen] = useState(false);
@@ -168,6 +174,11 @@ export default function TestRecordingPage() {
     ? communities.filter((c) => c.lga === formData.lga)
     : communities;
 
+  const bmiResult = calculateBMI(
+    testDetails.weightKg ? parseFloat(testDetails.weightKg) : undefined,
+    testDetails.heightCm ? parseFloat(testDetails.heightCm) : undefined
+  );
+
   // Validation functions for each step
   // Validation functions for each step with detailed field-level errors
   const validateStep1 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
@@ -216,82 +227,20 @@ export default function TestRecordingPage() {
     };
   };
 
-  const validateStep2 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
-    const errors: Record<string, string | null> = {};
-    
-    if (!testDetails.testType) {
-      errors.testType = 'Please select a test type';
-    }
-    if (!testDetails.dateConducted) {
-      errors.dateConducted = 'Please select the date conducted';
-    } else {
-      const date = new Date(testDetails.dateConducted);
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      if (date > today) {
-        errors.dateConducted = 'Date cannot be in the future';
-      }
-    }
-    if (!testDetails.testResult) {
-      errors.testResult = 'Please select a test result';
-    }
-    if (!testDetails.officerNote.trim()) {
-      errors.officerNote = 'Please add an officer note';
-    }
-    if (!testDetails.testImage) {
-      errors.testImage = 'Please upload a test image';
-    } else {
-      if (testDetails.testImage.size > 10 * 1024 * 1024) {
-        errors.testImage = 'Test image must be less than 10MB';
-      }
-      if (!testDetails.testImage.type.startsWith('image/')) {
-        errors.testImage = 'Test image must be an image file';
-      }
-    }
-
-    const errorMessages = Object.values(errors).filter(Boolean) as string[];
-    return {
-      isValid: errorMessages.length === 0,
-      errors,
-      firstError: errorMessages[0] || null,
-    };
-  };
-
-  const validateStep3 = (): { isValid: boolean; errors: Record<string, string | null>; firstError: string | null } => {
-    const errors: Record<string, string | null> = {};
-    
-    if (!patientPhoto) {
-      errors.patientPhoto = 'Please upload a patient photo';
-    } else {
-      if (patientPhoto.size > 10 * 1024 * 1024) {
-        errors.patientPhoto = 'Photo size must be less than 10MB';
-      }
-      if (!patientPhoto.type.startsWith('image/')) {
-        errors.patientPhoto = 'Please upload a valid image file';
-      }
-    }
-
-    const errorMessages = Object.values(errors).filter(Boolean) as string[];
-    return {
-      isValid: errorMessages.length === 0,
-      errors,
-      firstError: errorMessages[0] || null,
-    };
-  };
+  /* TEMPORARILY COMMENTED OUT - Test details validation
+  const validateStep2 = () => { ... };
+  const validateStep3 = () => { ... };
+  */
 
   // Get current step validation result
   const getCurrentStepValidation = useCallback(() => {
     switch (currentStep) {
       case 1:
         return validateStep1();
-      case 2:
-        return validateStep2();
-      case 3:
-        return validateStep3();
       default:
         return { isValid: true, errors: {}, firstError: null };
     }
-  }, [currentStep, formData, testDetails, patientPhoto]);
+  }, [currentStep, formData]);
 
   // Check if current step is valid (for button disable state)
   const currentValidation = getCurrentStepValidation();
@@ -301,7 +250,7 @@ export default function TestRecordingPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent Enter key from navigating if form is invalid
-      if (e.key === 'Enter' && !isCurrentStepValid && currentStep < 4) {
+      if (e.key === 'Enter' && !isCurrentStepValid && currentStep < 2) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -323,8 +272,6 @@ export default function TestRecordingPage() {
     // Touch all fields in current step to show errors
     const stepFields: Record<number, string[]> = {
       1: ['lga', 'community', 'firstName', 'lastName', 'age', 'gender', 'phoneNumber'],
-      2: ['testType', 'dateConducted', 'testResult', 'officerNote', 'testImage'],
-      3: ['patientPhoto'],
     };
     
     const fieldsToTouch = stepFields[currentStep] || [];
@@ -339,7 +286,7 @@ export default function TestRecordingPage() {
     }
     
     setValidationError(null);
-    if (currentStep < 4) setCurrentStep(currentStep + 1);
+    if (currentStep < 2) setCurrentStep(currentStep + 1);
   };
 
   const previousStep = () => {
@@ -409,38 +356,16 @@ export default function TestRecordingPage() {
     }
   };
 
-  const handlePatientPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setPatientPhoto(file);
-    setValidationError(null);
-    setFieldErrors((prev) => ({ ...prev, patientPhoto: null }));
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Handle camera capture
+  // Handle camera capture (test image only)
   const handleCameraCapture = (file: File) => {
-    if (cameraTarget === 'test') {
-      setTestDetails((prev) => ({ ...prev, testImage: file }));
-      setFieldErrors((prev) => ({ ...prev, testImage: null }));
-      setTouchedFields((prev) => ({ ...prev, testImage: true }));
-      const reader = new FileReader();
-      reader.onloadend = () => setTestImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPatientPhoto(file);
-      setFieldErrors((prev) => ({ ...prev, patientPhoto: null }));
-      setTouchedFields((prev) => ({ ...prev, patientPhoto: true }));
-      const reader = new FileReader();
-      reader.onloadend = () => setPatientPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
+    setTestDetails((prev) => ({ ...prev, testImage: file }));
+    setFieldErrors((prev) => ({ ...prev, testImage: null }));
+    setTouchedFields((prev) => ({ ...prev, testImage: true }));
+    const reader = new FileReader();
+    reader.onloadend = () => setTestImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
 
     setValidationError(null);
-    setCameraTarget(null);
     setShowCameraCapture(false);
   };
 
@@ -510,31 +435,29 @@ export default function TestRecordingPage() {
         throw new Error('Gender is required');
       }
 
-      // Validate test details
+      /* TEMPORARILY COMMENTED OUT - Test details validation
       if (!testDetails.testType?.trim()) {
         throw new Error('Test type is required');
       }
       if (!testDetails.testResult?.trim()) {
-        throw new Error('Test result is required');
+        throw new Error('Blood pressure is required');
+      }
+      if (!/^\d{2,3}\/\d{2,3}$/.test(testDetails.testResult.trim())) {
+        throw new Error('Blood pressure must be in format 120/80');
       }
       if (!testDetails.dateConducted) {
         throw new Error('Date conducted is required');
       }
+      */
 
-      // Create patient with test details in one request
-      const result = await fieldAgentApi.createPatientWithTest({
+      // Create patient (without test details for now)
+      const result = await fieldAgentApi.createPatient({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         age: parseInt(formData.age) || 0,
-        gender: formData.gender, // 'male' or 'female' (lowercase)
+        gender: formData.gender,
         phone: formData.phoneNumber?.trim() || '',
         community: communityId,
-        testDetails: [{
-          testType: testDetails.testType,
-          testResult: testDetails.testResult,
-          dateConducted: testDetails.dateConducted,
-          officerNotes: testDetails.officerNote || '',
-        }],
       });
 
       if (!result.success) {
@@ -561,10 +484,14 @@ export default function TestRecordingPage() {
         testResult: '',
         officerNote: '',
         testImage: null,
+        heightCm: '',
+        weightKg: '',
+        bloodPressureSystolic: '',
+        bloodPressureDiastolic: '',
+        glucoseLevel: '',
+        glucoseUnit: 'mg/dL',
       });
-      setPatientPhoto(null);
       setTestImagePreview(null);
-      setPatientPhotoPreview(null);
       setTouchedFields({});
       setFieldErrors({});
       setCurrentStep(1);
@@ -637,14 +564,15 @@ export default function TestRecordingPage() {
       {/* Form Card */}
       <div className="flex justify-center">
         <div className="w-full max-w-[768px] rounded-lg bg-white border border-[#d9d9d9] overflow-hidden p-6">
-          <FormProgress currentStep={currentStep} />
+          <FormProgress
+            currentStep={currentStep}
+            stepLabels={['Patient\ninfo', 'Submit']}
+          />
 
           <div className="max-w-[517px] mx-auto">
             <h2 className="text-xl font-medium text-[#212b36] font-poppins mb-6">
               {currentStep === 1 && 'Patient Info'}
-              {currentStep === 2 && 'Test Details'}
-              {currentStep === 3 && 'Upload photo/attachment'}
-              {currentStep === 4 && 'Summary'}
+              {currentStep === 2 && 'Summary'}
             </h2>
 
             {/* Step 1: Patient Info */}
@@ -835,133 +763,29 @@ export default function TestRecordingPage() {
               </div>
             )}
 
-            {/* Step 2: Test Details */}
+            {/* Step 2: Test Details - TEMPORARILY COMMENTED OUT
             {currentStep === 2 && (
               <TestDetailsForm
                 testDetails={testDetails}
                 onChange={handleTestDetailsChange}
                 onImageChange={handleTestImageChange}
                 onOpenCameraCapture={() => {
-                  setCameraTarget('test');
                   setShowCameraCapture(true);
                 }}
                 onBlur={handleFieldBlur}
                 errors={fieldErrors}
                 touched={touchedFields}
                 testTypes={testTypes}
+                useFreeTextBP
+                hideHealthMetrics
               />
             )}
+            */}
 
-            {/* Step 3: Upload Photos */}
-            {currentStep === 3 && (
-              <div className="flex flex-col gap-[26px]">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
-                  {/* Hidden file inputs */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePatientPhotoChange}
-                    className="hidden"
-                  />
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handlePatientPhotoChange}
-                    className="hidden"
-                  />
+            {/* Step 3: Health Metrics - TEMPORARILY COMMENTED OUT\n            {currentStep === 3 && (\n              <div className=\"flex flex-col gap-6\">...</div>\n            )}\n            */}
 
-                  {/* Upload box with dashed border */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-                      className={`w-full h-[140px] rounded bg-white border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer ${
-                        getFieldError('patientPhoto') 
-                          ? 'border-red-500 bg-red-50/30 hover:border-red-600' 
-                          : patientPhoto 
-                            ? 'border-green-500 bg-green-50/30 hover:border-green-600'
-                            : 'border-[#d9d9d9] hover:border-[#2c7be5] hover:bg-blue-50/30'
-                      }`}
-                    >
-                      {patientPhoto ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span className="text-green-600 text-base font-normal font-poppins">Photo uploaded</span>
-                        </div>
-                      ) : (
-                        <span className="text-[#637381] text-base font-normal font-poppins">Upload Patient Image</span>
-                      )}
-                    </button>
-
-                    {/* Upload Options Popup */}
-                    {showPhotoOptions && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setShowPhotoOptions(false)}
-                        />
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-56 bg-white rounded-lg shadow-lg border border-[#d9d9d9] z-50 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowPhotoOptions(false);
-                              setCameraTarget('patient');
-                              setShowCameraCapture(true);
-                            }}
-                            className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors border-b border-[#d9d9d9]"
-                          >
-                            Take photo
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowPhotoOptions(false);
-                              fileInputRef.current?.click();
-                            }}
-                            className="w-full px-4 py-3 text-left text-[#212b36] text-base font-poppins hover:bg-gray-50 transition-colors"
-                          >
-                            Choose existing photo
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {getFieldError('patientPhoto') && (
-                    <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {getFieldError('patientPhoto')}
-                    </p>
-                  )}
-
-                  {patientPhoto && (
-                    <p className="mt-1 text-sm text-green-600 font-poppins flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Selected: {patientPhoto.name}
-                    </p>
-                  )}
-                </div>
-                {patientPhotoPreview && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Patient Photo Preview</label>
-                    <img src={patientPhotoPreview} alt="Patient" className="max-w-[300px] rounded border border-green-500" />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 4: Summary */}
-            {currentStep === 4 && (
+            {/* Step 4: Summary → now Step 2 */}
+            {currentStep === 2 && (
               <div className="flex flex-col gap-6">
                 {/* Patient Info Section */}
                 <div className="flex flex-col gap-4">
@@ -1026,85 +850,11 @@ export default function TestRecordingPage() {
                   </div>
                 </div>
 
-                {/* Test Details Section */}
+                {/* TEMPORARILY COMMENTED OUT - Test Details, Health Metrics, Test Image sections
                 <div className="flex flex-col gap-4">
-                  <div className="h-8 bg-[#ecf4ff] rounded px-3 flex items-center">
-                    <span className="text-sm font-medium text-[#2c7be5] font-poppins">Test Details</span>
-                  </div>
-
-                  {/* Test Type */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
-                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType ? getTestTypeName(testDetails.testType) : '-'}</span>
-                    </div>
-                  </div>
-
-                  {/* Date Conducted */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
-                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.dateConducted || '-'}</span>
-                    </div>
-                  </div>
-
-                  {/* Test Result */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
-                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testResult || '-'}</span>
-                    </div>
-                  </div>
-
-                  {/* Officer Note */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
-                    <div className="min-h-[80px] rounded bg-white border border-[#d9d9d9] flex items-start p-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.officerNote || '-'}</span>
-                    </div>
-                  </div>
-
-                  {/* Attachments */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-medium text-[#637381] font-poppins">Test image</label>
-                      {testImagePreview ? (
-                        <div className="w-full max-w-[200px] h-[130px] rounded border border-[#d9d9d9] overflow-hidden relative">
-                          <img src={testImagePreview} alt="Test" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setTestDetails(prev => ({ ...prev, testImage: null }));
-                              setTestImagePreview(null);
-                            }}
-                            className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-100"
-                          >
-                            <svg className="w-3.5 h-3.5 text-[#637381]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                          <span className="text-[#637381] font-poppins text-sm">No image uploaded</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-medium text-[#637381] font-poppins">Patient photo</label>
-                      {patientPhotoPreview ? (
-                        <div className="w-full max-w-[200px] h-[130px] rounded border border-[#d9d9d9] overflow-hidden">
-                          <img src={patientPhotoPreview} alt="Patient" className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                          <span className="text-[#637381] font-poppins text-sm">No photo uploaded</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  ... Test Details and Health Metrics sections ...
                 </div>
+                */}
               </div>
             )}
           </div>
@@ -1121,7 +871,7 @@ export default function TestRecordingPage() {
             ) : (
               <div />
             )}
-            {currentStep < 4 ? (
+            {currentStep < 2 ? (
               <button
                 onClick={nextStep}
                 disabled={!isCurrentStepValid}
@@ -1151,7 +901,6 @@ export default function TestRecordingPage() {
         isOpen={showCameraCapture}
         onClose={() => {
           setShowCameraCapture(false);
-          setCameraTarget(null);
         }}
         onCapture={handleCameraCapture}
       />

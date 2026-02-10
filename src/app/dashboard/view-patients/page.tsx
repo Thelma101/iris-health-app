@@ -131,6 +131,16 @@ export default function ViewPatientsPage() {
           officerNotes: updatedTestDetails.officerNote,
           testSheetUrl: existingTest.testSheetUrl || '',
           patientImageUrl: existingTest.patientImageUrl || '',
+          // Health metrics
+          heightCm: updatedTestDetails.heightCm,
+          weightKg: updatedTestDetails.weightKg,
+          bmi: updatedTestDetails.bmi,
+          bmiCategory: updatedTestDetails.bmiCategory,
+          bloodPressureSystolic: updatedTestDetails.bloodPressureSystolic,
+          bloodPressureDiastolic: updatedTestDetails.bloodPressureDiastolic,
+          bpCategory: updatedTestDetails.bpCategory,
+          glucoseLevel: updatedTestDetails.glucoseLevel,
+          glucoseUnit: updatedTestDetails.glucoseUnit,
         };
         
         updatePayload.testDetails = existingTests;
@@ -268,14 +278,17 @@ export default function ViewPatientsPage() {
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : 'N/A',
               officerNote: latestTest?.officerNotes || '',
-              testSheetImage: latestTest?.testSheetUrl || selectedPatient.testSheetUrl || '',
+              // Health metrics
+              heightCm: latestTest?.heightCm,
+              weightKg: latestTest?.weightKg,
+              bmi: latestTest?.bmi,
+              bmiCategory: latestTest?.bmiCategory,
+              bloodPressureSystolic: latestTest?.bloodPressureSystolic,
+              bloodPressureDiastolic: latestTest?.bloodPressureDiastolic,
+              bpCategory: latestTest?.bpCategory,
+              glucoseLevel: latestTest?.glucoseLevel,
+              glucoseUnit: latestTest?.glucoseUnit,
             };
-          })()}
-          patientImage={(() => {
-            const latestTest = selectedPatient.testDetails && selectedPatient.testDetails.length > 0
-              ? selectedPatient.testDetails[selectedPatient.testDetails.length - 1]
-              : null;
-            return latestTest?.patientImageUrl || selectedPatient.patientImageUrl || '';
           })()}
           onDownload={handleDownloadPatientDetails}
         />
@@ -300,10 +313,18 @@ export default function ViewPatientsPage() {
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : 'N/A',
               officerNote: latestTest?.officerNotes || '',
-              testSheetImage: latestTest?.testSheetUrl || editingPatient.testSheetUrl || '',
+              // Health metrics
+              heightCm: latestTest?.heightCm,
+              weightKg: latestTest?.weightKg,
+              bmi: latestTest?.bmi,
+              bmiCategory: latestTest?.bmiCategory,
+              bloodPressureSystolic: latestTest?.bloodPressureSystolic,
+              bloodPressureDiastolic: latestTest?.bloodPressureDiastolic,
+              bpCategory: latestTest?.bpCategory,
+              glucoseLevel: latestTest?.glucoseLevel,
+              glucoseUnit: latestTest?.glucoseUnit,
             };
           })()}
-          patientImage={editingPatient.patientImageUrl || ''}
         />
       )}
     </main>

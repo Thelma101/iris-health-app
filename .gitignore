@@ -156,6 +156,9 @@ HARDCODED_DATA_AUDIT.md
 # Lock files from duplicate dirs (keep root + backend-2.0 only)
 iris-health-app/
 Lunar-Med-Track/
+medtrack-v1-working/
+medtrack-FE-BE-duplicate/
+refactor-FE-BE/
 
 # Terraform / IaC state
 *.tfstate

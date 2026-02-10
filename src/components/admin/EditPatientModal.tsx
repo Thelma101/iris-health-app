@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ModalBackdrop from './ModalBackdrop';
 import { toISODateFormat, toDisplayDateFormat, normalizeAge } from '@/lib/utils/validation';
+import { calculateBMI, classifyBloodPressure, getBMICategoryColor, getBPCategoryColor } from '@/lib/utils/bmiCalculator';
 
 interface PatientData {
   id: string;
@@ -23,7 +24,16 @@ interface TestDetails {
   testResult: string;
   dateConducted: string;
   officerNote: string;
-  testSheetImage?: string;
+  // Health metrics
+  heightCm?: number;
+  weightKg?: number;
+  bmi?: number;
+  bmiCategory?: string;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  bpCategory?: string;
+  glucoseLevel?: number;
+  glucoseUnit?: string;
 }
 
 interface EditPatientModalProps {
@@ -32,7 +42,6 @@ interface EditPatientModalProps {
   onUpdate: (updatedPatient: PatientData, updatedTestDetails?: TestDetails) => Promise<void> | void;
   patient: PatientData;
   testDetails?: TestDetails;
-  patientImage?: string;
 }
 
 export default function EditPatientModal({
@@ -41,7 +50,6 @@ export default function EditPatientModal({
   onUpdate,
   patient,
   testDetails,
-  patientImage,
 }: EditPatientModalProps) {
   const [formData, setFormData] = useState<PatientData>(patient);
   const [testData, setTestData] = useState<TestDetails>(() => ({
@@ -49,6 +57,15 @@ export default function EditPatientModal({
     testResult: testDetails?.testResult || '',
     dateConducted: toISODateFormat(testDetails?.dateConducted || ''),
     officerNote: testDetails?.officerNote || '',
+    heightCm: testDetails?.heightCm,
+    weightKg: testDetails?.weightKg,
+    bmi: testDetails?.bmi,
+    bmiCategory: testDetails?.bmiCategory,
+    bloodPressureSystolic: testDetails?.bloodPressureSystolic,
+    bloodPressureDiastolic: testDetails?.bloodPressureDiastolic,
+    bpCategory: testDetails?.bpCategory,
+    glucoseLevel: testDetails?.glucoseLevel,
+    glucoseUnit: testDetails?.glucoseUnit || 'mg/dL',
   }));
   const [isSaving, setIsSaving] = useState(false);
 
@@ -70,6 +87,18 @@ export default function EditPatientModal({
     }
   }, [testDetails]);
 
+  // Auto-calculate BMI
+  const bmiResult = useMemo(() => {
+    const h = testData.heightCm ? testData.heightCm : null;
+    const w = testData.weightKg ? testData.weightKg : null;
+    return calculateBMI(w, h);
+  }, [testData.heightCm, testData.weightKg]);
+
+  // Auto-classify BP
+  const bpCategory = useMemo(() => {
+    return classifyBloodPressure(testData.bloodPressureSystolic ?? null, testData.bloodPressureDiastolic ?? null);
+  }, [testData.bloodPressureSystolic, testData.bloodPressureDiastolic]);
+
   if (!isOpen) return null;
 
   const handleInputChange = (field: keyof PatientData, value: string) => {
@@ -80,13 +109,16 @@ export default function EditPatientModal({
     setTestData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleHealthMetricChange = (field: keyof TestDetails, value: string) => {
+    const numVal = value === '' ? undefined : parseFloat(value);
+    setTestData((prev) => ({ ...prev, [field]: numVal }));
+  };
+
   const handleUpdate = async () => {
     setIsSaving(true);
     try {
-      // Call the actual update callback with form data and test data
       await onUpdate(formData, testData);
     } catch (error) {
-      // Error handling connected to logging service
       console.error('Error updating patient:', error);
     } finally {
       setIsSaving(false);
@@ -207,6 +239,122 @@ export default function EditPatientModal({
               </div>
             </div>
 
+            {/* Health Metrics Section (Editable) */}
+            <div className="space-y-3">
+              <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
+                <h3 className="text-base font-medium text-[#212b36] font-poppins">Health Metrics</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Height (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="300"
+                      value={testData.heightCm ?? ''}
+                      onChange={(e) => handleHealthMetricChange('heightCm', e.target.value)}
+                      placeholder="e.g. 170"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Weight (kg)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="500"
+                      value={testData.weightKg ?? ''}
+                      onChange={(e) => handleHealthMetricChange('weightKg', e.target.value)}
+                      placeholder="e.g. 70"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    />
+                  </div>
+                </div>
+
+                {bmiResult && (
+                  <div className="flex items-center gap-3 p-3 rounded border border-[#d9d9d9] bg-gray-50">
+                    <span className="text-sm font-medium text-[#637381] font-poppins">BMI:</span>
+                    <span className="text-sm font-semibold text-[#212b36] font-poppins">{bmiResult.bmi}</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getBMICategoryColor(bmiResult.category)}`}>
+                      {bmiResult.category}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">BP Systolic</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="300"
+                      value={testData.bloodPressureSystolic ?? ''}
+                      onChange={(e) => handleHealthMetricChange('bloodPressureSystolic', e.target.value)}
+                      placeholder="e.g. 120"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">BP Diastolic</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="200"
+                      value={testData.bloodPressureDiastolic ?? ''}
+                      onChange={(e) => handleHealthMetricChange('bloodPressureDiastolic', e.target.value)}
+                      placeholder="e.g. 80"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    />
+                  </div>
+                </div>
+
+                {bpCategory && (
+                  <div className="flex items-center gap-3 p-3 rounded border border-[#d9d9d9] bg-gray-50">
+                    <span className="text-sm font-medium text-[#637381] font-poppins">Blood Pressure:</span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getBPCategoryColor(bpCategory)}`}>
+                      {bpCategory}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Glucose Level</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={testData.glucoseLevel ?? ''}
+                      onChange={(e) => handleHealthMetricChange('glucoseLevel', e.target.value)}
+                      placeholder="e.g. 95"
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Glucose Unit</label>
+                    <select
+                      value={testData.glucoseUnit || 'mg/dL'}
+                      onChange={(e) => setTestData((prev) => ({ ...prev, glucoseUnit: e.target.value }))}
+                      className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
+                      disabled={isSaving}
+                    >
+                      <option value="mg/dL">mg/dL</option>
+                      <option value="mmol/L">mmol/L</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Test Details Section */}
             {testDetails && (
               <div className="space-y-3">
@@ -266,36 +414,6 @@ export default function EditPatientModal({
                       placeholder="Add officer notes..."
                     />
                   </div>
-
-                  {/* Test Sheet - Read only (cannot edit uploaded images) */}
-                  {testDetails.testSheetImage && (
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Sheet</label>
-                      <div className="relative w-full max-w-[200px]">
-                        <img 
-                          src={testDetails.testSheetImage} 
-                          alt="Test Sheet" 
-                          className="w-full rounded border border-[#d9d9d9] object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Patient Image Section */}
-            {patientImage && (
-              <div className="space-y-3">
-                <div className="bg-[#f4f5f7] border-b border-[#d9d9d9] py-2 px-3 mb-3">
-                  <h3 className="text-base font-medium text-[#212b36] font-poppins">Patient Image</h3>
-                </div>
-                <div className="relative w-full max-w-[200px]">
-                  <img 
-                    src={patientImage} 
-                    alt="Patient" 
-                    className="w-full rounded border border-[#d9d9d9] object-cover"
-                  />
                 </div>
               </div>
             )}

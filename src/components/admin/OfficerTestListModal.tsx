@@ -20,8 +20,15 @@ export interface PatientTestRecord {
     testResult: string;
     dateConducted: string;
     officerNote: string;
-    testSheetUrl?: string;
-    patientImage?: string;
+    heightCm?: number;
+    weightKg?: number;
+    bmi?: number;
+    bmiCategory?: string;
+    bloodPressureSystolic?: number;
+    bloodPressureDiastolic?: number;
+    bpCategory?: string;
+    glucoseLevel?: number;
+    glucoseUnit?: string;
   }>;
 }
 
