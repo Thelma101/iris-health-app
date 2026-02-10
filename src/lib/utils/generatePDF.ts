@@ -33,6 +33,8 @@ interface PatientPDFData {
   lga?: string;
   registeredDate?: string;
   totalTests?: number;
+  adminEmail?: string;
+  reportIndex?: number;
   testDetails?: Array<{
     testType?: string;
     testResult?: string;
@@ -71,13 +73,14 @@ export function generatePatientReportPDF(patient: PatientPDFData): jsPDF {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('CONSOLIDATED PATIENT HEALTH REPORT', pageWidth / 2, 12, { align: 'center' });
+  doc.text('PATIENT HEALTH REPORT', pageWidth / 2, 12, { align: 'center' });
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text('MedTrack Health Information System', pageWidth / 2, 18, { align: 'center' });
 
-  // Report meta
-  const reportId = patient.patientId ? `RPT-${patient.patientId.slice(-8).toUpperCase()}` : 'RPT-' + Date.now().toString(36).toUpperCase();
+  // Report meta - sequential report ID starting from 0001
+  const reportNum = patient.reportIndex ?? 1;
+  const reportId = `RPT-${String(reportNum).padStart(4, '0')}`;
   doc.setFontSize(7);
   doc.text(`Report ID: ${reportId}`, margin, 25);
   doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - margin, 25, { align: 'right' });
@@ -329,8 +332,8 @@ export function generatePatientReportPDF(patient: PatientPDFData): jsPDF {
 
   y += 4;
 
-  // --- AUTHORIZATION / SIGNATURE ---
-  checkPageBreak(40);
+  // --- REPORT INFO ---
+  checkPageBreak(30);
   doc.setFillColor(232, 241, 255);
   doc.rect(margin, y, contentWidth, 8, 'F');
   doc.setDrawColor(44, 123, 229);
@@ -338,45 +341,30 @@ export function generatePatientReportPDF(patient: PatientPDFData): jsPDF {
   doc.setTextColor(33, 43, 54);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('Authorization', margin + 3, y + 5.5);
+  doc.text('Report Information', margin + 3, y + 5.5);
   y += 14;
 
-  // Left column: signature
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(177, 185, 192);
-  doc.text('REVIEWED BY (DOCTOR / OFFICER)', margin + 3, y);
-  y += 4;
-  doc.setDrawColor(217, 217, 217);
-  doc.line(margin + 3, y + 12, margin + contentWidth / 2 - 5, y + 12);
-  doc.setFontSize(7);
-  doc.setTextColor(200, 200, 200);
-  doc.text('Signature', margin + 3, y + 2);
-  
-  // Right column: date & report info
-  const rx = margin + contentWidth / 2 + 5;
-  doc.setTextColor(177, 185, 192);
-  doc.setFontSize(7);
-  doc.text('DATE & TIME', rx, y - 4);
-  doc.setTextColor(33, 43, 54);
-  doc.setFontSize(9);
-  doc.text(new Date().toLocaleString(), rx, y);
-  
-  doc.setTextColor(177, 185, 192);
-  doc.setFontSize(7);
-  doc.text('REPORT VERSION', rx, y + 6);
-  doc.setTextColor(33, 43, 54);
-  doc.setFontSize(9);
-  doc.text('v1', rx, y + 10);
+  const infoItems: string[][] = [
+    ['DATE & TIME', new Date().toLocaleString()],
+    ['REPORT ID', reportId],
+  ];
+  if (patient.adminEmail) {
+    infoItems.push(['CONDUCTED BY', patient.adminEmail]);
+  }
 
-  doc.setTextColor(177, 185, 192);
-  doc.setFontSize(7);
-  doc.text('REPORT ID', rx, y + 16);
-  doc.setTextColor(33, 43, 54);
-  doc.setFontSize(9);
-  doc.text(reportId, rx, y + 20);
+  infoItems.forEach((item, i) => {
+    const ix = margin + 3 + (i * (contentWidth / infoItems.length));
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(177, 185, 192);
+    doc.text(item[0], ix, y);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(33, 43, 54);
+    doc.text(item[1], ix, y + 5);
+  });
 
-  y += 28;
+  y += 14;
 
   // --- FOOTER ---
   const pageCount = doc.getNumberOfPages();

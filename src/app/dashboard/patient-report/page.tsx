@@ -155,6 +155,8 @@ function PatientReportPageContent() {
 
   const handleDownloadPDF = () => {
     if (!patient) return;
+    let adminEmail = '-';
+    try { const d = JSON.parse(localStorage.getItem('adminData') || '{}'); adminEmail = d.email || '-'; } catch { /* ignore */ }
     const doc = generatePatientReportPDF({
       name: `${patient.firstName} ${patient.lastName}`,
       patientId: patient._id,
@@ -165,6 +167,8 @@ function PatientReportPageContent() {
       lga: patient.lga || getCommunityLga(patient.community),
       registeredDate: patient.createdAt,
       totalTests: patient.numberOfTests || patient.testDetails?.length || 0,
+      adminEmail,
+      reportIndex: 1,
       testDetails: patient.testDetails?.map(t => ({
         testType: getTestTypeName(t.testType),
         testResult: t.testResult,
@@ -269,7 +273,7 @@ function PatientReportPageContent() {
 
       {/* Print Header - Professional medical layout */}
       <div className="hidden print:block text-center mb-6 border-b-2 border-[#2c7be5] pb-4">
-        <h1 className="text-2xl font-bold text-[#212b36] font-poppins uppercase tracking-wide">CONSOLIDATED PATIENT HEALTH REPORT</h1>
+        <h1 className="text-2xl font-bold text-[#212b36] font-poppins uppercase tracking-wide">PATIENT HEALTH REPORT</h1>
         <p className="text-sm text-[#637381] mt-1 font-poppins">MedTrack Health Information System</p>
         <div className="flex justify-between mt-3 text-xs text-[#637381] font-poppins">
           <span>Report ID: RPT-{patient._id?.slice(-8)?.toUpperCase()}</span>
@@ -586,34 +590,23 @@ function PatientReportPageContent() {
           </div>
         )}
 
-        {/* Doctor Signature & Timestamp Section */}
+        {/* Report Info Section */}
         <div className="border border-[#d9d9d9] rounded-lg overflow-hidden print:break-inside-avoid">
           <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-2 px-4">
-            <h2 className="text-base font-semibold text-[#212b36] font-poppins">Authorization</h2>
+            <h2 className="text-base font-semibold text-[#212b36] font-poppins">Report Information</h2>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Reviewed By (Doctor / Officer)</label>
-                <div className="border-b-2 border-[#d9d9d9] pb-8 mt-1">
-                  <p className="text-xs text-[#d9d9d9] font-poppins italic">Signature</p>
-                </div>
-                <div className="border-b border-[#d9d9d9] pb-1 mt-2">
-                  <p className="text-xs text-[#d9d9d9] font-poppins italic">Print Name</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Date & Time</label>
-                <p className="text-sm text-[#212b36] font-poppins mt-1">{new Date().toLocaleString()}</p>
-                <div className="mt-4">
-                  <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Report Version</label>
-                  <p className="text-sm text-[#212b36] font-poppins mt-0.5">v{reportVersion}</p>
-                </div>
-                <div className="mt-2">
-                  <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Report ID</label>
-                  <p className="text-sm text-[#212b36] font-poppins mt-0.5 font-mono">RPT-{patient._id?.slice(-8)?.toUpperCase()}</p>
-                </div>
-              </div>
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Date & Time</label>
+              <p className="text-sm text-[#212b36] font-poppins mt-0.5">{new Date().toLocaleString()}</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Report ID</label>
+              <p className="text-sm text-[#212b36] font-poppins mt-0.5 font-mono">RPT-{String(1).padStart(4, '0')}</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[#b1b9c0] font-poppins uppercase">Conducted By</label>
+              <p className="text-sm text-[#212b36] font-poppins mt-0.5">{(() => { try { const d = JSON.parse(localStorage.getItem('adminData') || '{}'); return d.email || '-'; } catch { return '-'; } })()}</p>
             </div>
           </div>
         </div>

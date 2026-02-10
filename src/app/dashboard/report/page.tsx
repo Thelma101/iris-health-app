@@ -581,6 +581,8 @@ export default function ReportPage() {
             glucoseUnit: selectedPatient.testDetails[0].glucoseUnit,
           } : undefined}
           onDownload={() => {
+            let adminEmail = '-';
+            try { const d = JSON.parse(localStorage.getItem('adminData') || '{}'); adminEmail = d.email || '-'; } catch { /* ignore */ }
             const doc = generatePatientReportPDF({
               name: selectedPatient.name,
               patientId: selectedPatient.patientId || '',
@@ -590,6 +592,8 @@ export default function ReportPage() {
               community: selectedPatient.community,
               lga: selectedPatient.lga,
               totalTests: selectedPatient.testDetails?.length || 0,
+              adminEmail,
+              reportIndex: 1,
               testDetails: selectedPatient.testDetails?.map((t: any) => ({
                 testType: t.testType,
                 testResult: t.testResult,
