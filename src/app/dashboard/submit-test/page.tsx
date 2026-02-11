@@ -79,7 +79,7 @@ export default function SubmitTestPage() {
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
     testType: '',
-    dateConducted: '',
+    dateConducted: new Date().toISOString().split('T')[0],
     testResult: '',
     officerNote: '',
     testImage: null,
@@ -206,7 +206,7 @@ export default function SubmitTestPage() {
       }
     }
     if (!testDetails.officerNote.trim()) {
-      errors.officerNote = 'Please add an officer note';
+      errors.officerNote = 'Please add additional notes';
     }
 
     const errorMessages = Object.values(errors).filter(Boolean) as string[];
@@ -604,7 +604,7 @@ export default function SubmitTestPage() {
         });
         setTestDetails({
           testType: '',
-          dateConducted: new Date().toISOString().split('T')[0],
+          dateConducted: new Date().toISOString().slice(0, 16),
           testResult: '',
           officerNote: '',
           testImage: null,
@@ -1069,13 +1069,13 @@ export default function SubmitTestPage() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
                     <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
-                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.dateConducted || '-'}</span>
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.dateConducted ? new Date(testDetails.dateConducted).toLocaleString() : '-'}</span>
                     </div>
                   </div>
 
-                  {/* Officer Note */}
+                  {/* Additional Notes */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Additional Notes</label>
                     <div className="min-h-20 rounded bg-white border border-[#d9d9d9] flex items-start p-[22px]">
                       <span className="text-[#212b36] font-poppins text-sm">{testDetails.officerNote || '-'}</span>
                     </div>
@@ -1261,7 +1261,7 @@ export default function SubmitTestPage() {
                   setCurrentStep(2);
                   setTestDetails({
                     testType: '',
-                    dateConducted: new Date().toISOString().split('T')[0],
+                    dateConducted: new Date().toISOString().slice(0, 16),
                     testResult: '',
                     officerNote: '',
                     testImage: null,

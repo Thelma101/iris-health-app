@@ -130,7 +130,7 @@ export default function TestDetailsForm({
   };
 
   const selectTextClass = testDetails.testType && getSelectedTestTypeName() ? 'text-[#212b36]' : 'text-[#999]';
-  const dateTextClass = testDetails.dateConducted ? 'text-[#212b36]' : 'text-[#999]';
+  // dateTextClass removed - date field is now auto-set and read-only
   const testResultTextClass = testDetails.testResult ? 'text-[#212b36]' : 'text-[#999]';
   const bpPattern = /^\d{2,3}\/\d{2,3}$/;
 
@@ -182,16 +182,15 @@ export default function TestDetailsForm({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
-        <div className={`relative h-12 rounded bg-white border ${getFieldClasses('dateConducted')}`}>
+        <div className={`relative h-12 rounded bg-gray-100 border border-[#d9d9d9]`}>
           <input
-            type="date"
-            value={testDetails.dateConducted}
-            onChange={(e) => onChange('dateConducted', e.target.value)}
-            onBlur={() => onBlur?.('dateConducted')}
-            max={new Date().toISOString().split('T')[0]}
-            className={`w-full h-full px-5 bg-transparent text-sm font-poppins focus:outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer ${dateTextClass}`}
+            type="datetime-local"
+            value={testDetails.dateConducted || new Date().toISOString().slice(0, 16)}
+            readOnly
+            disabled
+            className="w-full h-full px-5 bg-transparent text-sm font-poppins focus:outline-none cursor-not-allowed text-[#637381]"
           />
-          <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute top-1/2 right-2.5 -translate-y-1/2 w-6 h-6 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
@@ -440,13 +439,13 @@ export default function TestDetailsForm({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#637381] font-poppins">Officer Note</label>
+        <label className="text-sm font-medium text-[#637381] font-poppins">Additional Notes</label>
         <textarea
           value={testDetails.officerNote}
           onChange={(e) => onChange('officerNote', e.target.value)}
           onBlur={() => onBlur?.('officerNote')}
           className={`w-full h-24 p-3 rounded bg-white border text-sm placeholder:text-[#d9d9d9] font-poppins focus:outline-none resize-none ${getFieldClasses('officerNote')}`}
-          placeholder="Enter officer note"
+          placeholder="Enter additional notes"
         />
         {getFieldError('officerNote') && (
           <p className="text-sm text-red-500 font-poppins flex items-center gap-1">

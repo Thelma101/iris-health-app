@@ -23,6 +23,7 @@ interface TestDetails {
   testType: string;
   testResult: string;
   dateConducted: string;
+  editedDate: string;
   officerNote: string;
   // Health metrics
   heightCm?: number;
@@ -56,6 +57,7 @@ export default function EditPatientModal({
     testType: testDetails?.testType || '',
     testResult: testDetails?.testResult || '',
     dateConducted: toISODateFormat(testDetails?.dateConducted || ''),
+    editedDate: new Date().toISOString().slice(0, 16),
     officerNote: testDetails?.officerNote || '',
     heightCm: testDetails?.heightCm,
     weightKg: testDetails?.weightKg,
@@ -83,6 +85,7 @@ export default function EditPatientModal({
       setTestData({
         ...testDetails,
         dateConducted: toISODateFormat(testDetails.dateConducted),
+        editedDate: new Date().toISOString().slice(0, 16),
       });
     }
   }, [testDetails]);
@@ -397,7 +400,17 @@ export default function EditPatientModal({
                       <input
                         type="date"
                         value={testData.dateConducted}
-                        onChange={(e) => handleTestInputChange('dateConducted', e.target.value)}
+                        readOnly
+                        disabled
+                        className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#637381] font-poppins bg-gray-100 cursor-not-allowed"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Edited Date</label>
+                      <input
+                        type="datetime-local"
+                        value={testData.editedDate}
+                        onChange={(e) => handleTestInputChange('editedDate', e.target.value)}
                         className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                         disabled={isSaving}
                       />
@@ -405,13 +418,13 @@ export default function EditPatientModal({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Additional Notes</label>
                     <textarea
                       value={testData.officerNote}
                       onChange={(e) => handleTestInputChange('officerNote', e.target.value)}
                       className="w-full p-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors min-h-[6rem] resize-none"
                       disabled={isSaving}
-                      placeholder="Add officer notes..."
+                      placeholder="Add additional notes..."
                     />
                   </div>
                 </div>

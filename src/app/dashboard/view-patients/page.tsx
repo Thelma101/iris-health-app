@@ -389,6 +389,7 @@ export default function ViewPatientsPage() {
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : 'N/A',
               officerNote: latestTest?.officerNotes || '',
+              editedDate: new Date().toISOString().slice(0, 16),
               // Health metrics
               heightCm: latestTest?.heightCm,
               weightKg: latestTest?.weightKg,

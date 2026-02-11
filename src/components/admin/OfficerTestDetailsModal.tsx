@@ -243,7 +243,7 @@ export default function OfficerTestDetailsModal({
                   </div>
 
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Officer Note</label>
+                    <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Additional Notes</label>
                     <div className="bg-white rounded p-2 border border-[#d9d9d9] min-h-12">
                       <p className="text-sm text-[#212b36] font-poppins">{testDetails.officerNote}</p>
                     </div>

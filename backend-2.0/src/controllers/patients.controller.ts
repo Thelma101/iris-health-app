@@ -319,6 +319,7 @@ export const getAllPatients = asyncHandler(async (req: Request, res: Response): 
     Patient.find(filter)
       .populate("community", "name lga")
       .populate("testDetails.testType", "name")
+      .populate("testDetails.conductedBy", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(pageSize),
@@ -345,7 +346,8 @@ export const getPatientById = asyncHandler(async (req: Request, res: Response): 
 
   const patient = await Patient.findById(id)
     .populate("community", "name lga")
-     .populate("testDetails.testType", "name");
+    .populate("testDetails.testType", "name")
+    .populate("testDetails.conductedBy", "name email");
 
   if (!patient) {
     res.status(404).json({ message: "Patient not found" });

@@ -49,7 +49,7 @@ const TestDetailSchema = new Schema<ITestDetail>({
   patientImageUrl: { type: String },
   conductedBy: {
     type: Schema.Types.ObjectId,
-    ref: "FieldAgent",
+    ref: "Admin",
     index: true
   },
   // Health metrics

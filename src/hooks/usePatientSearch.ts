@@ -42,9 +42,12 @@ export function usePatientSearch() {
             ? p.community.lga
             : (p.lga || 'Unknown');
 
-          // Get latest test details
+          // Get latest test details - sort by dateConducted to get the most recent
           const testDetails = p.testDetails || [];
-          const latestTest = testDetails.length > 0 ? testDetails[testDetails.length - 1] : null;
+          const sortedTests = [...testDetails].sort((a: any, b: any) => 
+            new Date(b.dateConducted || '').getTime() - new Date(a.dateConducted || '').getTime()
+          );
+          const latestTest = sortedTests.length > 0 ? sortedTests[0] : null;
 
           return {
             id: typeof p._id === 'number' ? p._id : (typeof p.id === 'number' ? p.id : index + 1),
