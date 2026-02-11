@@ -619,11 +619,6 @@ export default function SubmitTestPage() {
         setTestImagePreview(null);
         setTouchedFields({});
         setFieldErrors({});
-        
-        // Auto-dismiss success message after 10 seconds
-        setTimeout(() => {
-          setSubmitSuccess(false);
-        }, 10000);
       } else {
         setSubmitError(res.error || 'Submission failed');
       }

@@ -159,25 +159,13 @@ export const createPatient = asyncHandler(
       testDetails = [];
     }
 
-    // ✅ Validate test types + results
-    const bpPattern = /^\d{2,3}\/\d{2,3}$/;
+    // ✅ Validate test types
     for (const test of testDetails) {
       const testTypeDoc = await testTypeModel.findById(test.testType);
 
       if (!testTypeDoc) {
         res.status(400).json({
           message: `Invalid test type: ${test.testType}`
-        });
-        return;
-      }
-
-      const testResultValue = String(test.testResult || '').trim();
-      const isBpReading = bpPattern.test(testResultValue);
-
-      // Only validate testResult if one was provided
-      if (testResultValue && !isBpReading && !testTypeDoc.allowedResults.includes(test.testResult)) {
-        res.status(400).json({
-          message: `Invalid result for ${testTypeDoc.name}`
         });
         return;
       }
@@ -442,18 +430,6 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response): P
         return;
       }
 
-      const testResultValue = String(test.testResult || '').trim();
-      if (testResultValue && !testTypeDoc.allowedResults.includes(testResultValue)) {
-        // Also allow BP pattern
-        const bpPattern = /^\d{2,3}\/\d{2,3}$/;
-        if (!bpPattern.test(testResultValue)) {
-          res.status(400).json({
-            message: `Invalid result for ${testTypeDoc.name}. Allowed: ${testTypeDoc.allowedResults.join(", ")}`
-          });
-          return;
-        }
-      }
-
       // ✅ UPDATE existing test (NO PUSH)
       existingTest.testType = new Types.ObjectId(testTypeId);
       if (test.testResult !== undefined) existingTest.testResult = test.testResult;
@@ -528,18 +504,11 @@ export const addTestToPatient = asyncHandler(async (req: Request, res: Response)
     return;
   }
 
-  // Validate test types + results
-  const bpPattern = /^\d{2,3}\/\d{2,3}$/;
+  // Validate test types
   for (const test of testDetails) {
     const testTypeDoc = await testTypeModel.findById(test.testType);
     if (!testTypeDoc) {
       res.status(400).json({ message: `Invalid test type: ${test.testType}` });
-      return;
-    }
-    const testResultValue = String(test.testResult || '').trim();
-    const isBpReading = bpPattern.test(testResultValue);
-    if (testResultValue && !isBpReading && !testTypeDoc.allowedResults.includes(test.testResult)) {
-      res.status(400).json({ message: `Invalid result for ${testTypeDoc.name}` });
       return;
     }
   }
