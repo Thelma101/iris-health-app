@@ -52,11 +52,23 @@ export default function EditPatientModal({
   patient,
   testDetails,
 }: EditPatientModalProps) {
+  // Convert a date string to datetime-local format (YYYY-MM-DDTHH:MM)
+  const toDateTimeLocal = (dateStr: string): string => {
+    if (!dateStr || dateStr === 'N/A' || dateStr === '-') return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return toISODateFormat(dateStr);
+      return d.toISOString().slice(0, 16);
+    } catch {
+      return toISODateFormat(dateStr);
+    }
+  };
+
   const [formData, setFormData] = useState<PatientData>(patient);
   const [testData, setTestData] = useState<TestDetails>(() => ({
     testType: testDetails?.testType || '',
     testResult: testDetails?.testResult || '',
-    dateConducted: toISODateFormat(testDetails?.dateConducted || ''),
+    dateConducted: toDateTimeLocal(testDetails?.dateConducted || ''),
     editedDate: new Date().toISOString().slice(0, 16),
     officerNote: testDetails?.officerNote || '',
     heightCm: testDetails?.heightCm,
@@ -84,7 +96,7 @@ export default function EditPatientModal({
     if (testDetails) {
       setTestData({
         ...testDetails,
-        dateConducted: toISODateFormat(testDetails.dateConducted),
+        dateConducted: toDateTimeLocal(testDetails.dateConducted),
         editedDate: new Date().toISOString().slice(0, 16),
       });
     }
@@ -380,25 +392,19 @@ export default function EditPatientModal({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Test Result</label>
-                      <select
+                      <input
+                        type="text"
                         value={testData.testResult}
                         onChange={(e) => handleTestInputChange('testResult', e.target.value)}
+                        placeholder="Enter test result"
                         className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
                         disabled={isSaving}
-                      >
-                        <option value="">Select Result</option>
-                        <option value="Positive">Positive</option>
-                        <option value="Negative">Negative</option>
-                        <option value="Inconclusive">Inconclusive</option>
-                        <option value="High">High</option>
-                        <option value="Low">Low</option>
-                        <option value="Normal">Normal</option>
-                      </select>
+                      />
                     </div>
                     <div className="space-y-1">
                       <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Date Conducted</label>
                       <input
-                        type="date"
+                        type="datetime-local"
                         value={testData.dateConducted}
                         readOnly
                         disabled
@@ -406,13 +412,13 @@ export default function EditPatientModal({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Edited Date</label>
+                      <label className="text-sm font-medium text-[#b1b9c0] font-poppins">Updated Date</label>
                       <input
                         type="datetime-local"
                         value={testData.editedDate}
-                        onChange={(e) => handleTestInputChange('editedDate', e.target.value)}
-                        className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#212b36] font-poppins focus:outline-none focus:border-[#2c7be5] transition-colors"
-                        disabled={isSaving}
+                        readOnly
+                        disabled
+                        className="w-full h-12 px-3 border border-[#d9d9d9] rounded text-sm text-[#637381] font-poppins bg-gray-100 cursor-not-allowed"
                       />
                     </div>
                   </div>

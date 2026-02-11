@@ -181,6 +181,20 @@ export default function TestDetailsForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#637381] font-poppins">Test Result <span className="text-xs text-[#999] font-normal">(optional)</span></label>
+        <div className={`relative h-12 rounded bg-white border ${getFieldClasses('testResult')}`}>
+          <input
+            type="text"
+            value={testDetails.testResult}
+            onChange={(e) => onChange('testResult', e.target.value)}
+            onBlur={() => onBlur?.('testResult')}
+            placeholder="Enter test result"
+            className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] text-sm font-poppins focus:outline-none cursor-text"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#637381] font-poppins">Date Conducted</label>
         <div className={`relative h-12 rounded bg-gray-100 border border-[#d9d9d9]`}>
           <input
@@ -203,103 +217,6 @@ export default function TestDetailsForm({
           </p>
         )}
       </div>
-
-      {!hideTestResult && (
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#637381] font-poppins">
-          {useFreeTextBP ? 'Blood Pressure (mmHg)' : 'Test Result'}
-        </label>
-        {useFreeTextBP ? (
-          <div className={`relative h-12 rounded bg-white border ${getFieldClasses('testResult')}`}>
-            <input
-              type="text"
-              value={testDetails.testResult}
-              onChange={(e) => {
-                const value = e.target.value;
-                onChange('testResult', value);
-                if (bpPattern.test(value.trim())) {
-                  setBpInputError(null);
-                }
-              }}
-              onBlur={() => {
-                const value = testDetails.testResult.trim();
-                if (!bpPattern.test(value)) {
-                  setBpInputError('Enter BP in format 120/80');
-                } else {
-                  setBpInputError(null);
-                }
-                onBlur?.('testResult');
-              }}
-              maxLength={10}
-              placeholder="120/80"
-              className="w-full h-full px-[22px] bg-transparent text-[#212b36] placeholder:text-[#d9d9d9] font-poppins focus:outline-none cursor-text"
-            />
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => testDetails.testType && !noResultsConfigured ? setShowTestResultModal(true) : null}
-            onBlur={() => onBlur?.('testResult')}
-            disabled={!testDetails.testType || noResultsConfigured}
-            className={`relative h-12 rounded bg-white border px-5 flex items-center justify-between text-left transition-colors ${
-              !testDetails.testType || noResultsConfigured
-                ? 'opacity-60 cursor-not-allowed border-[#d9d9d9]' 
-                : `hover:border-[#2c7be5] cursor-pointer ${getFieldClasses('testResult')}`
-            }`}
-          >
-            <span className={`text-sm font-poppins ${testResultTextClass}`}>
-              {!testDetails.testType 
-                ? 'Select a test type first' 
-                : noResultsConfigured
-                ? 'No results configured for this test type'
-                : testDetails.testResult || 'Select test result'}
-            </span>
-            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        )}
-        {!useFreeTextBP && !testDetails.testType && (
-          <p className="text-sm text-[#637381] font-poppins">
-            Please select a test type to see available results
-          </p>
-        )}
-        {!useFreeTextBP && noResultsConfigured && testDetails.testType && (
-          <p className="text-sm text-amber-600 font-poppins flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            This test type has no configured results. Please configure results via Admin settings.
-          </p>
-        )}
-        {getFieldError('testResult') && (
-          <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {getFieldError('testResult')}
-          </p>
-        )}
-        {useFreeTextBP && bpInputError && !getFieldError('testResult') && (
-          <p className="text-sm text-red-500 font-poppins flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {bpInputError}
-          </p>
-        )}
-      </div>
-      )}
-
-      {!hideTestResult && !useFreeTextBP && (
-        <TestResultModal
-          isOpen={showTestResultModal}
-          selectedValue={testDetails.testResult}
-          onSelect={(value) => onChange('testResult', value)}
-          onClose={() => setShowTestResultModal(false)}
-          options={availableResults}
-        />
-      )}
 
       {!hideHealthMetrics && (
         <>

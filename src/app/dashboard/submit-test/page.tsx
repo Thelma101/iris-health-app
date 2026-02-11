@@ -79,7 +79,7 @@ export default function SubmitTestPage() {
 
   const [testDetails, setTestDetails] = useState<TestDetails>({
     testType: '',
-    dateConducted: new Date().toISOString().split('T')[0],
+    dateConducted: new Date().toISOString().slice(0, 16),
     testResult: '',
     officerNote: '',
     testImage: null,
@@ -1062,6 +1062,14 @@ export default function SubmitTestPage() {
                     <label className="text-sm font-medium text-[#637381] font-poppins">Test Type</label>
                     <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
                       <span className="text-[#212b36] font-poppins text-sm">{testDetails.testType ? getTestTypeName(testDetails.testType) : '-'}</span>
+                    </div>
+                  </div>
+
+                  {/* Test Result */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[#637381] font-poppins">Test Result</label>
+                    <div className="h-12 rounded bg-white border border-[#d9d9d9] flex items-center px-[22px]">
+                      <span className="text-[#212b36] font-poppins text-sm">{testDetails.testResult || '-'}</span>
                     </div>
                   </div>
 
