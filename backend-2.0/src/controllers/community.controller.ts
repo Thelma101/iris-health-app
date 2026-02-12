@@ -192,8 +192,11 @@ export const getStatsByLga = asyncHandler(
       return;
     }
 
+    // Sanitize input to prevent regex injection by escaping special regex characters
+    const escapedLga = lga.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
     // Case-insensitive search for the LGA
-    const lgaRegex = new RegExp(`^${lga}$`, 'i');
+    const lgaRegex = new RegExp(`^${escapedLga}$`, 'i');
 
     // Count communities in this LGA
     const communityCount = await communityModel.countDocuments({ lga: lgaRegex });
@@ -220,14 +223,14 @@ export const getStatsByLga = asyncHandler(
 
     res.status(200).json({
       message: `Statistics for ${lga} LGA fetched successfully`,
-      lga: lga,
+      lga,
       stats: {
         communities: communityCount,
         patients: patientCount,
         totalEntries: communityCount + patientCount,
         totalTestsConducted: totalTests
       },
-      communities: communities
+      communities
     });
   }
 );
