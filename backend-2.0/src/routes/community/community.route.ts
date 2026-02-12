@@ -1,10 +1,9 @@
 import { Express, Router } from "express";
 import { adminOnly, agentOrAdmin, protect } from "../../middlewares/authMiddleware";
-import { createCommunity, deleteCommunity, getAllCommunities, getCommunityById, getPatientsByCommunity, getStatsByLga, updateCommunity } from "../../controllers/community.controller";
+import { createCommunity, deleteCommunity, getAllCommunities, getCommunityById, getPatientsByCommunity, updateCommunity } from "../../controllers/community.controller";
 const communityRoutes: Router = Router();
 communityRoutes.post('/', protect, adminOnly, createCommunity)
 communityRoutes.get('/all', protect, adminOnly, getAllCommunities)
-communityRoutes.get('/stats/lga', protect, agentOrAdmin, getStatsByLga)
 communityRoutes.get('/:id/patients', protect, agentOrAdmin, getPatientsByCommunity)
 communityRoutes.get('/:id', protect, adminOnly, getCommunityById)
 communityRoutes.put('/:id', protect, adminOnly, updateCommunity)
