@@ -178,3 +178,56 @@ export const getCommunityLga = asyncHandler(
     });
   }
 );
+
+/**
+ * Get statistics for a specific LGA
+ * Query parameter: lga (e.g., /api/communities/stats/lga?lga=Badagry)
+ */
+export const getStatsByLga = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { lga } = req.query;
+
+    if (!lga || typeof lga !== 'string') {
+      res.status(400).json({ message: "LGA query parameter is required" });
+      return;
+    }
+
+    // Case-insensitive search for the LGA
+    const lgaRegex = new RegExp(`^${lga}$`, 'i');
+
+    // Count communities in this LGA
+    const communityCount = await communityModel.countDocuments({ lga: lgaRegex });
+
+    // Get communities with their details
+    const communities = await communityModel.find(
+      { lga: lgaRegex },
+      { name: 1, lga: 1, totalTestsConducted: 1, totalPopulation: 1, topPositive: 1, topNegative: 1 }
+    );
+
+    // Count patients in this LGA
+    const patientCount = await Patient.countDocuments({ lga: lgaRegex });
+
+    // Get total tests conducted for patients in this LGA
+    const patients = await Patient.find(
+      { lga: lgaRegex },
+      { numberOfTests: 1, testDetails: 1 }
+    );
+
+    let totalTests = 0;
+    patients.forEach(patient => {
+      totalTests += patient.testDetails?.length || 0;
+    });
+
+    res.status(200).json({
+      message: `Statistics for ${lga} LGA fetched successfully`,
+      lga: lga,
+      stats: {
+        communities: communityCount,
+        patients: patientCount,
+        totalEntries: communityCount + patientCount,
+        totalTestsConducted: totalTests
+      },
+      communities: communities
+    });
+  }
+);
