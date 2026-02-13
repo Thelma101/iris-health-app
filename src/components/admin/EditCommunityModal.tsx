@@ -160,7 +160,7 @@ export default function EditCommunityModal({
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <button
-        className="absolute inset-0 bg-black/20 backdrop-blur-[10px] cursor-pointer"
+        className="absolute inset-0 bg-black/20 backdrop-blur-[2px] cursor-pointer"
         onClick={onClose}
         aria-label="Close modal"
       />

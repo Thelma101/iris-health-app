@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import ModalBackdrop from './ModalBackdrop';
 import { toISODateFormat, toDisplayDateFormat, normalizeAge } from '@/lib/utils/validation';
 import { calculateBMI, classifyBloodPressure, getBMICategoryColor, getBPCategoryColor } from '@/lib/utils/bmiCalculator';
 
@@ -142,20 +141,24 @@ export default function EditPatientModal({
 
   return (
     <>
-      {isOpen && <ModalBackdrop onClick={onClose} />}
+      {/* Backdrop */}
+      <button className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] cursor-pointer" onClick={onClose} aria-label="Close modal" />
 
-      <div className="fixed right-0 top-0 h-screen w-full max-w-[500px] bg-white z-50 flex flex-col overflow-hidden shadow-xl transition-all duration-200 pointer-events-auto">
+      <div className="fixed right-0 top-0 h-screen w-full sm:w-[500px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-[#d9d9d9] px-6 py-4 flex items-center justify-between">
+          <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
             <h2 className="text-lg font-semibold text-[#212b36] font-poppins">
               Edit {formData.firstName} {formData.lastName}
             </h2>
             <button
               onClick={onClose}
               disabled={isSaving}
-              className="text-[#637381] hover:text-[#212b36] transition-colors disabled:opacity-50 font-poppins text-xl"
+              className="text-[#637381] hover:text-[#212b36] transition-colors disabled:opacity-50"
+              aria-label="Close modal"
             >
-              ×
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 

@@ -52,7 +52,7 @@ export default function OfficerTestDetailsModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
+      <button className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] cursor-pointer" onClick={onClose} aria-label="Close modal" />
 
       {/* Modal Drawer - Right Side */}
       <div className="fixed right-0 top-0 h-screen w-full sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">

@@ -47,21 +47,19 @@ export default function PatientDetailsModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-white/30 backdrop-blur-sm cursor-pointer" onClick={onClose} />
+      <button className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] cursor-pointer" onClick={onClose} aria-label="Close modal" />
 
       {/* Modal Drawer */}
-      <div className="fixed right-0 top-0 h-screen w-full max-w-[466px] sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl transition-all duration-200"
-        style={{ width: '100vw', maxWidth: 466 }}
-      >
+      <div className="fixed right-0 top-0 h-screen w-full sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
         {/* Header */}
         <div className="border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
           <h2 className="text-xl font-medium text-[#212b36] font-poppins">{patient.name}</h2>
           <button
             onClick={onClose}
-            className="cursor-pointer hover:opacity-70 transition-opacity p-1"
+            className="text-[#637381] hover:text-[#212b36] transition-colors"
             aria-label="Close modal"
           >
-            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

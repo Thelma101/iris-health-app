@@ -1,7 +1,5 @@
 'use client';
-import Image from 'next/image';
 import { useEffect, useState, useMemo } from 'react';
-import ModalBackdrop from './ModalBackdrop';
 import api from '@/lib/api/index';
 
 export interface PatientTestRecord {
@@ -108,18 +106,20 @@ export default function OfficerTestListModal({
 
   return (
     <>
-      <ModalBackdrop onClick={onClose} />
+      {/* Backdrop */}
+      <button className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] cursor-pointer" onClick={onClose} aria-label="Close modal" />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center sm:items-start sm:justify-end pointer-events-none">
-        <div className="bg-white w-full max-w-[411px] h-screen pointer-events-auto sm:rounded-none shadow-xl m-0 flex flex-col">
+      <div className="fixed right-0 top-0 h-screen w-full sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
           {/* Header */}
-          <div className="bg-white border-b border-[#d9d9d9] h-[48px] flex items-center justify-between px-[22px] flex-shrink-0">
-            <h2 className="text-[20px] font-medium text-[#212b36] font-poppins">{officerName} Test List</h2>
+          <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
+            <h2 className="text-xl font-medium text-[#212b36] font-poppins">{officerName} Test List</h2>
             <button
               onClick={onClose}
               className="text-[#637381] hover:text-[#212b36] transition-colors"
             >
-              <Image src="/icons/cancel-01.svg" alt="Close" width={24} height={24} />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
@@ -195,7 +195,6 @@ export default function OfficerTestListModal({
               </button>
             </div>
           )}
-        </div>
       </div>
     </>
   );

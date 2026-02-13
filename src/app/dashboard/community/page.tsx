@@ -83,7 +83,7 @@ export default function CommunityPage() {
     try {
       const [commRes, patientsRes] = await Promise.all([
         api.getCommunities(),
-        api.getPatients(),
+        api.getPatients({ limit: 1000 }),
       ]);
 
       if (commRes?.success && commRes.data) {
@@ -101,7 +101,7 @@ export default function CommunityPage() {
           // Find patients belonging to this community
           const communityPatients = allPatients.filter((p: { community?: string | { _id?: string } }) => {
             const cId = typeof p.community === 'object' ? p.community?._id : p.community;
-            return cId === c._id;
+            return String(cId) === String(c._id);
           });
 
           // Compute stats from testDetails

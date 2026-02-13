@@ -185,12 +185,22 @@ export default function ViewPatientsPage() {
 
   const handleDownloadPatientDetails = () => {
     if (!selectedPatient) return;
-    const patientData = `Patient Details\n\nName: ${selectedPatient.name}\nAge: ${selectedPatient.age}\nGender: ${selectedPatient.gender}\nCommunity: ${selectedPatient.community}\nLGA: ${selectedPatient.lga}\nTests Taken: ${selectedPatient.testsTaken}\nLast Test Type: ${selectedPatient.lastTestType}`;
-    const blob = new Blob([patientData], { type: 'text/plain' });
+    const headers = ['Name', 'Age', 'Gender', 'Community', 'LGA', 'Tests Taken', 'Last Test Type'];
+    const values = [
+      selectedPatient.name,
+      selectedPatient.age,
+      selectedPatient.gender,
+      selectedPatient.community,
+      selectedPatient.lga,
+      String(selectedPatient.testsTaken ?? ''),
+      selectedPatient.lastTestType ?? '',
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`);
+    const csvContent = [headers.join(','), values.join(',')].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `patient-${selectedPatient.name.replace(/\s+/g, '-')}.txt`;
+    a.download = `patient-${selectedPatient.name.replace(/\s+/g, '-')}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };

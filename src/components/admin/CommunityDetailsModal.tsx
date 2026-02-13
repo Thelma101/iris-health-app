@@ -56,18 +56,18 @@ export default function CommunityDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50">
+    <>
       {/* Backdrop */}
       <button
-        className="absolute inset-0 bg-black/20 backdrop-blur-[2px] cursor-pointer"
+        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] cursor-pointer"
         onClick={onClose}
         aria-label="Close modal"
       />
 
       {/* Right Side Drawer */}
-      <div className="absolute right-0 top-0 h-full w-full max-w-[420px] bg-white shadow-xl overflow-y-auto animate-[slideInRight_0.3s_ease-out]">
+      <div className="fixed right-0 top-0 h-screen w-full sm:w-[466px] bg-white z-50 flex flex-col overflow-hidden shadow-xl">
         {/* Modal Header */}
-        <div className="sticky top-0 bg-white flex items-center justify-between border-b border-[#d9d9d9] px-6 py-4 z-10">
+        <div className="bg-white border-b border-[#d9d9d9] h-12 flex items-center justify-between px-[22px] flex-shrink-0">
           <h2 className="text-xl font-medium text-[#212b36] font-poppins">{community.name}</h2>
           <button
             onClick={onClose}
@@ -81,7 +81,7 @@ export default function CommunityDetailsModal({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-0">
+        <div className="flex-1 overflow-y-auto p-6 space-y-0">
           {/* Map Section */}
           <div className="bg-gray-100 h-48 rounded-lg overflow-hidden border border-[#e5e7eb] mb-6">
             <iframe
@@ -196,6 +196,6 @@ export default function CommunityDetailsModal({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
