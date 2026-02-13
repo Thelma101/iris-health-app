@@ -22,6 +22,13 @@ export interface ITestDetail {
   glucoseUnit?: string; // mg/dL or mmol/L
 }
 
+export interface IEditRecord {
+  editedBy: Types.ObjectId;  // Admin who made the edit
+  editedAt: Date;
+  action: string;  // e.g. 'update_patient', 'update_test', 'add_test'
+  changes?: string; // summary of what changed
+}
+
 export interface IPatient extends Document {
   firstName: string;
   lastName: string;
@@ -32,6 +39,8 @@ export interface IPatient extends Document {
   lga?: string;
   numberOfTests: number;
   testDetails: ITestDetail[];
+  createdBy?: Types.ObjectId; // Admin who created this patient record
+  editHistory: IEditRecord[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,6 +73,13 @@ const TestDetailSchema = new Schema<ITestDetail>({
   glucoseUnit: { type: String, enum: ["mg/dL", "mmol/L"], default: "mg/dL" },
 })
 
+const EditRecordSchema = new Schema<IEditRecord>({
+  editedBy: { type: Schema.Types.ObjectId, ref: "Admin" },
+  editedAt: { type: Date, default: Date.now },
+  action: { type: String },
+  changes: { type: String },
+}, { _id: false });
+
 const PatientSchema = new Schema<IPatient>({
   firstName: { type: String, required: true, index: true },
   lastName: { type: String, required: true, index: true },
@@ -73,7 +89,9 @@ const PatientSchema = new Schema<IPatient>({
   community: { type: Schema.Types.ObjectId, ref: "Community", required: true, index: true },
   lga: { type: String }, // denormalized for fast queries
   numberOfTests: { type: Number, default: 0 },
-  testDetails: [TestDetailSchema]
+  testDetails: [TestDetailSchema],
+  createdBy: { type: Schema.Types.ObjectId, ref: "Admin" },
+  editHistory: [EditRecordSchema],
 }, { timestamps: true });
 
 // compound index to speed up queries by community + name

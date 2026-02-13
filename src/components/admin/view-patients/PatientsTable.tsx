@@ -38,7 +38,7 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
                   Tests Taken
                 </th>
                 <th className="px-3 py-3 text-left text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[16%]">
-                  Last Test Result
+                  Last Test Type
                 </th>
                 <th className="px-3 py-3 text-center text-sm font-semibold text-[#637381] font-poppins bg-[#f4f5f7] w-[14%]">
                   Action
@@ -70,7 +70,7 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
                       {patient.testsTaken}
                     </td>
                     <td className="px-3 py-3 text-sm text-[#637381] font-poppins break-words">
-                      {patient.lastTestResult}
+                      {patient.lastTestType}
                     </td>
                     <td className="px-3 py-3 text-sm font-semibold text-center">
                       <span
@@ -159,12 +159,12 @@ export default function PatientsTable({ patients, onViewPatient, onEditPatient }
                 <p className="text-[#637381] text-[14px] font-poppins">{patient.testsTaken}</p>
               </div>
 
-              {/* Last Test Result */}
+              {/* Last Test Type */}
               <div className="bg-[#f4f5f7] px-2.5 py-2 border-b border-[#d9d9d9]">
-                <p className="font-semibold text-[#637381] text-[14px] font-poppins">Last Test Result</p>
+                <p className="font-semibold text-[#637381] text-[14px] font-poppins">Last Test Type</p>
               </div>
               <div className="px-2.5 py-1.5 border-b border-[#d9d9d9] bg-white">
-                <p className="text-[#637381] text-[14px] font-poppins">{patient.lastTestResult}</p>
+                <p className="text-[#637381] text-[14px] font-poppins">{patient.lastTestType}</p>
               </div>
 
               {/* Action */}

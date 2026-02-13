@@ -58,7 +58,11 @@ export function usePatientSearch() {
             community: communityName,
             lga: lgaName,
             testsTaken: p.numberOfTests || p.testsTaken || testDetails.length || 0,
-            lastTestResult: latestTest?.testResult || p.lastTestResult || 'N/A',
+            lastTestType: latestTest?.testType
+              ? (typeof latestTest.testType === 'object' && latestTest.testType?.name
+                ? latestTest.testType.name
+                : latestTest.testType)
+              : 'N/A',
             phoneNumber: p.phone || p.phoneNumber,
             phone: p.phone || p.phoneNumber,
             testDetails: testDetails.map((t: any) => ({
@@ -169,11 +173,11 @@ export function usePatientSearch() {
   const handleSearch = () => {};
 
   const handleExport = (selectedDate: string) => {
-    const headers = ['Patient Name', 'Age', 'Gender', 'Community', 'LGA', 'Tests Taken', 'Last Test Result'];
+    const headers = ['Patient Name', 'Age', 'Gender', 'Community', 'LGA', 'Tests Taken', 'Last Test Type'];
     const csv = [
       headers.join(','),
       ...filteredPatients.map((patient) =>
-        [patient.name, patient.age, patient.gender, patient.community, patient.lga, patient.testsTaken, patient.lastTestResult].join(',')
+        [patient.name, patient.age, patient.gender, patient.community, patient.lga, patient.testsTaken, patient.lastTestType].join(',')
       ),
     ].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });

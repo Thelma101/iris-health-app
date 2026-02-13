@@ -29,23 +29,18 @@ export default function DashboardPage() {
       logger.info('AdminDashboard', 'Fetching dashboard data');
       const startTime = performance.now();
       try {
-        // Fetch stats and recent records from API
-        const [statsRes, recentRes] = await Promise.all([
-          api.getDashboardStats(),
-          api.getRecentCommunityRecords(),
-        ]);
+        // Fetch all dashboard data in a single combined call (avoids duplicate API requests)
+        const dashRes = await api.getDashboardData();
         const duration = Math.round(performance.now() - startTime);
-        if (statsRes.data) {
-          setStats(statsRes.data);
-          logger.info('AdminDashboard', `Dashboard stats loaded (${duration}ms)`, {
-            communities: statsRes.data.communities,
-            fieldAgents: statsRes.data.fieldAgents,
-            tests: statsRes.data.tests,
+        if (dashRes.data) {
+          setStats(dashRes.data.stats);
+          setRecentRecords(dashRes.data.records);
+          logger.info('AdminDashboard', `Dashboard data loaded (${duration}ms)`, {
+            communities: dashRes.data.stats.communities,
+            fieldAgents: dashRes.data.stats.fieldAgents,
+            tests: dashRes.data.stats.tests,
+            records: dashRes.data.records.length,
           });
-        }
-        if (recentRes.data) {
-          setRecentRecords(recentRes.data);
-          logger.info('AdminDashboard', 'Recent records loaded', { count: recentRes.data.length });
         }
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
@@ -144,16 +139,22 @@ export default function DashboardPage() {
                           <p className="text-[#212b36] text-sm font-normal font-poppins">{record.totalTests}</p>
                         </div>
                         <div className="bg-[#f4f5f7] px-3 py-2">
-                          <p className="text-[#637381] text-xs font-semibold font-poppins">Top Tests +ve</p>
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Total Patients</p>
                         </div>
                         <div className="px-3 py-2">
-                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.topPositiveTest}</p>
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.totalPatients}</p>
                         </div>
                         <div className="bg-[#f4f5f7] px-3 py-2">
-                          <p className="text-[#637381] text-xs font-semibold font-poppins">Top Tests -ve</p>
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Top Test Type</p>
                         </div>
                         <div className="px-3 py-2">
-                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.topNegativeTest}</p>
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.topTestType}</p>
+                        </div>
+                        <div className="bg-[#f4f5f7] px-3 py-2">
+                          <p className="text-[#637381] text-xs font-semibold font-poppins">Last Visited</p>
+                        </div>
+                        <div className="px-3 py-2">
+                          <p className="text-[#212b36] text-sm font-normal font-poppins">{record.lastVisited}</p>
                         </div>
                       </div>
                     ))
@@ -166,11 +167,12 @@ export default function DashboardPage() {
 
                 {/* Desktop Table View */}
                 <div className="hidden md:block rounded-lg border border-[#d9d9d9] overflow-hidden max-h-[calc(100vh-420px)] overflow-y-auto">
-                  <div className="bg-[#f4f5f7] px-4 py-2 grid grid-cols-4 gap-4 sticky top-0 z-10">
+                  <div className="bg-[#f4f5f7] px-4 py-2 grid grid-cols-5 gap-4 sticky top-0 z-10">
                     <div className="text-[#637381] text-sm font-semibold font-poppins">Communities</div>
                     <div className="text-[#637381] text-sm font-semibold font-poppins">Total Test</div>
-                    <div className="text-[#637381] text-sm font-semibold font-poppins">Top Tests +ve</div>
-                    <div className="text-[#637381] text-sm font-semibold font-poppins">Top Tests -ve</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Total Patients</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Top Test Type</div>
+                    <div className="text-[#637381] text-sm font-semibold font-poppins">Last Visited</div>
                   </div>
 
                   <div className="divide-y divide-[#e5e7eb]">
@@ -178,7 +180,7 @@ export default function DashboardPage() {
                       recentRecords.map((record, idx) => (
                         <div
                           key={`desktop-${record.community}-${idx}`}
-                          className={`px-4 py-2 grid grid-cols-4 gap-4 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'
+                          className={`px-4 py-2 grid grid-cols-5 gap-4 transition-colors hover:bg-gray-50 ${idx % 2 === 1 ? 'bg-[#fcfdfd]' : 'bg-white'
                             }`}
                         >
                           <div className="text-[#637381] text-sm font-normal font-poppins truncate">
@@ -188,10 +190,13 @@ export default function DashboardPage() {
                             {record.totalTests}
                           </div>
                           <div className="text-[#637381] text-sm font-normal font-poppins">
-                            {record.topPositiveTest}
+                            {record.totalPatients}
+                          </div>
+                          <div className="text-[#637381] text-sm font-normal font-poppins truncate">
+                            {record.topTestType}
                           </div>
                           <div className="text-[#637381] text-sm font-normal font-poppins">
-                            {record.topNegativeTest}
+                            {record.lastVisited}
                           </div>
                         </div>
                       ))

@@ -27,7 +27,7 @@ export interface Patient {
   community: string;
   lga: string;
   testsTaken: number;
-  lastTestResult: string;
+  lastTestType: string;
   phoneNumber?: string;
   phone?: string;
   testDetails?: TestDetail[];

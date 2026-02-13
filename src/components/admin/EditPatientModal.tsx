@@ -16,7 +16,7 @@ interface PatientData {
   gender: string;
   phoneNumber: string;
   testsTaken?: number;
-  lastTestResult?: string;
+  lastTestType?: string;
 }
 
 interface TestDetails {

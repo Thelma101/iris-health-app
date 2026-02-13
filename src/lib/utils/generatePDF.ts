@@ -24,6 +24,8 @@ export function formatDateTime(dateStr?: string | null): string {
 }
 
 interface PatientPDFData {
+  _id?: string;
+  id?: string;
   name: string;
   patientId?: string;
   age?: string | number;
@@ -78,9 +80,8 @@ export function generatePatientReportPDF(patient: PatientPDFData): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.text('MedTrack Health Information System', pageWidth / 2, 18, { align: 'center' });
 
-  // Report meta - sequential report ID starting from 0001
-  const reportNum = patient.reportIndex ?? 1;
-  const reportId = `RPT-${String(reportNum).padStart(4, '0')}`;
+  // Report meta - unique report ID from patient's ObjectId
+  const reportId = `RPT-${(patient._id || patient.id || '00000000').slice(-8).toUpperCase()}`;
   doc.setFontSize(7);
   doc.text(`Report ID: ${reportId}`, margin, 25);
   doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - margin, 25, { align: 'right' });

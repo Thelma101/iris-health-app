@@ -241,6 +241,8 @@ for (const test of testDetails) {
   if (result === "negative") negativeCount++;
 }
 
+    const adminId = (req as any).user?.id;
+
     const patient = await Patient.create({
       firstName,
       lastName,
@@ -251,6 +253,7 @@ for (const test of testDetails) {
       lga: lga || communityExists.lga,
       testDetails: enrichedTestDetails,
       numberOfTests: enrichedTestDetails.length,
+      createdBy: adminId ? new Types.ObjectId(adminId) : undefined,
     });
 
     await Community.findByIdAndUpdate(community, {
@@ -300,7 +303,7 @@ export const getAllPatients = asyncHandler(async (req: Request, res: Response): 
 
   // Pagination
   const pageNum = Math.max(1, parseInt(page as string) || 1);
-  const pageSize = Math.min(100, Math.max(1, parseInt(limit as string) || 50));
+  const pageSize = Math.min(1000, Math.max(1, parseInt(limit as string) || 50));
   const skip = (pageNum - 1) * pageSize;
 
   const [patients, total] = await Promise.all([
@@ -308,6 +311,8 @@ export const getAllPatients = asyncHandler(async (req: Request, res: Response): 
       .populate("community", "name lga")
       .populate("testDetails.testType", "name")
       .populate("testDetails.conductedBy", "name email")
+      .populate("createdBy", "name email")
+      .populate("editHistory.editedBy", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(pageSize),
@@ -335,7 +340,9 @@ export const getPatientById = asyncHandler(async (req: Request, res: Response): 
   const patient = await Patient.findById(id)
     .populate("community", "name lga")
     .populate("testDetails.testType", "name")
-    .populate("testDetails.conductedBy", "name email");
+    .populate("testDetails.conductedBy", "name email")
+    .populate("createdBy", "name email")
+    .populate("editHistory.editedBy", "name email");
 
   if (!patient) {
     res.status(404).json({ message: "Patient not found" });
@@ -451,11 +458,44 @@ export const updatePatient = asyncHandler(async (req: Request, res: Response): P
   }
 
   // Update patient bio data
-  if (updateData.firstName !== undefined) patient.firstName = updateData.firstName;
-  if (updateData.lastName !== undefined) patient.lastName = updateData.lastName;
-  if (updateData.phone !== undefined) patient.phone = updateData.phone;
-  if (updateData.age !== undefined) patient.age = updateData.age;
-  if (updateData.gender !== undefined) patient.gender = updateData.gender;
+  const changes: string[] = [];
+  if (updateData.firstName !== undefined && updateData.firstName !== patient.firstName) {
+    changes.push(`firstName: ${patient.firstName} → ${updateData.firstName}`);
+    patient.firstName = updateData.firstName;
+  }
+  if (updateData.lastName !== undefined && updateData.lastName !== patient.lastName) {
+    changes.push(`lastName: ${patient.lastName} → ${updateData.lastName}`);
+    patient.lastName = updateData.lastName;
+  }
+  if (updateData.phone !== undefined && updateData.phone !== patient.phone) {
+    changes.push(`phone updated`);
+    patient.phone = updateData.phone;
+  }
+  if (updateData.age !== undefined && updateData.age !== patient.age) {
+    changes.push(`age: ${patient.age} → ${updateData.age}`);
+    patient.age = updateData.age;
+  }
+  if (updateData.gender !== undefined && updateData.gender !== patient.gender) {
+    changes.push(`gender: ${patient.gender} → ${updateData.gender}`);
+    patient.gender = updateData.gender;
+  }
+
+  // Record edit history if there are changes
+  const editAction = updateData.testDetails?.length ? 'update_test' : 'update_patient';
+  const editSummary = updateData.testDetails?.length
+    ? `Test details updated${changes.length ? '; ' + changes.join(', ') : ''}`
+    : changes.join(', ') || 'Patient record updated';
+
+  const adminId = (req as any).user?.id;
+  if (adminId) {
+    if (!patient.editHistory) patient.editHistory = [];
+    patient.editHistory.push({
+      editedBy: new Types.ObjectId(adminId),
+      editedAt: new Date(),
+      action: editAction,
+      changes: editSummary,
+    } as any);
+  }
 
   try {
     await patient.save();

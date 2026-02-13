@@ -61,8 +61,9 @@ export interface DashboardStats {
 export interface RecentRecord {
   community: string;
   totalTests: number;
-  topPositiveTest: string;
-  topNegativeTest: string;
+  totalPatients: number;
+  topTestType: string;
+  lastVisited: string;
 }
 
 export interface Community {
@@ -478,16 +479,16 @@ export const api = {
   deleteTestType: (id: string) =>
     apiRequest(`/admin/testtypes/${id}`, { method: 'DELETE' }),
 
-  // Dashboard - aggregate calls that compute stats from available data
-  getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
+  // Dashboard - single combined fetch to avoid duplicate API calls
+  getDashboardData: async (): Promise<ApiResponse<{ stats: DashboardStats; records: RecentRecord[] }>> => {
     try {
+      // Single set of API calls - communities, fieldAgents, patients
       const [communitiesRes, fieldAgentsRes, patientsRes] = await Promise.all([
         api.getCommunities(),
         api.getFieldAgents(),
-        api.getPatients(),
+        api.getPatients({ limit: 1000 }),
       ]);
 
-      // Handle nested response structure
       const commData = communitiesRes.data as any;
       const agentsData = fieldAgentsRes.data as any;
       const patData = patientsRes.data as any;
@@ -496,23 +497,45 @@ export const api = {
       const fieldAgents = agentsData?.agents || agentsData?.data?.agents || agentsData?.fieldAgents || [];
       const patients = patData?.data?.patients || patData?.patients || [];
 
-      // Count total tests from community stats OR patient testDetails
+      // --- Compute stats ---
       let totalTests = communities.reduce((sum: number, c: any) => sum + (c.totalTestsConducted || 0), 0);
       if (totalTests === 0) {
-        // Fallback: count from patient testDetails
         totalTests = patients.reduce((sum: number, p: any) => sum + (p.testDetails?.length || 0), 0);
       }
 
-      // Find the most recent test date from patient testDetails
       let latestDate = '';
+      const communityStats: Record<string, { patientCount: number; lastVisited: string; testTypeCounts: Record<string, number> }> = {};
+      communities.forEach((c: any) => {
+        communityStats[String(c._id)] = { patientCount: 0, lastVisited: '', testTypeCounts: {} };
+      });
+
       patients.forEach((p: any) => {
+        const commId = String(p.community?._id || p.community);
+        if (commId && communityStats[commId]) {
+          communityStats[commId].patientCount++;
+        }
         const tests = p.testDetails || [];
         tests.forEach((t: any) => {
           const d = t.dateConducted || t.dateVisited;
-          if (d && (!latestDate || new Date(d) > new Date(latestDate))) {
-            latestDate = d;
+          if (d) {
+            if (!latestDate || new Date(d) > new Date(latestDate)) {
+              latestDate = d;
+            }
+            if (commId && communityStats[commId] && (!communityStats[commId].lastVisited || new Date(d) > new Date(communityStats[commId].lastVisited))) {
+              communityStats[commId].lastVisited = d;
+            }
+          }
+          // Track test type counts per community
+          if (commId && communityStats[commId]) {
+            const typeName = typeof t.testType === 'object' ? t.testType?.name : t.testType;
+            if (typeName) {
+              communityStats[commId].testTypeCounts[typeName] = (communityStats[commId].testTypeCounts[typeName] || 0) + 1;
+            }
           }
         });
+        if (commId && communityStats[commId] && !communityStats[commId].lastVisited && p.createdAt) {
+          communityStats[commId].lastVisited = p.createdAt;
+        }
       });
 
       const stats: DashboardStats = {
@@ -526,113 +549,44 @@ export const api = {
           : 'N/A',
       };
 
-      return { success: true, data: stats };
+      // --- Compute recent records ---
+      const records: RecentRecord[] = communities.slice(0, 15).map((c: any) => {
+        const cStats = communityStats[String(c._id)] || { patientCount: 0, lastVisited: '', testTypeCounts: {} };
+        // Find top test type
+        const topType = Object.entries(cStats.testTypeCounts).sort((a, b) => (b[1] as number) - (a[1] as number))[0];
+        return {
+          community: `${c.name} ${c.lga}`,
+          totalTests: c.totalTestsConducted || 0,
+          totalPatients: cStats.patientCount,
+          topTestType: topType ? String(topType[0]) : '-',
+          lastVisited: cStats.lastVisited
+            ? new Date(cStats.lastVisited).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '-',
+        };
+      });
+
+      return { success: true, data: { stats, records } };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch dashboard stats',
+        error: error instanceof Error ? error.message : 'Failed to fetch dashboard data',
         data: {
-          communities: 0,
-          fieldAgents: 0,
-          tests: 0,
-          communitiesCovered: 0,
-          fieldAgentsAvailable: 0,
-          lastTestDate: 'N/A',
+          stats: { communities: 0, fieldAgents: 0, tests: 0, communitiesCovered: 0, fieldAgentsAvailable: 0, lastTestDate: 'N/A' },
+          records: [],
         },
       };
     }
   },
 
+  // Keep separate functions for backward compatibility (they delegate to getDashboardData)
+  getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
+    const res = await api.getDashboardData();
+    return { success: res.success, data: res.data!.stats, error: res.error };
+  },
+
   getRecentCommunityRecords: async (): Promise<ApiResponse<RecentRecord[]>> => {
-    try {
-      const [communitiesRes, patientsRes, testTypesRes] = await Promise.all([
-        api.getCommunities(),
-        api.getPatients(),
-        api.getTestTypes(),
-      ]);
-      // Handle nested response structure
-      const commData = communitiesRes.data as any;
-      const patData = patientsRes.data as any;
-      const testTypesData = testTypesRes.data as any;
-      const communities = commData?.data?.communities || commData?.communities || [];
-      const patients = patData?.data?.patients || patData?.patients || [];
-      const testTypes = testTypesData?.data?.testTypes || testTypesData?.testTypes || [];
-
-      // Build a lookup map of test type ID to name
-      const testTypeMap: Record<string, string> = {};
-      testTypes.forEach((tt: any) => {
-        testTypeMap[tt._id] = tt.name;
-      });
-
-      // Build a map of community ID to test results
-      const communityStats: Record<string, { 
-        positiveTests: Record<string, number>; 
-        negativeTests: Record<string, number>;
-        totalTests: number;
-      }> = {};
-
-      // Initialize for all communities
-      communities.forEach((c: any) => {
-        communityStats[c._id] = { positiveTests: {}, negativeTests: {}, totalTests: 0 };
-      });
-
-      // Aggregate test data from patients
-      patients.forEach((p: any) => {
-        const commId = p.community?._id || p.community;
-        if (commId && communityStats[commId]) {
-          const tests = p.testDetails || [];
-          tests.forEach((t: any) => {
-            // Resolve test type name: check if object with name, otherwise lookup by ID
-            let testTypeName: string;
-            if (typeof t.testType === 'object' && t.testType?.name) {
-              testTypeName = t.testType.name;
-            } else if (typeof t.testType === 'string') {
-              // It's an ObjectId string - look it up in the map
-              testTypeName = testTypeMap[t.testType] || 'Unknown Test';
-            } else {
-              testTypeName = 'Unknown Test';
-            }
-            
-            const result = (t.testResult || '').toLowerCase().trim();
-            
-            communityStats[commId].totalTests++;
-            
-            // Classify result using shared classifier that handles all result types
-            const resultClass = classifyResult(result);
-            
-            if (resultClass === 'positive') {
-              communityStats[commId].positiveTests[testTypeName] = (communityStats[commId].positiveTests[testTypeName] || 0) + 1;
-            } else if (resultClass === 'negative') {
-              communityStats[commId].negativeTests[testTypeName] = (communityStats[commId].negativeTests[testTypeName] || 0) + 1;
-            }
-          });
-        }
-      });
-
-      const records: RecentRecord[] = communities.slice(0, 15).map((c: any) => {
-        const stats = communityStats[c._id] || { positiveTests: {}, negativeTests: {}, totalTests: 0 };
-        
-        // Find top positive test type
-        const topPositive = Object.entries(stats.positiveTests).sort((a, b) => b[1] - a[1])[0];
-        // Find top negative test type
-        const topNegative = Object.entries(stats.negativeTests).sort((a, b) => b[1] - a[1])[0];
-
-        return {
-          community: `${c.name} ${c.lga}`,
-          totalTests: c.totalTestsConducted || stats.totalTests || 0,
-          topPositiveTest: topPositive ? `${topPositive[0]} (${topPositive[1]})` : '-',
-          topNegativeTest: topNegative ? `${topNegative[0]} (${topNegative[1]})` : '-',
-        };
-      });
-
-      return { success: true, data: records };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch records',
-        data: [],
-      };
-    }
+    const res = await api.getDashboardData();
+    return { success: res.success, data: res.data!.records, error: res.error };
   },
 
   // Analytics - compute from patient data
@@ -641,7 +595,7 @@ export const api = {
       // Fetch communities and patients to compute cases per community
       const [communitiesRes, patientsRes] = await Promise.all([
         api.getCommunities(),
-        api.getPatients(),
+        api.getPatients({ limit: 1000 }),
       ]);
 
       const commData = communitiesRes.data as any;
@@ -652,7 +606,7 @@ export const api = {
       // Apply community filter only - testType and date filters are applied during counting
       if (params?.communityId) {
         patients = patients.filter((p: any) => {
-          const commId = p.community?._id || p.community;
+          const commId = String(p.community?._id || p.community);
           return commId === params.communityId;
         });
       }
@@ -661,12 +615,12 @@ export const api = {
       const communityTestCounts: Record<string, { name: string; count: number }> = {};
 
       communities.forEach((c: any) => {
-        communityTestCounts[c._id] = { name: c.name, count: 0 };
+        communityTestCounts[String(c._id)] = { name: c.name, count: 0 };
       });
 
       // Count from filtered patients - apply ALL filters to test counting
       patients.forEach((p: any) => {
-        const commId = p.community?._id || p.community;
+        const commId = String(p.community?._id || p.community);
         if (commId && communityTestCounts[commId]) {
           let tests = p.testDetails || [];
           
@@ -712,23 +666,23 @@ export const api = {
     }
   },
 
-  // Test Rate - compute from patient data
-  getTestRatePerType: async (params?: Record<string, string>): Promise<ApiResponse<{ positivePercentage: number; negativePercentage: number }>> => {
+  // Test Rate - compute test type distribution from patient data
+  getTestRatePerType: async (params?: Record<string, string>): Promise<ApiResponse<{ positivePercentage: number; negativePercentage: number; distribution: Array<{ type: string; count: number; percentage: number }> }>> => {
     try {
-      const patientsRes = await api.getPatients();
+      const patientsRes = await api.getPatients({ limit: 1000 });
       const patData = patientsRes.data as any;
       let patients = patData?.data?.patients || patData?.patients || [];
 
       // Apply community filter
       if (params?.communityId) {
         patients = patients.filter((p: any) => {
-          const commId = p.community?._id || p.community;
+          const commId = String(p.community?._id || p.community);
           return commId === params.communityId;
         });
       }
 
-      let positiveCount = 0;
-      let negativeCount = 0;
+      const testTypeCounts: Record<string, number> = {};
+      let totalTests = 0;
 
       patients.forEach((p: any) => {
         let tests = p.testDetails || [];
@@ -742,7 +696,7 @@ export const api = {
           });
         }
 
-        // Apply date filter - count tests on or before selected date
+        // Apply date filter
         if (params?.date) {
           tests = tests.filter((t: any) => {
             const rawDate = t.dateConducted || t.dateVisited;
@@ -753,26 +707,59 @@ export const api = {
         }
 
         tests.forEach((test: any) => {
-          const result = (test.testResult || '').toLowerCase().trim();
-          const resultClass = classifyResult(result);
-          if (resultClass === 'positive') {
-            positiveCount++;
-          } else if (resultClass === 'negative') {
-            negativeCount++;
+          const typeName = typeof test.testType === 'object' ? test.testType?.name : test.testType;
+          if (typeName) {
+            testTypeCounts[typeName] = (testTypeCounts[typeName] || 0) + 1;
+            totalTests++;
           }
         });
       });
 
-      const total = positiveCount + negativeCount;
-      const positivePercentage = total > 0 ? Math.round((positiveCount / total) * 100) : 0;
-      const negativePercentage = total > 0 ? Math.round((negativeCount / total) * 100) : 0;
+      // Build distribution sorted by count
+      const distribution = Object.entries(testTypeCounts)
+        .map(([type, count]) => ({ type, count, percentage: totalTests > 0 ? Math.round((count / totalTests) * 100) : 0 }))
+        .sort((a, b) => b.count - a.count);
 
-      return { success: true, data: { positivePercentage, negativePercentage } };
+      // Also compute positive/negative for non-BP/sugar tests (HIV, Malaria, etc.)
+      let positiveCount = 0;
+      let negativeCount = 0;
+      patients.forEach((p: any) => {
+        let tests = p.testDetails || [];
+        if (params?.testType) {
+          tests = tests.filter((t: any) => {
+            const n = typeof t.testType === 'object' ? t.testType?.name : t.testType;
+            return n && n.toLowerCase() === params.testType!.toLowerCase();
+          });
+        }
+        if (params?.date) {
+          tests = tests.filter((t: any) => {
+            const rawDate = t.dateConducted || t.dateVisited;
+            if (!rawDate) return false;
+            return new Date(rawDate).toISOString().split('T')[0] <= params.date!;
+          });
+        }
+        tests.forEach((test: any) => {
+          const result = (test.testResult || '').toLowerCase().trim();
+          const resultClass = classifyResult(result);
+          if (resultClass === 'positive') positiveCount++;
+          else if (resultClass === 'negative') negativeCount++;
+        });
+      });
+      const classifiedTotal = positiveCount + negativeCount;
+
+      return {
+        success: true,
+        data: {
+          positivePercentage: classifiedTotal > 0 ? Math.round((positiveCount / classifiedTotal) * 100) : 0,
+          negativePercentage: classifiedTotal > 0 ? Math.round((negativeCount / classifiedTotal) * 100) : 0,
+          distribution,
+        },
+      };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Analytics data not available',
-        data: { positivePercentage: 0, negativePercentage: 0 },
+        data: { positivePercentage: 0, negativePercentage: 0, distribution: [] },
       };
     }
   },

@@ -97,7 +97,7 @@ export default function ViewPatientsPage() {
       gender: patient.gender,
       phoneNumber: patient.phoneNumber || patient.phone || '',
       testsTaken: patient.testsTaken,
-      lastTestResult: patient.lastTestResult,
+      lastTestType: patient.lastTestType,
       testDetails: patient.testDetails || [],
       latestTest: latestTest,
       testSheetUrl: latestTest?.testSheetUrl || patient.testSheetUrl || '',
@@ -185,7 +185,7 @@ export default function ViewPatientsPage() {
 
   const handleDownloadPatientDetails = () => {
     if (!selectedPatient) return;
-    const patientData = `Patient Details\n\nName: ${selectedPatient.name}\nAge: ${selectedPatient.age}\nGender: ${selectedPatient.gender}\nCommunity: ${selectedPatient.community}\nLGA: ${selectedPatient.lga}\nTests Taken: ${selectedPatient.testsTaken}\nLast Test Result: ${selectedPatient.lastTestResult}`;
+    const patientData = `Patient Details\n\nName: ${selectedPatient.name}\nAge: ${selectedPatient.age}\nGender: ${selectedPatient.gender}\nCommunity: ${selectedPatient.community}\nLGA: ${selectedPatient.lga}\nTests Taken: ${selectedPatient.testsTaken}\nLast Test Type: ${selectedPatient.lastTestType}`;
     const blob = new Blob([patientData], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -349,7 +349,7 @@ export default function ViewPatientsPage() {
               : null;
             return {
               testType: resolveTestTypeName(latestTest?.testType),
-              testResult: latestTest?.testResult || selectedPatient.lastTestResult || 'N/A',
+              testResult: latestTest?.testResult || selectedPatient.lastTestType || 'N/A',
               dateConducted: latestTest?.dateConducted 
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : 'N/A',
@@ -384,7 +384,7 @@ export default function ViewPatientsPage() {
             const latestTest = editingPatient.latestTest;
             return {
               testType: resolveTestTypeName(latestTest?.testType),
-              testResult: latestTest?.testResult || editingPatient.lastTestResult || 'N/A',
+              testResult: latestTest?.testResult || editingPatient.lastTestType || 'N/A',
               dateConducted: latestTest?.dateConducted 
                 ? new Date(latestTest.dateConducted).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : 'N/A',

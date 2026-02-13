@@ -85,15 +85,25 @@ export default function ReportPage() {
         setCasesData(casesRes.data);
       }
 
-      // Fetch rate per type
+      // Fetch rate per type — now returns test type distribution
       const rateRes = await api.getTestRatePerType(params);
       if (rateRes?.success && rateRes.data) {
-        // Convert to array format for the component
-        const rateDataArray = [
-          { label: 'Positive', value: rateRes.data.positivePercentage, color: '#F97316' },
-          { label: 'Negative', value: rateRes.data.negativePercentage, color: '#3B82F6' },
-        ];
-        setRateData(rateDataArray);
+        const colors = ['#3B82F6', '#F97316', '#10B981', '#8B5CF6', '#EF4444', '#F59E0B', '#06B6D4', '#EC4899', '#6366F1', '#14B8A6'];
+        const distribution = rateRes.data.distribution || [];
+        if (distribution.length > 0) {
+          const rateDataArray = distribution.slice(0, 6).map((d: { type: string; count: number; percentage: number }, i: number) => ({
+            label: d.type,
+            value: d.percentage,
+            color: colors[i % colors.length],
+          }));
+          setRateData(rateDataArray);
+        } else {
+          // Fallback to positive/negative if no distribution
+          setRateData([
+            { label: 'Positive', value: rateRes.data.positivePercentage, color: '#F97316' },
+            { label: 'Negative', value: rateRes.data.negativePercentage, color: '#3B82F6' },
+          ]);
+        }
       }
     } catch (err) {
       console.error('[ReportPage] Error fetching chart data:', err);
@@ -105,7 +115,7 @@ export default function ReportPage() {
   const fetchBmiStats = useCallback(async () => {
     setBmiLoading(true);
     try {
-      const res = await api.getPatients();
+      const res = await api.getPatients({ limit: 1000 });
       const patientsData = res?.data as any;
       const patients = patientsData?.data?.patients || patientsData?.patients || [];
 
