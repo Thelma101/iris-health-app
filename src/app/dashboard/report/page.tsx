@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import AnalyticsFilters from '@/components/admin/analytics/AnalyticsFilters';
 import CasesPerCommunity from '@/components/admin/analytics/CasesPerCommunity';
 import RatePerType from '@/components/admin/analytics/RatePerType';
@@ -10,6 +10,7 @@ import OfficerTestDetailsModal from '@/components/admin/OfficerTestDetailsModal'
 import api from '@/lib/api/index';
 import { calculateBMI } from '@/lib/utils/bmiCalculator';
 import { generatePatientReportPDF, generateCommunityReportPDF, formatDate } from '@/lib/utils/generatePDF';
+import { exportCommunitySummaryCsv, exportPatientsCsv } from '@/lib/utils/csvExport';
 
 interface CommunityStats {
   id: string;
@@ -34,6 +35,10 @@ export default function ReportPage() {
   const [selectedPatient, setSelectedPatient] = useState<PatientTestRecord | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [bulkDownloadLoading, setBulkDownloadLoading] = useState(false);
+  const [showDownloadAllMenu, setShowDownloadAllMenu] = useState(false);
+  const [showCommunityMenuId, setShowCommunityMenuId] = useState<string | null>(null);
+  const downloadAllRef = useRef<HTMLDivElement>(null);
+  const communityMenuRef = useRef<HTMLDivElement>(null);
   
   // Community summary stats
   const [communityStats, setCommunityStats] = useState<CommunityStats[]>([]);
@@ -224,7 +229,7 @@ export default function ReportPage() {
     try {
       const [commRes, patRes] = await Promise.all([
         api.getCommunities(),
-        api.getPatients(),
+        api.getPatients({ limit: 1000 }),
       ]);
       const commData = commRes.data as any;
       const communities = commData?.data?.communities || commData?.communities || [];
@@ -233,8 +238,8 @@ export default function ReportPage() {
 
       const stats: CommunityStats[] = communities.map((c: any) => {
         const communityPatients = patients.filter((p: any) => {
-          const commId = p.community?._id || p.community;
-          return commId === c._id;
+          const commId = String(p.community?._id || p.community);
+          return commId === String(c._id);
         });
         let positive = 0;
         let negative = 0;
@@ -275,11 +280,27 @@ export default function ReportPage() {
     fetchCommunityStats();
   }, [fetchCommunityStats]);
 
-  // Bulk download community report as PDF
-  const handleBulkDownload = async (communityId?: string) => {
+  // Close dropdown menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (downloadAllRef.current && !downloadAllRef.current.contains(e.target as Node)) {
+        setShowDownloadAllMenu(false);
+      }
+      if (communityMenuRef.current && !communityMenuRef.current.contains(e.target as Node)) {
+        setShowCommunityMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Bulk download community report as PDF or CSV
+  const handleBulkDownload = async (communityId?: string, format: 'pdf' | 'csv' = 'pdf') => {
     setBulkDownloadLoading(true);
+    setShowDownloadAllMenu(false);
+    setShowCommunityMenuId(null);
     try {
-      const patRes = await api.getPatients(communityId ? { community: communityId } : undefined);
+      const patRes = await api.getPatients(communityId ? { community: communityId, limit: 1000 } : { limit: 1000 });
       const patData = patRes.data as any;
       const patients = patData?.data?.patients || patData?.patients || [];
       
@@ -287,18 +308,20 @@ export default function ReportPage() {
         ? communityStats.find(c => c.id === communityId)?.name || 'Community'
         : 'All Communities';
 
-      const stats = communityId ? communityStats.find(c => c.id === communityId) : undefined;
-
-      const doc = generateCommunityReportPDF(communityName, patients, stats ? {
-        totalPatients: stats.totalPatients,
-        totalTests: stats.totalTests,
-        positiveTests: stats.positiveTests,
-        negativeTests: stats.negativeTests,
-        assignedAgents: stats.assignedAgents,
-        agentNames: stats.agentNames,
-      } : undefined);
-
-      doc.save(`health-report-${communityName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
+      if (format === 'csv') {
+        exportPatientsCsv(patients, `patients-${communityName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`);
+      } else {
+        const stats = communityId ? communityStats.find(c => c.id === communityId) : undefined;
+        const doc = generateCommunityReportPDF(communityName, patients, stats ? {
+          totalPatients: stats.totalPatients,
+          totalTests: stats.totalTests,
+          positiveTests: stats.positiveTests,
+          negativeTests: stats.negativeTests,
+          assignedAgents: stats.assignedAgents,
+          agentNames: stats.agentNames,
+        } : undefined);
+        doc.save(`health-report-${communityName.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.pdf`);
+      }
     } catch (err) {
       console.error('Bulk download error:', err);
     } finally {
@@ -306,11 +329,17 @@ export default function ReportPage() {
     }
   };
 
+  // Download community summary table as CSV
+  const handleDownloadCommunitySummaryCsv = () => {
+    setShowDownloadAllMenu(false);
+    exportCommunitySummaryCsv(communityStats);
+  };
+
   const handleExport = async () => {
     setExportLoading(true);
     try {
       // Fetch all patients for full export
-      const patRes = await api.getPatients(selectedCommunity ? { community: selectedCommunity } : undefined);
+      const patRes = await api.getPatients(selectedCommunity ? { community: selectedCommunity, limit: 1000 } : { limit: 1000 });
       const patData = patRes.data as any;
       const patients = patData?.data?.patients || patData?.patients || [];
       const commName = selectedCommunity
@@ -473,20 +502,40 @@ export default function ReportPage() {
           <div className="border border-[#d9d9d9] rounded-lg overflow-hidden bg-white">
             <div className="bg-[#e8f1ff] border-b-2 border-[#2c7be5] py-2 px-4 flex items-center justify-between">
               <h3 className="text-base font-semibold text-[#212b36] font-poppins">Community Summary</h3>
-              <button
-                onClick={() => handleBulkDownload()}
-                disabled={bulkDownloadLoading || communityStatsLoading}
-                className="text-xs px-3 py-1.5 rounded-lg bg-[#2c7be5] text-white font-poppins hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
-              >
-                {bulkDownloadLoading ? (
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
-                ) : (
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
+              <div className="relative" ref={downloadAllRef}>
+                <button
+                  onClick={() => setShowDownloadAllMenu(!showDownloadAllMenu)}
+                  disabled={bulkDownloadLoading || communityStatsLoading}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-[#2c7be5] text-white font-poppins hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {bulkDownloadLoading ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  )}
+                  Download All
+                  <svg className="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {showDownloadAllMenu && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-30 min-w-[160px]">
+                    <button onClick={() => handleBulkDownload(undefined, 'pdf')} className="w-full text-left px-3 py-2 text-xs font-poppins text-[#212b36] hover:bg-[#f4f5f7] rounded-t-lg flex items-center gap-2 cursor-pointer">
+                      <svg className="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+                      All Patients (PDF)
+                    </button>
+                    <button onClick={() => handleBulkDownload(undefined, 'csv')} className="w-full text-left px-3 py-2 text-xs font-poppins text-[#212b36] hover:bg-[#f4f5f7] flex items-center gap-2 cursor-pointer">
+                      <svg className="w-3.5 h-3.5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+                      All Patients (CSV)
+                    </button>
+                    <div className="border-t border-[#e9edf1]" />
+                    <button onClick={handleDownloadCommunitySummaryCsv} className="w-full text-left px-3 py-2 text-xs font-poppins text-[#212b36] hover:bg-[#f4f5f7] rounded-b-lg flex items-center gap-2 cursor-pointer">
+                      <svg className="w-3.5 h-3.5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+                      Summary Table (CSV)
+                    </button>
+                  </div>
                 )}
-                Download All
-              </button>
+              </div>
             </div>
             <div className="p-4">
               {communityStatsLoading ? (
@@ -521,13 +570,22 @@ export default function ReportPage() {
                           <td className="text-sm text-green-600 font-poppins py-2.5 px-3 text-center">{stat.negativeTests}</td>
                           <td className="text-sm text-[#637381] font-poppins py-2.5 px-3 text-center" title={stat.agentNames.join(', ')}>{stat.assignedAgents}</td>
                           <td className="text-sm font-poppins py-2.5 px-3 text-right">
-                            <button
-                              onClick={() => handleBulkDownload(stat.id)}
-                              disabled={bulkDownloadLoading}
-                              className="text-xs px-2 py-1 rounded bg-[#e8f1ff] text-[#2c7be5] hover:bg-[#d0e3ff] transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                              Download
-                            </button>
+                            <div className="relative inline-block" ref={showCommunityMenuId === stat.id ? communityMenuRef : undefined}>
+                              <button
+                                onClick={() => setShowCommunityMenuId(showCommunityMenuId === stat.id ? null : stat.id)}
+                                disabled={bulkDownloadLoading}
+                                className="text-xs px-2 py-1 rounded bg-[#e8f1ff] text-[#2c7be5] hover:bg-[#d0e3ff] transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                              >
+                                Download
+                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                              </button>
+                              {showCommunityMenuId === stat.id && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-30 min-w-[120px]">
+                                  <button onClick={() => handleBulkDownload(stat.id, 'pdf')} className="w-full text-left px-3 py-1.5 text-xs font-poppins text-[#212b36] hover:bg-[#f4f5f7] rounded-t-lg cursor-pointer">PDF</button>
+                                  <button onClick={() => handleBulkDownload(stat.id, 'csv')} className="w-full text-left px-3 py-1.5 text-xs font-poppins text-[#212b36] hover:bg-[#f4f5f7] rounded-b-lg cursor-pointer">CSV</button>
+                                </div>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

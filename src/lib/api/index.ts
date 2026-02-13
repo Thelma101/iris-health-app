@@ -297,7 +297,7 @@ export const api = {
   }>>> => {
     try {
       const [patientsRes, communitiesRes] = await Promise.all([
-        apiRequest<{ patients: any[] }>('/patients'),
+        apiRequest<{ patients: any[] }>('/patients?limit=1000'),
         apiRequest<{ communities: any[] }>('/community/all'),
       ]);
       const patientsData = patientsRes.data as any;
@@ -337,8 +337,8 @@ export const api = {
       patients.forEach((patient: any) => {
         const tests = patient.testDetails || [];
         const testsByOfficer = tests.filter((test: any) => {
-          const conductedBy = test.conductedBy?._id || test.conductedBy;
-          return conductedBy === officerId;
+          const conductedBy = String(test.conductedBy?._id || test.conductedBy || '');
+          return conductedBy === String(officerId);
         });
         if (testsByOfficer.length > 0) {
           filteredByConductedBy.push(mapPatient(patient, testsByOfficer, index++));
@@ -357,7 +357,7 @@ export const api = {
         const officers = c.fieldOfficers || [];
         officers.forEach((o: any) => {
           const oid = o._id || o;
-          if (oid === officerId || oid?.toString() === officerId) {
+          if (String(oid) === String(officerId)) {
             officerCommunityIds.add(c._id);
           }
         });
@@ -366,7 +366,7 @@ export const api = {
       const filteredByCommunity: Array<any> = [];
       index = 1;
       patients.forEach((patient: any) => {
-        const commId = patient.community?._id || patient.community;
+        const commId = String(patient.community?._id || patient.community || '');
         if (commId && officerCommunityIds.has(commId)) {
           const tests = patient.testDetails || [];
           if (tests.length > 0) {
